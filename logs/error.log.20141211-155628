@@ -1,0 +1,15 @@
+[Thu Dec 11 17:56:28 2014] [error] Internal Server Error: /api/jms/files/workflows/27/itpsort.pl
+[Thu Dec 11 17:56:28 2014] [error] Traceback (most recent call last):
+[Thu Dec 11 17:56:28 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+[Thu Dec 11 17:56:28 2014] [error]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Thu Dec 11 17:56:28 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/decorators/csrf.py", line 57, in wrapped_view
+[Thu Dec 11 17:56:28 2014] [error]     return view_func(*args, **kwargs)
+[Thu Dec 11 17:56:28 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/generic/base.py", line 69, in view
+[Thu Dec 11 17:56:28 2014] [error]     return self.dispatch(request, *args, **kwargs)
+[Thu Dec 11 17:56:28 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 403, in dispatch
+[Thu Dec 11 17:56:28 2014] [error]     response = self.handle_exception(exc)
+[Thu Dec 11 17:56:28 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 400, in dispatch
+[Thu Dec 11 17:56:28 2014] [error]     response = handler(request, *args, **kwargs)
+[Thu Dec 11 17:56:28 2014] [error]   File "/srv/JMS/src/job/views.py", line 1091, in get
+[Thu Dec 11 17:56:28 2014] [error]     with open(path, 'r') as f:
+[Thu Dec 11 17:56:28 2014] [error] IOError: [Errno 2] No such file or directory: u'/jabba/JM/users/david/workflows/27/itpsort.pl'

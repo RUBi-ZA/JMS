@@ -1,0 +1,909 @@
+[Thu Dec 11 17:55:45 2014] [error] Internal Server Error: /api/jms/dashboard
+[Thu Dec 11 17:55:45 2014] [error] Traceback (most recent call last):
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+[Thu Dec 11 17:55:45 2014] [error]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/decorators/csrf.py", line 57, in wrapped_view
+[Thu Dec 11 17:55:45 2014] [error]     return view_func(*args, **kwargs)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/generic/base.py", line 69, in view
+[Thu Dec 11 17:55:45 2014] [error]     return self.dispatch(request, *args, **kwargs)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 403, in dispatch
+[Thu Dec 11 17:55:45 2014] [error]     response = self.handle_exception(exc)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 391, in dispatch
+[Thu Dec 11 17:55:45 2014] [error]     self.initial(request, *args, **kwargs)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 320, in initial
+[Thu Dec 11 17:55:45 2014] [error]     self.perform_authentication(request)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 270, in perform_authentication
+[Thu Dec 11 17:55:45 2014] [error]     request.user
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 226, in user
+[Thu Dec 11 17:55:45 2014] [error]     self._authenticate()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 401, in _authenticate
+[Thu Dec 11 17:55:45 2014] [error]     user_auth_tuple = authenticator.authenticate(self)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/authentication.py", line 117, in authenticate
+[Thu Dec 11 17:55:45 2014] [error]     if not user or not user.is_active:
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 224, in inner
+[Thu Dec 11 17:55:45 2014] [error]     self._setup()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 357, in _setup
+[Thu Dec 11 17:55:45 2014] [error]     self._wrapped = self._setupfunc()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 23, in <lambda>
+[Thu Dec 11 17:55:45 2014] [error]     request.user = SimpleLazyObject(lambda: get_user(request))
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 11, in get_user
+[Thu Dec 11 17:55:45 2014] [error]     request._cached_user = auth.get_user(request)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/__init__.py", line 151, in get_user
+[Thu Dec 11 17:55:45 2014] [error]     user_id = request.session[SESSION_KEY]
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 49, in __getitem__
+[Thu Dec 11 17:55:45 2014] [error]     return self._session[key]
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 175, in _get_session
+[Thu Dec 11 17:55:45 2014] [error]     self._session_cache = self.load()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/db.py", line 21, in load
+[Thu Dec 11 17:55:45 2014] [error]     expire_date__gt=timezone.now()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/manager.py", line 92, in manager_method
+[Thu Dec 11 17:55:45 2014] [error]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 351, in get
+[Thu Dec 11 17:55:45 2014] [error]     num = len(clone)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 122, in __len__
+[Thu Dec 11 17:55:45 2014] [error]     self._fetch_all()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 966, in _fetch_all
+[Thu Dec 11 17:55:45 2014] [error]     self._result_cache = list(self.iterator())
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 265, in iterator
+[Thu Dec 11 17:55:45 2014] [error]     for row in compiler.results_iter():
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 700, in results_iter
+[Thu Dec 11 17:55:45 2014] [error]     for rows in self.execute_sql(MULTI):
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 784, in execute_sql
+[Thu Dec 11 17:55:45 2014] [error]     cursor = self.connection.cursor()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 165, in cursor
+[Thu Dec 11 17:55:45 2014] [error]     cursor = self.make_debug_cursor(self._cursor())
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 138, in _cursor
+[Thu Dec 11 17:55:45 2014] [error]     self.ensure_connection()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:45 2014] [error]     self.connect()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/utils.py", line 94, in __exit__
+[Thu Dec 11 17:55:45 2014] [error]     six.reraise(dj_exc_type, dj_exc_value, traceback)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:45 2014] [error]     self.connect()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 122, in connect
+[Thu Dec 11 17:55:45 2014] [error]     self.connection = self.get_new_connection(conn_params)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/mysql/base.py", line 471, in get_new_connection
+[Thu Dec 11 17:55:45 2014] [error]     conn = Database.connect(**conn_params)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/__init__.py", line 81, in Connect
+[Thu Dec 11 17:55:45 2014] [error]     return Connection(*args, **kwargs)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/connections.py", line 193, in __init__
+[Thu Dec 11 17:55:45 2014] [error]     super(Connection, self).__init__(*args, **kwargs2)
+[Thu Dec 11 17:55:45 2014] [error] OperationalError: (1045, "Access denied for user 'jms'@'yoda' (using password: YES)")
+[Thu Dec 11 17:55:45 2014] [error] Internal Server Error: /api/jms/dashboard
+[Thu Dec 11 17:55:45 2014] [error] Traceback (most recent call last):
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+[Thu Dec 11 17:55:45 2014] [error]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/decorators/csrf.py", line 57, in wrapped_view
+[Thu Dec 11 17:55:45 2014] [error]     return view_func(*args, **kwargs)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/generic/base.py", line 69, in view
+[Thu Dec 11 17:55:45 2014] [error]     return self.dispatch(request, *args, **kwargs)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 403, in dispatch
+[Thu Dec 11 17:55:45 2014] [error]     response = self.handle_exception(exc)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 391, in dispatch
+[Thu Dec 11 17:55:45 2014] [error]     self.initial(request, *args, **kwargs)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 320, in initial
+[Thu Dec 11 17:55:45 2014] [error]     self.perform_authentication(request)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 270, in perform_authentication
+[Thu Dec 11 17:55:45 2014] [error]     request.user
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 226, in user
+[Thu Dec 11 17:55:45 2014] [error]     self._authenticate()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 401, in _authenticate
+[Thu Dec 11 17:55:45 2014] [error]     user_auth_tuple = authenticator.authenticate(self)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/authentication.py", line 117, in authenticate
+[Thu Dec 11 17:55:45 2014] [error]     if not user or not user.is_active:
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 224, in inner
+[Thu Dec 11 17:55:45 2014] [error]     self._setup()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 357, in _setup
+[Thu Dec 11 17:55:45 2014] [error]     self._wrapped = self._setupfunc()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 23, in <lambda>
+[Thu Dec 11 17:55:45 2014] [error]     request.user = SimpleLazyObject(lambda: get_user(request))
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 11, in get_user
+[Thu Dec 11 17:55:45 2014] [error]     request._cached_user = auth.get_user(request)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/__init__.py", line 151, in get_user
+[Thu Dec 11 17:55:45 2014] [error]     user_id = request.session[SESSION_KEY]
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 49, in __getitem__
+[Thu Dec 11 17:55:45 2014] [error]     return self._session[key]
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 175, in _get_session
+[Thu Dec 11 17:55:45 2014] [error]     self._session_cache = self.load()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/db.py", line 21, in load
+[Thu Dec 11 17:55:45 2014] [error]     expire_date__gt=timezone.now()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/manager.py", line 92, in manager_method
+[Thu Dec 11 17:55:45 2014] [error]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 351, in get
+[Thu Dec 11 17:55:45 2014] [error]     num = len(clone)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 122, in __len__
+[Thu Dec 11 17:55:45 2014] [error]     self._fetch_all()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 966, in _fetch_all
+[Thu Dec 11 17:55:45 2014] [error]     self._result_cache = list(self.iterator())
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 265, in iterator
+[Thu Dec 11 17:55:45 2014] [error]     for row in compiler.results_iter():
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 700, in results_iter
+[Thu Dec 11 17:55:45 2014] [error]     for rows in self.execute_sql(MULTI):
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 784, in execute_sql
+[Thu Dec 11 17:55:45 2014] [error]     cursor = self.connection.cursor()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 165, in cursor
+[Thu Dec 11 17:55:45 2014] [error]     cursor = self.make_debug_cursor(self._cursor())
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 138, in _cursor
+[Thu Dec 11 17:55:45 2014] [error]     self.ensure_connection()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:45 2014] [error]     self.connect()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/utils.py", line 94, in __exit__
+[Thu Dec 11 17:55:45 2014] [error]     six.reraise(dj_exc_type, dj_exc_value, traceback)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:45 2014] [error]     self.connect()
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 122, in connect
+[Thu Dec 11 17:55:45 2014] [error]     self.connection = self.get_new_connection(conn_params)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/mysql/base.py", line 471, in get_new_connection
+[Thu Dec 11 17:55:45 2014] [error]     conn = Database.connect(**conn_params)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/__init__.py", line 81, in Connect
+[Thu Dec 11 17:55:45 2014] [error]     return Connection(*args, **kwargs)
+[Thu Dec 11 17:55:45 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/connections.py", line 193, in __init__
+[Thu Dec 11 17:55:45 2014] [error]     super(Connection, self).__init__(*args, **kwargs2)
+[Thu Dec 11 17:55:45 2014] [error] OperationalError: (1045, "Access denied for user 'jms'@'yoda' (using password: YES)")
+[Thu Dec 11 17:55:47 2014] [error] Internal Server Error: /workflows
+[Thu Dec 11 17:55:47 2014] [error] Traceback (most recent call last):
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+[Thu Dec 11 17:55:47 2014] [error]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/decorators.py", line 21, in _wrapped_view
+[Thu Dec 11 17:55:47 2014] [error]     if test_func(request.user):
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/decorators.py", line 47, in <lambda>
+[Thu Dec 11 17:55:47 2014] [error]     lambda u: u.is_authenticated(),
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 224, in inner
+[Thu Dec 11 17:55:47 2014] [error]     self._setup()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 357, in _setup
+[Thu Dec 11 17:55:47 2014] [error]     self._wrapped = self._setupfunc()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 23, in <lambda>
+[Thu Dec 11 17:55:47 2014] [error]     request.user = SimpleLazyObject(lambda: get_user(request))
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 11, in get_user
+[Thu Dec 11 17:55:47 2014] [error]     request._cached_user = auth.get_user(request)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/__init__.py", line 151, in get_user
+[Thu Dec 11 17:55:47 2014] [error]     user_id = request.session[SESSION_KEY]
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 49, in __getitem__
+[Thu Dec 11 17:55:47 2014] [error]     return self._session[key]
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 175, in _get_session
+[Thu Dec 11 17:55:47 2014] [error]     self._session_cache = self.load()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/db.py", line 21, in load
+[Thu Dec 11 17:55:47 2014] [error]     expire_date__gt=timezone.now()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/manager.py", line 92, in manager_method
+[Thu Dec 11 17:55:47 2014] [error]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 351, in get
+[Thu Dec 11 17:55:47 2014] [error]     num = len(clone)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 122, in __len__
+[Thu Dec 11 17:55:47 2014] [error]     self._fetch_all()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 966, in _fetch_all
+[Thu Dec 11 17:55:47 2014] [error]     self._result_cache = list(self.iterator())
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 265, in iterator
+[Thu Dec 11 17:55:47 2014] [error]     for row in compiler.results_iter():
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 700, in results_iter
+[Thu Dec 11 17:55:47 2014] [error]     for rows in self.execute_sql(MULTI):
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 784, in execute_sql
+[Thu Dec 11 17:55:47 2014] [error]     cursor = self.connection.cursor()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 165, in cursor
+[Thu Dec 11 17:55:47 2014] [error]     cursor = self.make_debug_cursor(self._cursor())
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 138, in _cursor
+[Thu Dec 11 17:55:47 2014] [error]     self.ensure_connection()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:47 2014] [error]     self.connect()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/utils.py", line 94, in __exit__
+[Thu Dec 11 17:55:47 2014] [error]     six.reraise(dj_exc_type, dj_exc_value, traceback)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:47 2014] [error]     self.connect()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 122, in connect
+[Thu Dec 11 17:55:47 2014] [error]     self.connection = self.get_new_connection(conn_params)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/mysql/base.py", line 471, in get_new_connection
+[Thu Dec 11 17:55:47 2014] [error]     conn = Database.connect(**conn_params)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/__init__.py", line 81, in Connect
+[Thu Dec 11 17:55:47 2014] [error]     return Connection(*args, **kwargs)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/connections.py", line 193, in __init__
+[Thu Dec 11 17:55:47 2014] [error]     super(Connection, self).__init__(*args, **kwargs2)
+[Thu Dec 11 17:55:47 2014] [error] OperationalError: (1045, "Access denied for user 'jms'@'yoda' (using password: YES)")
+[Thu Dec 11 17:55:47 2014] [error] Internal Server Error: /api/jms/filemanager/cluster/
+[Thu Dec 11 17:55:47 2014] [error] Traceback (most recent call last):
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+[Thu Dec 11 17:55:47 2014] [error]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/decorators/csrf.py", line 57, in wrapped_view
+[Thu Dec 11 17:55:47 2014] [error]     return view_func(*args, **kwargs)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/generic/base.py", line 69, in view
+[Thu Dec 11 17:55:47 2014] [error]     return self.dispatch(request, *args, **kwargs)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 403, in dispatch
+[Thu Dec 11 17:55:47 2014] [error]     response = self.handle_exception(exc)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 391, in dispatch
+[Thu Dec 11 17:55:47 2014] [error]     self.initial(request, *args, **kwargs)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 320, in initial
+[Thu Dec 11 17:55:47 2014] [error]     self.perform_authentication(request)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 270, in perform_authentication
+[Thu Dec 11 17:55:47 2014] [error]     request.user
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 226, in user
+[Thu Dec 11 17:55:47 2014] [error]     self._authenticate()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 401, in _authenticate
+[Thu Dec 11 17:55:47 2014] [error]     user_auth_tuple = authenticator.authenticate(self)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/authentication.py", line 117, in authenticate
+[Thu Dec 11 17:55:47 2014] [error]     if not user or not user.is_active:
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 224, in inner
+[Thu Dec 11 17:55:47 2014] [error]     self._setup()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 357, in _setup
+[Thu Dec 11 17:55:47 2014] [error]     self._wrapped = self._setupfunc()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 23, in <lambda>
+[Thu Dec 11 17:55:47 2014] [error]     request.user = SimpleLazyObject(lambda: get_user(request))
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 11, in get_user
+[Thu Dec 11 17:55:47 2014] [error]     request._cached_user = auth.get_user(request)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/__init__.py", line 151, in get_user
+[Thu Dec 11 17:55:47 2014] [error]     user_id = request.session[SESSION_KEY]
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 49, in __getitem__
+[Thu Dec 11 17:55:47 2014] [error]     return self._session[key]
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 175, in _get_session
+[Thu Dec 11 17:55:47 2014] [error]     self._session_cache = self.load()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/db.py", line 21, in load
+[Thu Dec 11 17:55:47 2014] [error]     expire_date__gt=timezone.now()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/manager.py", line 92, in manager_method
+[Thu Dec 11 17:55:47 2014] [error]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 351, in get
+[Thu Dec 11 17:55:47 2014] [error]     num = len(clone)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 122, in __len__
+[Thu Dec 11 17:55:47 2014] [error]     self._fetch_all()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 966, in _fetch_all
+[Thu Dec 11 17:55:47 2014] [error]     self._result_cache = list(self.iterator())
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 265, in iterator
+[Thu Dec 11 17:55:47 2014] [error]     for row in compiler.results_iter():
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 700, in results_iter
+[Thu Dec 11 17:55:47 2014] [error]     for rows in self.execute_sql(MULTI):
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 784, in execute_sql
+[Thu Dec 11 17:55:47 2014] [error]     cursor = self.connection.cursor()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 165, in cursor
+[Thu Dec 11 17:55:47 2014] [error]     cursor = self.make_debug_cursor(self._cursor())
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 138, in _cursor
+[Thu Dec 11 17:55:47 2014] [error]     self.ensure_connection()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:47 2014] [error]     self.connect()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/utils.py", line 94, in __exit__
+[Thu Dec 11 17:55:47 2014] [error]     six.reraise(dj_exc_type, dj_exc_value, traceback)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:47 2014] [error]     self.connect()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 122, in connect
+[Thu Dec 11 17:55:47 2014] [error]     self.connection = self.get_new_connection(conn_params)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/mysql/base.py", line 471, in get_new_connection
+[Thu Dec 11 17:55:47 2014] [error]     conn = Database.connect(**conn_params)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/__init__.py", line 81, in Connect
+[Thu Dec 11 17:55:47 2014] [error]     return Connection(*args, **kwargs)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/connections.py", line 193, in __init__
+[Thu Dec 11 17:55:47 2014] [error]     super(Connection, self).__init__(*args, **kwargs2)
+[Thu Dec 11 17:55:47 2014] [error] OperationalError: (1045, "Access denied for user 'jms'@'yoda' (using password: YES)")
+[Thu Dec 11 17:55:47 2014] [error] Internal Server Error: /api/jms/filemanager/cluster/
+[Thu Dec 11 17:55:47 2014] [error] Traceback (most recent call last):
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+[Thu Dec 11 17:55:47 2014] [error]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/decorators/csrf.py", line 57, in wrapped_view
+[Thu Dec 11 17:55:47 2014] [error]     return view_func(*args, **kwargs)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/generic/base.py", line 69, in view
+[Thu Dec 11 17:55:47 2014] [error]     return self.dispatch(request, *args, **kwargs)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 403, in dispatch
+[Thu Dec 11 17:55:47 2014] [error]     response = self.handle_exception(exc)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 391, in dispatch
+[Thu Dec 11 17:55:47 2014] [error]     self.initial(request, *args, **kwargs)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 320, in initial
+[Thu Dec 11 17:55:47 2014] [error]     self.perform_authentication(request)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 270, in perform_authentication
+[Thu Dec 11 17:55:47 2014] [error]     request.user
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 226, in user
+[Thu Dec 11 17:55:47 2014] [error]     self._authenticate()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 401, in _authenticate
+[Thu Dec 11 17:55:47 2014] [error]     user_auth_tuple = authenticator.authenticate(self)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/authentication.py", line 117, in authenticate
+[Thu Dec 11 17:55:47 2014] [error]     if not user or not user.is_active:
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 224, in inner
+[Thu Dec 11 17:55:47 2014] [error]     self._setup()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 357, in _setup
+[Thu Dec 11 17:55:47 2014] [error]     self._wrapped = self._setupfunc()
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 23, in <lambda>
+[Thu Dec 11 17:55:47 2014] [error]     request.user = SimpleLazyObject(lambda: get_user(request))
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 11, in get_user
+[Thu Dec 11 17:55:47 2014] [error]     request._cached_user = auth.get_user(request)
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/__init__.py", line 151, in get_user
+[Thu Dec 11 17:55:47 2014] [error]     user_id = request.session[SESSION_KEY]
+[Thu Dec 11 17:55:47 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 49, in __getitem__
+[Thu Dec 11 17:55:48 2014] [error]     return self._session[key]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 175, in _get_session
+[Thu Dec 11 17:55:48 2014] [error]     self._session_cache = self.load()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/db.py", line 21, in load
+[Thu Dec 11 17:55:48 2014] [error]     expire_date__gt=timezone.now()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/manager.py", line 92, in manager_method
+[Thu Dec 11 17:55:48 2014] [error]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 351, in get
+[Thu Dec 11 17:55:48 2014] [error]     num = len(clone)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 122, in __len__
+[Thu Dec 11 17:55:48 2014] [error]     self._fetch_all()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 966, in _fetch_all
+[Thu Dec 11 17:55:48 2014] [error]     self._result_cache = list(self.iterator())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 265, in iterator
+[Thu Dec 11 17:55:48 2014] [error]     for row in compiler.results_iter():
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 700, in results_iter
+[Thu Dec 11 17:55:48 2014] [error]     for rows in self.execute_sql(MULTI):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 784, in execute_sql
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.connection.cursor()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 165, in cursor
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.make_debug_cursor(self._cursor())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 138, in _cursor
+[Thu Dec 11 17:55:48 2014] [error]     self.ensure_connection()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/utils.py", line 94, in __exit__
+[Thu Dec 11 17:55:48 2014] [error]     six.reraise(dj_exc_type, dj_exc_value, traceback)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 122, in connect
+[Thu Dec 11 17:55:48 2014] [error]     self.connection = self.get_new_connection(conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/mysql/base.py", line 471, in get_new_connection
+[Thu Dec 11 17:55:48 2014] [error]     conn = Database.connect(**conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/__init__.py", line 81, in Connect
+[Thu Dec 11 17:55:48 2014] [error]     return Connection(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/connections.py", line 193, in __init__
+[Thu Dec 11 17:55:48 2014] [error]     super(Connection, self).__init__(*args, **kwargs2)
+[Thu Dec 11 17:55:48 2014] [error] OperationalError: (1045, "Access denied for user 'jms'@'yoda' (using password: YES)")
+[Thu Dec 11 17:55:48 2014] [error] Internal Server Error: /api/jms/filemanager/cluster/
+[Thu Dec 11 17:55:48 2014] [error] Traceback (most recent call last):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+[Thu Dec 11 17:55:48 2014] [error]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/decorators/csrf.py", line 57, in wrapped_view
+[Thu Dec 11 17:55:48 2014] [error]     return view_func(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/generic/base.py", line 69, in view
+[Thu Dec 11 17:55:48 2014] [error]     return self.dispatch(request, *args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 403, in dispatch
+[Thu Dec 11 17:55:48 2014] [error]     response = self.handle_exception(exc)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 391, in dispatch
+[Thu Dec 11 17:55:48 2014] [error]     self.initial(request, *args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 320, in initial
+[Thu Dec 11 17:55:48 2014] [error]     self.perform_authentication(request)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 270, in perform_authentication
+[Thu Dec 11 17:55:48 2014] [error]     request.user
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 226, in user
+[Thu Dec 11 17:55:48 2014] [error]     self._authenticate()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 401, in _authenticate
+[Thu Dec 11 17:55:48 2014] [error]     user_auth_tuple = authenticator.authenticate(self)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/authentication.py", line 117, in authenticate
+[Thu Dec 11 17:55:48 2014] [error]     if not user or not user.is_active:
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 224, in inner
+[Thu Dec 11 17:55:48 2014] [error]     self._setup()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 357, in _setup
+[Thu Dec 11 17:55:48 2014] [error]     self._wrapped = self._setupfunc()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 23, in <lambda>
+[Thu Dec 11 17:55:48 2014] [error]     request.user = SimpleLazyObject(lambda: get_user(request))
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 11, in get_user
+[Thu Dec 11 17:55:48 2014] [error]     request._cached_user = auth.get_user(request)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/__init__.py", line 151, in get_user
+[Thu Dec 11 17:55:48 2014] [error]     user_id = request.session[SESSION_KEY]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 49, in __getitem__
+[Thu Dec 11 17:55:48 2014] [error]     return self._session[key]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 175, in _get_session
+[Thu Dec 11 17:55:48 2014] [error]     self._session_cache = self.load()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/db.py", line 21, in load
+[Thu Dec 11 17:55:48 2014] [error]     expire_date__gt=timezone.now()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/manager.py", line 92, in manager_method
+[Thu Dec 11 17:55:48 2014] [error]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 351, in get
+[Thu Dec 11 17:55:48 2014] [error]     num = len(clone)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 122, in __len__
+[Thu Dec 11 17:55:48 2014] [error]     self._fetch_all()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 966, in _fetch_all
+[Thu Dec 11 17:55:48 2014] [error]     self._result_cache = list(self.iterator())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 265, in iterator
+[Thu Dec 11 17:55:48 2014] [error]     for row in compiler.results_iter():
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 700, in results_iter
+[Thu Dec 11 17:55:48 2014] [error]     for rows in self.execute_sql(MULTI):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 784, in execute_sql
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.connection.cursor()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 165, in cursor
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.make_debug_cursor(self._cursor())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 138, in _cursor
+[Thu Dec 11 17:55:48 2014] [error]     self.ensure_connection()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/utils.py", line 94, in __exit__
+[Thu Dec 11 17:55:48 2014] [error]     six.reraise(dj_exc_type, dj_exc_value, traceback)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 122, in connect
+[Thu Dec 11 17:55:48 2014] [error]     self.connection = self.get_new_connection(conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/mysql/base.py", line 471, in get_new_connection
+[Thu Dec 11 17:55:48 2014] [error]     conn = Database.connect(**conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/__init__.py", line 81, in Connect
+[Thu Dec 11 17:55:48 2014] [error]     return Connection(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/connections.py", line 193, in __init__
+[Thu Dec 11 17:55:48 2014] [error]     super(Connection, self).__init__(*args, **kwargs2)
+[Thu Dec 11 17:55:48 2014] [error] OperationalError: (1045, "Access denied for user 'jms'@'yoda' (using password: YES)")
+[Thu Dec 11 17:55:48 2014] [error] Internal Server Error: /api/jms/filemanager/cluster/
+[Thu Dec 11 17:55:48 2014] [error] Traceback (most recent call last):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+[Thu Dec 11 17:55:48 2014] [error]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/decorators/csrf.py", line 57, in wrapped_view
+[Thu Dec 11 17:55:48 2014] [error]     return view_func(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/generic/base.py", line 69, in view
+[Thu Dec 11 17:55:48 2014] [error]     return self.dispatch(request, *args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 403, in dispatch
+[Thu Dec 11 17:55:48 2014] [error]     response = self.handle_exception(exc)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 391, in dispatch
+[Thu Dec 11 17:55:48 2014] [error]     self.initial(request, *args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 320, in initial
+[Thu Dec 11 17:55:48 2014] [error]     self.perform_authentication(request)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 270, in perform_authentication
+[Thu Dec 11 17:55:48 2014] [error]     request.user
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 226, in user
+[Thu Dec 11 17:55:48 2014] [error]     self._authenticate()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 401, in _authenticate
+[Thu Dec 11 17:55:48 2014] [error]     user_auth_tuple = authenticator.authenticate(self)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/authentication.py", line 117, in authenticate
+[Thu Dec 11 17:55:48 2014] [error]     if not user or not user.is_active:
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 224, in inner
+[Thu Dec 11 17:55:48 2014] [error]     self._setup()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 357, in _setup
+[Thu Dec 11 17:55:48 2014] [error]     self._wrapped = self._setupfunc()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 23, in <lambda>
+[Thu Dec 11 17:55:48 2014] [error]     request.user = SimpleLazyObject(lambda: get_user(request))
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 11, in get_user
+[Thu Dec 11 17:55:48 2014] [error]     request._cached_user = auth.get_user(request)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/__init__.py", line 151, in get_user
+[Thu Dec 11 17:55:48 2014] [error]     user_id = request.session[SESSION_KEY]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 49, in __getitem__
+[Thu Dec 11 17:55:48 2014] [error]     return self._session[key]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 175, in _get_session
+[Thu Dec 11 17:55:48 2014] [error]     self._session_cache = self.load()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/db.py", line 21, in load
+[Thu Dec 11 17:55:48 2014] [error]     expire_date__gt=timezone.now()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/manager.py", line 92, in manager_method
+[Thu Dec 11 17:55:48 2014] [error]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 351, in get
+[Thu Dec 11 17:55:48 2014] [error]     num = len(clone)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 122, in __len__
+[Thu Dec 11 17:55:48 2014] [error]     self._fetch_all()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 966, in _fetch_all
+[Thu Dec 11 17:55:48 2014] [error]     self._result_cache = list(self.iterator())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 265, in iterator
+[Thu Dec 11 17:55:48 2014] [error]     for row in compiler.results_iter():
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 700, in results_iter
+[Thu Dec 11 17:55:48 2014] [error]     for rows in self.execute_sql(MULTI):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 784, in execute_sql
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.connection.cursor()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 165, in cursor
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.make_debug_cursor(self._cursor())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 138, in _cursor
+[Thu Dec 11 17:55:48 2014] [error]     self.ensure_connection()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/utils.py", line 94, in __exit__
+[Thu Dec 11 17:55:48 2014] [error]     six.reraise(dj_exc_type, dj_exc_value, traceback)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 122, in connect
+[Thu Dec 11 17:55:48 2014] [error]     self.connection = self.get_new_connection(conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/mysql/base.py", line 471, in get_new_connection
+[Thu Dec 11 17:55:48 2014] [error]     conn = Database.connect(**conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/__init__.py", line 81, in Connect
+[Thu Dec 11 17:55:48 2014] [error]     return Connection(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/connections.py", line 193, in __init__
+[Thu Dec 11 17:55:48 2014] [error]     super(Connection, self).__init__(*args, **kwargs2)
+[Thu Dec 11 17:55:48 2014] [error] OperationalError: (1045, "Access denied for user 'jms'@'yoda' (using password: YES)")
+[Thu Dec 11 17:55:48 2014] [error] Internal Server Error: /api/jms/jobs
+[Thu Dec 11 17:55:48 2014] [error] Traceback (most recent call last):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+[Thu Dec 11 17:55:48 2014] [error]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/decorators/csrf.py", line 57, in wrapped_view
+[Thu Dec 11 17:55:48 2014] [error]     return view_func(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/generic/base.py", line 69, in view
+[Thu Dec 11 17:55:48 2014] [error]     return self.dispatch(request, *args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 403, in dispatch
+[Thu Dec 11 17:55:48 2014] [error]     response = self.handle_exception(exc)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 391, in dispatch
+[Thu Dec 11 17:55:48 2014] [error]     self.initial(request, *args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 320, in initial
+[Thu Dec 11 17:55:48 2014] [error]     self.perform_authentication(request)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 270, in perform_authentication
+[Thu Dec 11 17:55:48 2014] [error]     request.user
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 226, in user
+[Thu Dec 11 17:55:48 2014] [error]     self._authenticate()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 401, in _authenticate
+[Thu Dec 11 17:55:48 2014] [error]     user_auth_tuple = authenticator.authenticate(self)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/authentication.py", line 117, in authenticate
+[Thu Dec 11 17:55:48 2014] [error]     if not user or not user.is_active:
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 224, in inner
+[Thu Dec 11 17:55:48 2014] [error]     self._setup()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 357, in _setup
+[Thu Dec 11 17:55:48 2014] [error]     self._wrapped = self._setupfunc()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 23, in <lambda>
+[Thu Dec 11 17:55:48 2014] [error]     request.user = SimpleLazyObject(lambda: get_user(request))
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 11, in get_user
+[Thu Dec 11 17:55:48 2014] [error]     request._cached_user = auth.get_user(request)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/__init__.py", line 151, in get_user
+[Thu Dec 11 17:55:48 2014] [error]     user_id = request.session[SESSION_KEY]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 49, in __getitem__
+[Thu Dec 11 17:55:48 2014] [error]     return self._session[key]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 175, in _get_session
+[Thu Dec 11 17:55:48 2014] [error]     self._session_cache = self.load()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/db.py", line 21, in load
+[Thu Dec 11 17:55:48 2014] [error]     expire_date__gt=timezone.now()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/manager.py", line 92, in manager_method
+[Thu Dec 11 17:55:48 2014] [error]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 351, in get
+[Thu Dec 11 17:55:48 2014] [error]     num = len(clone)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 122, in __len__
+[Thu Dec 11 17:55:48 2014] [error]     self._fetch_all()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 966, in _fetch_all
+[Thu Dec 11 17:55:48 2014] [error]     self._result_cache = list(self.iterator())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 265, in iterator
+[Thu Dec 11 17:55:48 2014] [error]     for row in compiler.results_iter():
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 700, in results_iter
+[Thu Dec 11 17:55:48 2014] [error]     for rows in self.execute_sql(MULTI):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 784, in execute_sql
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.connection.cursor()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 165, in cursor
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.make_debug_cursor(self._cursor())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 138, in _cursor
+[Thu Dec 11 17:55:48 2014] [error]     self.ensure_connection()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/utils.py", line 94, in __exit__
+[Thu Dec 11 17:55:48 2014] [error]     six.reraise(dj_exc_type, dj_exc_value, traceback)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 122, in connect
+[Thu Dec 11 17:55:48 2014] [error]     self.connection = self.get_new_connection(conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/mysql/base.py", line 471, in get_new_connection
+[Thu Dec 11 17:55:48 2014] [error]     conn = Database.connect(**conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/__init__.py", line 81, in Connect
+[Thu Dec 11 17:55:48 2014] [error]     return Connection(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/connections.py", line 193, in __init__
+[Thu Dec 11 17:55:48 2014] [error]     super(Connection, self).__init__(*args, **kwargs2)
+[Thu Dec 11 17:55:48 2014] [error] OperationalError: (1045, "Access denied for user 'jms'@'yoda' (using password: YES)")
+[Thu Dec 11 17:55:48 2014] [error] Internal Server Error: /api/jms/jobs/cluster/8378.torqueserver
+[Thu Dec 11 17:55:48 2014] [error] Traceback (most recent call last):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+[Thu Dec 11 17:55:48 2014] [error]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/decorators/csrf.py", line 57, in wrapped_view
+[Thu Dec 11 17:55:48 2014] [error]     return view_func(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/generic/base.py", line 69, in view
+[Thu Dec 11 17:55:48 2014] [error]     return self.dispatch(request, *args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 403, in dispatch
+[Thu Dec 11 17:55:48 2014] [error]     response = self.handle_exception(exc)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 391, in dispatch
+[Thu Dec 11 17:55:48 2014] [error]     self.initial(request, *args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 320, in initial
+[Thu Dec 11 17:55:48 2014] [error]     self.perform_authentication(request)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 270, in perform_authentication
+[Thu Dec 11 17:55:48 2014] [error]     request.user
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 226, in user
+[Thu Dec 11 17:55:48 2014] [error]     self._authenticate()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 401, in _authenticate
+[Thu Dec 11 17:55:48 2014] [error]     user_auth_tuple = authenticator.authenticate(self)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/authentication.py", line 117, in authenticate
+[Thu Dec 11 17:55:48 2014] [error]     if not user or not user.is_active:
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 224, in inner
+[Thu Dec 11 17:55:48 2014] [error]     self._setup()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 357, in _setup
+[Thu Dec 11 17:55:48 2014] [error]     self._wrapped = self._setupfunc()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 23, in <lambda>
+[Thu Dec 11 17:55:48 2014] [error]     request.user = SimpleLazyObject(lambda: get_user(request))
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 11, in get_user
+[Thu Dec 11 17:55:48 2014] [error]     request._cached_user = auth.get_user(request)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/__init__.py", line 151, in get_user
+[Thu Dec 11 17:55:48 2014] [error]     user_id = request.session[SESSION_KEY]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 49, in __getitem__
+[Thu Dec 11 17:55:48 2014] [error]     return self._session[key]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 175, in _get_session
+[Thu Dec 11 17:55:48 2014] [error]     self._session_cache = self.load()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/db.py", line 21, in load
+[Thu Dec 11 17:55:48 2014] [error]     expire_date__gt=timezone.now()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/manager.py", line 92, in manager_method
+[Thu Dec 11 17:55:48 2014] [error]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 351, in get
+[Thu Dec 11 17:55:48 2014] [error]     num = len(clone)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 122, in __len__
+[Thu Dec 11 17:55:48 2014] [error]     self._fetch_all()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 966, in _fetch_all
+[Thu Dec 11 17:55:48 2014] [error]     self._result_cache = list(self.iterator())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 265, in iterator
+[Thu Dec 11 17:55:48 2014] [error]     for row in compiler.results_iter():
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 700, in results_iter
+[Thu Dec 11 17:55:48 2014] [error]     for rows in self.execute_sql(MULTI):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 784, in execute_sql
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.connection.cursor()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 165, in cursor
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.make_debug_cursor(self._cursor())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 138, in _cursor
+[Thu Dec 11 17:55:48 2014] [error]     self.ensure_connection()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/utils.py", line 94, in __exit__
+[Thu Dec 11 17:55:48 2014] [error]     six.reraise(dj_exc_type, dj_exc_value, traceback)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 122, in connect
+[Thu Dec 11 17:55:48 2014] [error]     self.connection = self.get_new_connection(conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/mysql/base.py", line 471, in get_new_connection
+[Thu Dec 11 17:55:48 2014] [error]     conn = Database.connect(**conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/__init__.py", line 81, in Connect
+[Thu Dec 11 17:55:48 2014] [error]     return Connection(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/connections.py", line 193, in __init__
+[Thu Dec 11 17:55:48 2014] [error]     super(Connection, self).__init__(*args, **kwargs2)
+[Thu Dec 11 17:55:48 2014] [error] OperationalError: (1045, "Access denied for user 'jms'@'yoda' (using password: YES)")
+[Thu Dec 11 17:55:48 2014] [error] Internal Server Error: /api/jms/filemanager/cluster/
+[Thu Dec 11 17:55:48 2014] [error] Traceback (most recent call last):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+[Thu Dec 11 17:55:48 2014] [error]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/decorators/csrf.py", line 57, in wrapped_view
+[Thu Dec 11 17:55:48 2014] [error]     return view_func(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/generic/base.py", line 69, in view
+[Thu Dec 11 17:55:48 2014] [error]     return self.dispatch(request, *args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 403, in dispatch
+[Thu Dec 11 17:55:48 2014] [error]     response = self.handle_exception(exc)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 391, in dispatch
+[Thu Dec 11 17:55:48 2014] [error]     self.initial(request, *args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 320, in initial
+[Thu Dec 11 17:55:48 2014] [error]     self.perform_authentication(request)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 270, in perform_authentication
+[Thu Dec 11 17:55:48 2014] [error]     request.user
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 226, in user
+[Thu Dec 11 17:55:48 2014] [error]     self._authenticate()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 401, in _authenticate
+[Thu Dec 11 17:55:48 2014] [error]     user_auth_tuple = authenticator.authenticate(self)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/authentication.py", line 117, in authenticate
+[Thu Dec 11 17:55:48 2014] [error]     if not user or not user.is_active:
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 224, in inner
+[Thu Dec 11 17:55:48 2014] [error]     self._setup()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 357, in _setup
+[Thu Dec 11 17:55:48 2014] [error]     self._wrapped = self._setupfunc()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 23, in <lambda>
+[Thu Dec 11 17:55:48 2014] [error]     request.user = SimpleLazyObject(lambda: get_user(request))
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 11, in get_user
+[Thu Dec 11 17:55:48 2014] [error]     request._cached_user = auth.get_user(request)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/__init__.py", line 151, in get_user
+[Thu Dec 11 17:55:48 2014] [error]     user_id = request.session[SESSION_KEY]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 49, in __getitem__
+[Thu Dec 11 17:55:48 2014] [error]     return self._session[key]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 175, in _get_session
+[Thu Dec 11 17:55:48 2014] [error]     self._session_cache = self.load()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/db.py", line 21, in load
+[Thu Dec 11 17:55:48 2014] [error]     expire_date__gt=timezone.now()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/manager.py", line 92, in manager_method
+[Thu Dec 11 17:55:48 2014] [error]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 351, in get
+[Thu Dec 11 17:55:48 2014] [error]     num = len(clone)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 122, in __len__
+[Thu Dec 11 17:55:48 2014] [error]     self._fetch_all()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 966, in _fetch_all
+[Thu Dec 11 17:55:48 2014] [error]     self._result_cache = list(self.iterator())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 265, in iterator
+[Thu Dec 11 17:55:48 2014] [error]     for row in compiler.results_iter():
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 700, in results_iter
+[Thu Dec 11 17:55:48 2014] [error]     for rows in self.execute_sql(MULTI):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 784, in execute_sql
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.connection.cursor()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 165, in cursor
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.make_debug_cursor(self._cursor())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 138, in _cursor
+[Thu Dec 11 17:55:48 2014] [error]     self.ensure_connection()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/utils.py", line 94, in __exit__
+[Thu Dec 11 17:55:48 2014] [error]     six.reraise(dj_exc_type, dj_exc_value, traceback)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 122, in connect
+[Thu Dec 11 17:55:48 2014] [error]     self.connection = self.get_new_connection(conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/mysql/base.py", line 471, in get_new_connection
+[Thu Dec 11 17:55:48 2014] [error]     conn = Database.connect(**conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/__init__.py", line 81, in Connect
+[Thu Dec 11 17:55:48 2014] [error]     return Connection(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/connections.py", line 193, in __init__
+[Thu Dec 11 17:55:48 2014] [error]     super(Connection, self).__init__(*args, **kwargs2)
+[Thu Dec 11 17:55:48 2014] [error] OperationalError: (1045, "Access denied for user 'jms'@'yoda' (using password: YES)")
+[Thu Dec 11 17:55:48 2014] [error] Internal Server Error: /api/jms/filemanager/cluster/
+[Thu Dec 11 17:55:48 2014] [error] Traceback (most recent call last):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+[Thu Dec 11 17:55:48 2014] [error]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/decorators/csrf.py", line 57, in wrapped_view
+[Thu Dec 11 17:55:48 2014] [error]     return view_func(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/generic/base.py", line 69, in view
+[Thu Dec 11 17:55:48 2014] [error]     return self.dispatch(request, *args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 403, in dispatch
+[Thu Dec 11 17:55:48 2014] [error]     response = self.handle_exception(exc)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 391, in dispatch
+[Thu Dec 11 17:55:48 2014] [error]     self.initial(request, *args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 320, in initial
+[Thu Dec 11 17:55:48 2014] [error]     self.perform_authentication(request)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 270, in perform_authentication
+[Thu Dec 11 17:55:48 2014] [error]     request.user
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 226, in user
+[Thu Dec 11 17:55:48 2014] [error]     self._authenticate()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 401, in _authenticate
+[Thu Dec 11 17:55:48 2014] [error]     user_auth_tuple = authenticator.authenticate(self)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/authentication.py", line 117, in authenticate
+[Thu Dec 11 17:55:48 2014] [error]     if not user or not user.is_active:
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 224, in inner
+[Thu Dec 11 17:55:48 2014] [error]     self._setup()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 357, in _setup
+[Thu Dec 11 17:55:48 2014] [error]     self._wrapped = self._setupfunc()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 23, in <lambda>
+[Thu Dec 11 17:55:48 2014] [error]     request.user = SimpleLazyObject(lambda: get_user(request))
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 11, in get_user
+[Thu Dec 11 17:55:48 2014] [error]     request._cached_user = auth.get_user(request)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/__init__.py", line 151, in get_user
+[Thu Dec 11 17:55:48 2014] [error]     user_id = request.session[SESSION_KEY]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 49, in __getitem__
+[Thu Dec 11 17:55:48 2014] [error]     return self._session[key]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 175, in _get_session
+[Thu Dec 11 17:55:48 2014] [error]     self._session_cache = self.load()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/db.py", line 21, in load
+[Thu Dec 11 17:55:48 2014] [error]     expire_date__gt=timezone.now()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/manager.py", line 92, in manager_method
+[Thu Dec 11 17:55:48 2014] [error]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 351, in get
+[Thu Dec 11 17:55:48 2014] [error]     num = len(clone)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 122, in __len__
+[Thu Dec 11 17:55:48 2014] [error]     self._fetch_all()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 966, in _fetch_all
+[Thu Dec 11 17:55:48 2014] [error]     self._result_cache = list(self.iterator())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 265, in iterator
+[Thu Dec 11 17:55:48 2014] [error]     for row in compiler.results_iter():
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 700, in results_iter
+[Thu Dec 11 17:55:48 2014] [error]     for rows in self.execute_sql(MULTI):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 784, in execute_sql
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.connection.cursor()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 165, in cursor
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.make_debug_cursor(self._cursor())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 138, in _cursor
+[Thu Dec 11 17:55:48 2014] [error]     self.ensure_connection()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/utils.py", line 94, in __exit__
+[Thu Dec 11 17:55:48 2014] [error]     six.reraise(dj_exc_type, dj_exc_value, traceback)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 122, in connect
+[Thu Dec 11 17:55:48 2014] [error]     self.connection = self.get_new_connection(conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/mysql/base.py", line 471, in get_new_connection
+[Thu Dec 11 17:55:48 2014] [error]     conn = Database.connect(**conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/__init__.py", line 81, in Connect
+[Thu Dec 11 17:55:48 2014] [error]     return Connection(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/connections.py", line 193, in __init__
+[Thu Dec 11 17:55:48 2014] [error]     super(Connection, self).__init__(*args, **kwargs2)
+[Thu Dec 11 17:55:48 2014] [error] OperationalError: (1045, "Access denied for user 'jms'@'yoda' (using password: YES)")
+[Thu Dec 11 17:55:48 2014] [error] Internal Server Error: /api/jms/jobs
+[Thu Dec 11 17:55:48 2014] [error] Traceback (most recent call last):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+[Thu Dec 11 17:55:48 2014] [error]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/decorators/csrf.py", line 57, in wrapped_view
+[Thu Dec 11 17:55:48 2014] [error]     return view_func(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/generic/base.py", line 69, in view
+[Thu Dec 11 17:55:48 2014] [error]     return self.dispatch(request, *args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 403, in dispatch
+[Thu Dec 11 17:55:48 2014] [error]     response = self.handle_exception(exc)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 391, in dispatch
+[Thu Dec 11 17:55:48 2014] [error]     self.initial(request, *args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 320, in initial
+[Thu Dec 11 17:55:48 2014] [error]     self.perform_authentication(request)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 270, in perform_authentication
+[Thu Dec 11 17:55:48 2014] [error]     request.user
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 226, in user
+[Thu Dec 11 17:55:48 2014] [error]     self._authenticate()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 401, in _authenticate
+[Thu Dec 11 17:55:48 2014] [error]     user_auth_tuple = authenticator.authenticate(self)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/authentication.py", line 117, in authenticate
+[Thu Dec 11 17:55:48 2014] [error]     if not user or not user.is_active:
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 224, in inner
+[Thu Dec 11 17:55:48 2014] [error]     self._setup()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 357, in _setup
+[Thu Dec 11 17:55:48 2014] [error]     self._wrapped = self._setupfunc()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 23, in <lambda>
+[Thu Dec 11 17:55:48 2014] [error]     request.user = SimpleLazyObject(lambda: get_user(request))
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 11, in get_user
+[Thu Dec 11 17:55:48 2014] [error]     request._cached_user = auth.get_user(request)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/__init__.py", line 151, in get_user
+[Thu Dec 11 17:55:48 2014] [error]     user_id = request.session[SESSION_KEY]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 49, in __getitem__
+[Thu Dec 11 17:55:48 2014] [error]     return self._session[key]
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 175, in _get_session
+[Thu Dec 11 17:55:48 2014] [error]     self._session_cache = self.load()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/db.py", line 21, in load
+[Thu Dec 11 17:55:48 2014] [error]     expire_date__gt=timezone.now()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/manager.py", line 92, in manager_method
+[Thu Dec 11 17:55:48 2014] [error]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 351, in get
+[Thu Dec 11 17:55:48 2014] [error]     num = len(clone)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 122, in __len__
+[Thu Dec 11 17:55:48 2014] [error]     self._fetch_all()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 966, in _fetch_all
+[Thu Dec 11 17:55:48 2014] [error]     self._result_cache = list(self.iterator())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 265, in iterator
+[Thu Dec 11 17:55:48 2014] [error]     for row in compiler.results_iter():
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 700, in results_iter
+[Thu Dec 11 17:55:48 2014] [error]     for rows in self.execute_sql(MULTI):
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 784, in execute_sql
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.connection.cursor()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 165, in cursor
+[Thu Dec 11 17:55:48 2014] [error]     cursor = self.make_debug_cursor(self._cursor())
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 138, in _cursor
+[Thu Dec 11 17:55:48 2014] [error]     self.ensure_connection()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/utils.py", line 94, in __exit__
+[Thu Dec 11 17:55:48 2014] [error]     six.reraise(dj_exc_type, dj_exc_value, traceback)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:48 2014] [error]     self.connect()
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 122, in connect
+[Thu Dec 11 17:55:48 2014] [error]     self.connection = self.get_new_connection(conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/mysql/base.py", line 471, in get_new_connection
+[Thu Dec 11 17:55:48 2014] [error]     conn = Database.connect(**conn_params)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/__init__.py", line 81, in Connect
+[Thu Dec 11 17:55:48 2014] [error]     return Connection(*args, **kwargs)
+[Thu Dec 11 17:55:48 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/connections.py", line 193, in __init__
+[Thu Dec 11 17:55:48 2014] [error]     super(Connection, self).__init__(*args, **kwargs2)
+[Thu Dec 11 17:55:48 2014] [error] OperationalError: (1045, "Access denied for user 'jms'@'yoda' (using password: YES)")
+[Thu Dec 11 17:55:54 2014] [error] Internal Server Error: /api/jms/dashboard
+[Thu Dec 11 17:55:54 2014] [error] Traceback (most recent call last):
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/core/handlers/base.py", line 111, in get_response
+[Thu Dec 11 17:55:54 2014] [error]     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/decorators/csrf.py", line 57, in wrapped_view
+[Thu Dec 11 17:55:54 2014] [error]     return view_func(*args, **kwargs)
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/views/generic/base.py", line 69, in view
+[Thu Dec 11 17:55:54 2014] [error]     return self.dispatch(request, *args, **kwargs)
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 403, in dispatch
+[Thu Dec 11 17:55:54 2014] [error]     response = self.handle_exception(exc)
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 391, in dispatch
+[Thu Dec 11 17:55:54 2014] [error]     self.initial(request, *args, **kwargs)
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 320, in initial
+[Thu Dec 11 17:55:54 2014] [error]     self.perform_authentication(request)
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/views.py", line 270, in perform_authentication
+[Thu Dec 11 17:55:54 2014] [error]     request.user
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 226, in user
+[Thu Dec 11 17:55:54 2014] [error]     self._authenticate()
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/request.py", line 401, in _authenticate
+[Thu Dec 11 17:55:54 2014] [error]     user_auth_tuple = authenticator.authenticate(self)
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/authentication.py", line 117, in authenticate
+[Thu Dec 11 17:55:54 2014] [error]     if not user or not user.is_active:
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 224, in inner
+[Thu Dec 11 17:55:54 2014] [error]     self._setup()
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/utils/functional.py", line 357, in _setup
+[Thu Dec 11 17:55:54 2014] [error]     self._wrapped = self._setupfunc()
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 23, in <lambda>
+[Thu Dec 11 17:55:54 2014] [error]     request.user = SimpleLazyObject(lambda: get_user(request))
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/middleware.py", line 11, in get_user
+[Thu Dec 11 17:55:54 2014] [error]     request._cached_user = auth.get_user(request)
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/auth/__init__.py", line 151, in get_user
+[Thu Dec 11 17:55:54 2014] [error]     user_id = request.session[SESSION_KEY]
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 49, in __getitem__
+[Thu Dec 11 17:55:54 2014] [error]     return self._session[key]
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/base.py", line 175, in _get_session
+[Thu Dec 11 17:55:54 2014] [error]     self._session_cache = self.load()
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/sessions/backends/db.py", line 21, in load
+[Thu Dec 11 17:55:54 2014] [error]     expire_date__gt=timezone.now()
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/manager.py", line 92, in manager_method
+[Thu Dec 11 17:55:54 2014] [error]     return getattr(self.get_queryset(), name)(*args, **kwargs)
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 351, in get
+[Thu Dec 11 17:55:54 2014] [error]     num = len(clone)
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 122, in __len__
+[Thu Dec 11 17:55:54 2014] [error]     self._fetch_all()
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 966, in _fetch_all
+[Thu Dec 11 17:55:54 2014] [error]     self._result_cache = list(self.iterator())
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/query.py", line 265, in iterator
+[Thu Dec 11 17:55:54 2014] [error]     for row in compiler.results_iter():
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 700, in results_iter
+[Thu Dec 11 17:55:54 2014] [error]     for rows in self.execute_sql(MULTI):
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 784, in execute_sql
+[Thu Dec 11 17:55:54 2014] [error]     cursor = self.connection.cursor()
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 165, in cursor
+[Thu Dec 11 17:55:54 2014] [error]     cursor = self.make_debug_cursor(self._cursor())
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 138, in _cursor
+[Thu Dec 11 17:55:54 2014] [error]     self.ensure_connection()
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:54 2014] [error]     self.connect()
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/utils.py", line 94, in __exit__
+[Thu Dec 11 17:55:54 2014] [error]     six.reraise(dj_exc_type, dj_exc_value, traceback)
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 133, in ensure_connection
+[Thu Dec 11 17:55:54 2014] [error]     self.connect()
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/__init__.py", line 122, in connect
+[Thu Dec 11 17:55:54 2014] [error]     self.connection = self.get_new_connection(conn_params)
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/django/db/backends/mysql/base.py", line 471, in get_new_connection
+[Thu Dec 11 17:55:54 2014] [error]     conn = Database.connect(**conn_params)
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/__init__.py", line 81, in Connect
+[Thu Dec 11 17:55:54 2014] [error]     return Connection(*args, **kwargs)
+[Thu Dec 11 17:55:54 2014] [error]   File "/srv/JMS/src/venv/lib/python2.7/site-packages/MySQLdb/connections.py", line 193, in __init__
+[Thu Dec 11 17:55:54 2014] [error]     super(Connection, self).__init__(*args, **kwargs2)
+[Thu Dec 11 17:55:54 2014] [error] OperationalError: (1045, "Access denied for user 'jms'@'yoda' (using password: YES)")

@@ -3,6 +3,7 @@ from job.Utilities import *
 import objects
 from objects import JobDetail
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
@@ -16,8 +17,7 @@ from shutil import copyfile
 class JMS:
     
     def __init__(self, user=None):
-        self.accepted_IPs = ['146.231.130.9', '146.231.130.20', '146.231.130.21']
-        self.users_dir = "/jabba/JMS/users/"        
+        self.users_dir = os.path.join(settings.JMS_SETTINGS["JMS_shared_directory"], "users")       
         self.user = user
         
 

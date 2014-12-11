@@ -16,15 +16,15 @@ DATABASES = {
         'NAME': 'JMS',                      # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
         'USER': 'jms',
-        'PASSWORD': 'password',
-        'HOST': 'IPaddress/hostname',      
+        'PASSWORD': '',
+        'HOST': '',      
         'PORT': '',                      # Set to empty string for default.
     }
 }
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '146.231.130.12']
+#ALLOWED_HOSTS = ['*']
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -51,7 +51,7 @@ USE_TZ = False
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/var/www/example.com/media/"
-MEDIA_ROOT = '/srv/JMS/media'
+MEDIA_ROOT = '/srv/JMS/media's
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -182,3 +182,8 @@ AUTHENTICATION_BACKENDS = (
 )
 
 AUTH_PROFILE_MODULE = 'users.UserProfile'
+
+JMS_SETTINGS = {
+    #"JMS_shared_directory": "/path/to/nfs/share",
+}
+
