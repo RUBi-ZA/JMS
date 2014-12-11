@@ -1,0 +1,9 @@
+Django==1.7.1
+MySQL-python==1.2.5
+argparse==1.2.1
+django-cors-headers==0.13
+djangorestframework==2.4.4
+pexpect==3.3
+pylibmc==1.4.1
+requests==2.4.3
+wsgiref==0.1.2

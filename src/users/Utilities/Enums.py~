@@ -1,0 +1,3 @@
+class NotificationTypes:
+	
+	Added_As_Contact = 1

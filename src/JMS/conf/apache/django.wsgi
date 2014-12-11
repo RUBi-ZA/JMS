@@ -1,0 +1,12 @@
+import os
+import sys
+
+root_path = '/srv/JMS/'
+sys.path.insert(0, '/srv/JMS/src/venv/lib/python2.7/site-packages/')
+sys.path.insert(0, '/srv/JMS/src/')
+sys.path.insert(0, '/srv/JMS/src/JMS/')
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'JMS.settings'
+
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()

@@ -1,0 +1,29 @@
+{% extends "custom/JMS/index.html" %}
+
+{% block content %}
+	<div id="page-wrapper" >
+		<div id="page-inner">
+				        
+			<div class="row">
+				<div class="col-md-12">
+				    <h2><i class="fa fa-dashboard fa-2x"></i> Create Workflow</h2>   	
+				</div>
+			</div>
+			<!-- /. ROW  -->
+				        
+			<hr />
+				
+			<div class="row">
+				<div class="col-lg-12"> 
+		            
+		            
+				     
+		        </div>
+			</div>
+			<!-- /. ROW  -->
+				       
+		</div>
+		<!-- /. PAGE INNER  -->
+	</div>
+	<!-- /. PAGE WRAPPER  -->
+{% endblock %}

@@ -1,0 +1,10 @@
+function CreateWorkflowViewModel() {		
+	var self = this;
+	
+	
+}
+
+var create_workflow = new CreateWorkflowViewModel();
+ko.applyBindings(create_workflow, document.getElementById("page-wrapper"));
+
+create_workflow.LoadDashboard();
