@@ -13,6 +13,16 @@ Installation
 First of all, you will need to download the project from github. We recommend you download the project to the `/srv` directory so you will not need to change paths in the settings file later:
 
   `cd /srv`
+  
+  `sudo mkdir JMS`
+  
+  `sudo chown user:user JMS`
 
   `git clone https://github.com/RUBi-ZA/JMS.git`
+
+Navigate to the project directory and run setup.py to finish installing the JMS:
+
+  `cd /srv/JMS`
+  
+  `python setup.py`
 
