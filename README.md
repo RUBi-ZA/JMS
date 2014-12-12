@@ -77,7 +77,7 @@ git clone https://github.com/RUBi-ZA/JMS.git
 ```
 
 Navigate to the project src directory and setup a virtual environment:
-```
+``` bash
 cd /srv/JMS/src
 sudo apt-get install -y libmemcache-dev zlib1g-dev libssl-dev python-dev build-essential
 virtualenv venv
@@ -86,7 +86,7 @@ pip install -r requirements.txt
 
 Edit the `/srv/JMS/src/JMS/settings.py` file to include your database login details and the path to the NFS share:
 
-```
+``` python
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
