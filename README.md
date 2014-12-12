@@ -90,7 +90,7 @@ Navigate to the project src directory and setup a virtual environment:
   `pip install -r requirements.txt`
 
 Edit the /srv/JMS/src/JMS/settings.py file to include your database login details and the path to the NFS share:
-
+`
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
@@ -102,6 +102,7 @@ DATABASES = {
         'PORT': '',                      # Set to empty string for default.
     }
 }
+`
 
 JMS_SETTINGS = {
     "JMS_shared_directory": "/NFS/JMS/"
@@ -110,6 +111,9 @@ JMS_SETTINGS = {
 ### Run the server
 
   `cd /srv/JMS/src`
+  
   `source venv/bin/activate`
+  
   `python manage.py syncdb`
+  
   `python manage.py runserver`
