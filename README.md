@@ -24,9 +24,9 @@ Once MySQL server has installed, connect to the server and create a database and
 mysql -u root -p
 ```
 ``` sql
-CREATE DATABASE jms
+CREATE DATABASE JMS
 CREATE USER 'jms'@'localhost' IDENTIFIED BY 'password'
-GRANT ALL PRIVILEGES ON jms . * TO 'jms'@'localhost';
+GRANT ALL PRIVILEGES ON JMS . * TO 'jms'@'localhost';
 ``` 
 ### Setup NFS share
 
@@ -76,6 +76,7 @@ cd /srv
 sudo mkdir JMS
 sudo chown user:user JMS
 git clone https://github.com/RUBi-ZA/JMS.git
+sudo chown user:user JMS -R
 ```
 
 Navigate to the project src directory and setup a virtual environment:
@@ -83,6 +84,7 @@ Navigate to the project src directory and setup a virtual environment:
 cd /srv/JMS/src
 sudo apt-get install -y libmemcache-dev zlib1g-dev libssl-dev python-dev build-essential
 virtualenv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
