@@ -14,14 +14,16 @@ Installation
 ### Setup a MySQL database
 
 The JMS uses a MySQL database backend. If you haven't got MySQL server installed, install it as follows:
-```
+``` bash
 sudo apt-get install -y mysql-server
 ```
 You will be prompted to enter in a root password during installation. Remember this password as you will need it to connect to the MySQL server in the next step. 
 
 Once MySQL server has installed, connect to the server and create a database and database user for the JMS:
-```
+``` bash
 mysql -u root -p
+```
+``` sql
 CREATE DATABASE jms
 CREATE USER 'jms'@'localhost' IDENTIFIED BY 'password'
 GRANT ALL PRIVILEGES ON jms . * TO 'jms'@'localhost';
@@ -33,7 +35,7 @@ The JMS requires that an NFS is mounted on all nodes of the cluster that it mana
 Setting up NFS may be different depending on the linux distribution you are using. On Ubuntu 14.04, the following process can be followed:
 
 Set up one of the machines as the NFS server:
-```
+``` bash
 sudo apt-get install nfs-kernel-server
 sudo mkdir -p /NFS/JMS
 sudo chmod 777 /NFS/JMS -R
@@ -45,12 +47,12 @@ Add the following line to `/etc/exports` with the IP addresses of the nodes you 
 ```
 
 Restart the NFS server:
-```
+``` bash
 sudo service nfs-kernel-server restart
 ```
   
 On each client node, do the following:
-```
+``` bash
 sudo apt-get install nfs-common
 sudo mkdir -p /NFS/JMS
 sudo chmod 777 /NFS/JMS -R
@@ -69,7 +71,7 @@ mount -a
 ### Setup the Django project
 
 First of all, you will need to download the project from github. We recommend you download the project to the `/srv` directory so you will not need to change paths in the settings file later:
-```
+``` bash
 cd /srv
 sudo mkdir JMS
 sudo chown user:user JMS
@@ -106,7 +108,7 @@ JMS_SETTINGS = {
 ```
 
 ### Run the server
-```
+``` bash
 cd /srv/JMS/src
 source venv/bin/activate
 python manage.py syncdb
