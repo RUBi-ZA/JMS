@@ -10,6 +10,28 @@ The JMS is a Django project. We will welcome any and all help in developing it f
 
 Installation
 ---
+
+### Setup a MySQL database
+
+The JMS uses a MySQL database backend. If you haven't got MySQL server installed, install it as follows:
+
+  `sudo apt-get install -y mysql-server`
+
+You will be prompted to enter in a root password during installation. Remember this password as you will need it to connect to the MySQL server in the next step. 
+
+Once MySQL server has installed, connect to the server and create a database and database user for the JMS:
+
+  `mysql -u root -p`
+  
+  `CREATE DATABASE jms`
+  
+  `CREATE USER 'jms'@'localhost' IDENTIFIED BY 'password'`
+  
+  `GRANT ALL PRIVILEGES ON jms . * TO 'jms'@'localhost';`
+  
+
+### Setup the Django project
+
 First of all, you will need to download the project from github. We recommend you download the project to the `/srv` directory so you will not need to change paths in the settings file later:
 
   `cd /srv`
@@ -20,9 +42,12 @@ First of all, you will need to download the project from github. We recommend yo
 
   `git clone https://github.com/RUBi-ZA/JMS.git`
 
-Navigate to the project directory and run setup.py to finish installing the JMS:
+Navigate to the project src directory and setup a virtual environment:
 
-  `cd /srv/JMS`
+  `cd /srv/JMS/src`
   
-  `python setup.py`
+  `sudo apt-get install -y libmemcache-dev zlib1g-dev libssl-dev python-dev build-essential`
+  
+  `virtualenv venv`
 
+  `pip install -r requirements.txt`
