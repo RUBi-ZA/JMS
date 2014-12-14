@@ -1,0 +1,2 @@
+146.231.86.250 - - [14/Dec/2014:20:34:25 +0200] "GET /api/jms/dashboard HTTP/1.1" 500 4524 "http://jms.biosci.ru.ac.za/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/39.0.2171.65 Chrome/39.0.2171.65 Safari/537.36"
+146.231.86.250 - - [14/Dec/2014:20:34:31 +0200] "GET / HTTP/1.1" 500 15149 "http://jms.biosci.ru.ac.za/jobs/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/39.0.2171.65 Chrome/39.0.2171.65 Safari/537.36"

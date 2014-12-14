@@ -237,59 +237,68 @@ function JobsViewModel() {
 		    $.ajax({
 			    url: "/api/jms/jobs/" + self.job_id(),
 			    success: function(data) {
-				    if(self.Job() == null || self.Job().JobID() != data.JobID) {			
-					    job = new Job(data.JobID, data.JobName, data.JobDescription, data.Workflow.WorkflowName, []);
-				
-					    $.each(data.JobStages, function(i, js) {
-						    type = "Command-line Utility";
-						    if(js.Stage.StageType == 2)
-							    type = "Custom Script";
-						    else if(js.Stage.StageType == 3)
-							    type = "Workflow";
-					
-						    state = "Created";
-						    if(js.State == 2)
-							    state = "Queued";
-						    else if(js.State == 3)
-							    state = "Running";
-						    else if(js.State == 4)
-							    state = "Complete";
-						    else if(js.State == 5)
-							    state = "Awaiting User Input";
-						    else if(js.State == 6)
-							    state = "Stopped";
-						    else if(js.State == 7)
-							    state = "Failed";
+				    if(self.Job() == null || self.Job().JobID() != data.JobID) {
+				        if(data.Workflow != null) {			
+					        job = new Job(data.JobID, data.JobName, data.JobDescription, data.Workflow.WorkflowName, []);
+				        } else {
+				            job = new Job(data.JobID, data.JobName, data.JobDescription, "Custom Job", []);
+				        }
+				        
+					    $.each(data.JobStages, function(i, js) {					
+					        state = "Created";
+					        if(js.State == 2)
+						        state = "Queued";
+					        else if(js.State == 3)
+						        state = "Running";
+					        else if(js.State == 4)
+						        state = "Complete";
+					        else if(js.State == 5)
+						        state = "Awaiting User Input";
+					        else if(js.State == 6)
+						        state = "Stopped";
+					        else if(js.State == 7)
+						        state = "Failed";
+						        
+					        if(js.Stage != null) {
+						        type = "Command-line Utility";
+						        if(js.Stage.StageType == 2)
+							        type = "Custom Script";
+						        else if(js.Stage.StageType == 3)
+							        type = "Workflow";
 						
-						    jobstage = new JobStage(js.JobStageID, new Stage(js.Stage.StageID, js.Stage.StageName, js.Stage.StageIndex, type, js.Stage.Command), js.ClusterJobID, state, [], []);
+						        jobstage = new JobStage(js.JobStageID, new Stage(js.Stage.StageID, js.Stage.StageName, js.Stage.StageIndex, type, js.Stage.Command), js.ClusterJobID, state, [], []);
 					
-						    $.each(js.Stage.ExpectedOutputs, function(j, output) {							
-							    o = new ExpectedOutput(output.ExpectedOutputID, output.ExpectedOutputFileName);
-							    jobstage.ExpectedOutputs.push(o);
-						    });
+						        $.each(js.Stage.ExpectedOutputs, function(j, output) {							
+							        o = new ExpectedOutput(output.ExpectedOutputID, output.ExpectedOutputFileName);
+							        jobstage.ExpectedOutputs.push(o);
+						        });
 					
-						    $.each(js.JobStageParameters, function(j, param) {
-							    type = "Text";
-							    if(param.Parameter.ParameterType == 2)
-								    type = "Number";
-							    else if(param.Parameter.ParameterType == 3)
-								    type = "True/False";
-							    else if(param.Parameter.ParameterType == 4)
-								    type = "Options";
-							    else if(param.Parameter.ParameterType == 5)
-								    type = "File";
-							    else if(param.Parameter.ParameterType == 6)
-								    type = "Previous Parameter";
-							    else if(param.Parameter.ParameterType == 7) {
-								    type = "JSON File";
-							    }
+						        $.each(js.JobStageParameters, function(j, param) {
+							        type = "Text";
+							        if(param.Parameter.ParameterType == 2)
+								        type = "Number";
+							        else if(param.Parameter.ParameterType == 3)
+								        type = "True/False";
+							        else if(param.Parameter.ParameterType == 4)
+								        type = "Options";
+							        else if(param.Parameter.ParameterType == 5)
+								        type = "File";
+							        else if(param.Parameter.ParameterType == 6)
+								        type = "Previous Parameter";
+							        else if(param.Parameter.ParameterType == 7) {
+								        type = "JSON File";
+							        }
 							
-							    p = new Parameter(param.Parameter.ParameterID, param.Parameter.ParameterName, param.Value, type);
+							        p = new Parameter(param.Parameter.ParameterID, param.Parameter.ParameterName, param.Value, type);
 						
-							    jobstage.Parameters.push(p);
-						    });
+							        jobstage.Parameters.push(p);
+						        });
 					
-						    job.JobStages.push(jobstage);
+						        job.JobStages.push(jobstage);
+						    } else {
+						        jobstage = new JobStage(js.JobStageID, new Stage("n/a", "Custom Stage", 0, "n/a", "n/a"), js.ClusterJobID, state, null, null);
+					            job.JobStages.push(jobstage);
+						    }
 					    });
 				
 					    self.Job(job);
@@ -330,7 +339,11 @@ function JobsViewModel() {
 			success: function(data) {
 				jobs = []
 				$.each(data, function(i, job) {
-					jobs.push(new Job(job.JobID, job.JobName, job.Description, job.Workflow.WorkflowName));
+				    if(job.Workflow != null) {
+					    jobs.push(new Job(job.JobID, job.JobName, job.Description, job.Workflow.WorkflowName));
+					} else {
+					    jobs.push(new Job(job.JobID, job.JobName, job.Description, "Custom Job"));
+					}
 				});				
 				self.Jobs(jobs);
 				

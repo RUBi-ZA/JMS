@@ -18,7 +18,7 @@ class JMS:
     
     def __init__(self, user=None):
         self.base_dir = settings.JMS_SETTINGS["JMS_shared_directory"]
-        self.users_dir = "%s/%s" % (self.base_dir "users/")       
+        self.users_dir = "%s/%s" % (self.base_dir, "users/")       
         self.user = user
         
 
