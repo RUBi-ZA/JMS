@@ -15,7 +15,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from job.Utilities import *
 from job.JMS import JMS
 import objects
 from job.models import *
@@ -194,6 +193,8 @@ class Dashboard(APIView):
         dashboard = jms.GetDashboard(request.user.username, request.user.userprofile.Code)
         return Response(json.dumps(dashboard, default=lambda o: o.__dict__, sort_keys=True))
 
+
+
 class Workflows(APIView):
     permission_classes = (IsAuthenticated,)
     
@@ -351,6 +352,7 @@ class Workflows(APIView):
         serializer = WorkflowDetailSerializer(data)
         return Response(serializer.data)
         
+        
             
 class Workflow(APIView):
     authentication_classes = (BasicAuthentication,SessionAuthentication)
@@ -475,6 +477,7 @@ class ExportWorkflow(APIView):
         
         return response
                   
+                  
 
 class ImportWorkflow(APIView):
     
@@ -518,8 +521,7 @@ class ImportWorkflow(APIView):
         
         unzipped.close()
         
-        return Response()       
-        
+        return Response()          
     
         
 
@@ -1324,13 +1326,16 @@ class Prologue(APIView):
     def get(self, request, username, cluster_job_id):
         try:
             jms = JMS()
-            jms.AddUpdateClusterJob(cluster_job_id, username)
-                    
+            jms.AddUpdateClusterJob(cluster_job_id, username)                    
         
             jms.UpdateJobState(ClusterJobID=cluster_job_id, StatusID=objects.Status.Running)            
         except Exception, e:
-            File.print_to_file("/obiwanNFS/open/pro.log", str(e) + "\n\n", 'w')
-            
+            try:
+                with open("/tmp/pro.log", 'w') as f:
+                    print >> f, str(e) + "\n\n" 
+            except Exception, e:
+                return Response(status=200)
+               
         return Response(status=200)
 
 
@@ -1344,7 +1349,11 @@ class Epilogue(APIView):
             
             jms.FinishStage(cluster_job_id, int(exit_code))
         except Exception, e:
-            File.print_to_file("/obiwanNFS/open/epi.log", str(e) + "\n\n", 'w')
+            try:
+                with open("/tmp/epi.log", 'w') as f:
+                    print >> f, str(e) + "\n\n" 
+            except Exception, e:
+                return Response(status=200)
         
         return Response(status=200)
 

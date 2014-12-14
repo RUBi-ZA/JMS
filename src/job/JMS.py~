@@ -17,7 +17,8 @@ from shutil import copyfile
 class JMS:
     
     def __init__(self, user=None):
-        self.users_dir = os.path.join(settings.JMS_SETTINGS["JMS_shared_directory"], "users")       
+        self.base_dir = settings.JMS_SETTINGS["JMS_shared_directory"]
+        self.users_dir = os.path.join(self.base_dir, "users")       
         self.user = user
         
 
@@ -931,54 +932,7 @@ class JMS:
     
     
     def GetClusterJob(self, job_id, username, password):
-        mc = pylibmc.Client(['127.0.0.1'])
-        job = None
-        
-        try:
-            j = mc[str(job_id)]
-        
-        
-            job = ClusterJob()
-            job.ClusterJobID = j.get("ClusterJobID", None)
-            job.JobName = j.get("JobName", None)
-            job.JobOwner = j.get("JobOwner", None)
-    
-            job.MemoryRequested = j.get("MemoryRequested", None)
-            job.NodesAvailable = j.get("NodesAvailable", None)
-            job.NodesRequested = j.get("NodesRequested", None)
-            job.WalltimeRequested = j.get("WalltimeRequested", None)
-    
-            job.CPUTimeUsed = j.get("CPUTimeUsed", None)
-            job.MemoryUsed = j.get("MemoryUsed", None)
-            job.VirtualMemoryUsed = j.get("VirtualMemoryUsed", None)
-            job.WalltimeUsed = j.get("WalltimeUsed", None)
-    
-            job.State = j.get("State", None)
-            job.Queue = j.get("Queue", None)
-            job.Server = j.get("Server", None)
-            job.ExecutionHost = j.get("ExecutionHost", None)
-            job.SubmitArgs = j.get("SubmitArgs", None)
-            job.SubmitHost = j.get("SubmitHost", None)
-            job.OutputPath = j.get("OutputPath", None)
-            job.ErrorPath = j.get("ErrorPath", None)
-            job.Priority = j.get("Priority", 0)
-    
-            job.CreatedTime = j.get("CreatedTime", None)
-            job.TimeEnteredQueue = j.get("TimeEnteredQueue", None)
-            job.EligibleTime = j.get("EligibleTime", None)
-            job.LastModified = j.get("LastModified", None)
-            job.StartTime = j.get("StartTime", None)
-            job.CompletionTime = j.get("CompletionTime", None)
-            job.TotalRuntime = j.get("TotalRuntime", None)
-    
-            job.VariableList = j.get("VariableList", None)
-    
-            job.Comment = j.get("Comment", None)
-            job.ExitStatus = j.get("ExitStatus", None)
-                    
-        except Exception, e:        
-            job = ClusterJob.objects.get(pk=job_id)
-        
+        job = ClusterJob.objects.get(pk=job_id)        
         
         job.OutputStream = self.GetFileStream(username, password, job.OutputPath.split(":")[1])
         job.ErrorStream = self.GetFileStream(username, password, job.ErrorPath.split(":")[1])
@@ -988,14 +942,33 @@ class JMS:
     
     
     def AddUpdateClusterJob(self, job_id, username):
-        
-        user = User.objects.get(username=username)        
-        
+        user = None
+        try:
+            user = User.objects.get(username=username)        
+        except Exception, ex:
+            user = User.objects.create(username=username)
+               
         process = UserProcess(username, user.userprofile.Code)
         out = process.run_command("qstat -f %s" % job_id)
         process.close()
         
-        job = self.ParseClusterJob(out)        
+        job = self.ParseClusterJob(out)
+        
+        if job:
+            #Add the job to the JMS job history if it doesn't exist
+            try:
+                JobStage.objects.get(ClusterJobID=job_id)  
+            except Exception, ex:
+                state = objects.Status.Queued
+                if job.State == 'Q' or job.State == 'H':
+                    state = objects.Status.Queued
+                elif job.State == 'R':
+                    state = objects.Status.Running
+                elif job.State == 'E' or job.State == 'C':
+                    state = objects.Status.Completed_Successfully
+                    
+                j = Job.objects.create(JobName=job.JobName, JobDescription="This job was not submitted via the JMS", User=user, BatchJobInd=False)  
+                jobstage = JobStage.objects.create(Job=j, ClusterJobID=job.ClusterJobID, RequiresEditInd=False, State_id=state)
         
         return job    
     
@@ -1185,17 +1158,18 @@ class JMS:
         jobstage.State_id = StatusID
         jobstage.save()
         
-        #Create snapshot of job at this point in time
-        user = jobstage.Job.User
-        
-        job_dir = "%s/jobs/%s" % (self.users_dir + user.username, str(jobstage.Job.JobID))
-        snap_dir = "%s/Snapshots/Stage_%s" % (job_dir, str(jobstage.Stage.StageIndex))
-                
-        process = UserProcess(user.username, user.userprofile.Code)
-        process.run_command("chgrp jms %s -R" % job_dir)
-        os.system("chgrp jms %s -R" % job_dir)
-                
-        self.CreateSnapshot(process, job_dir, snap_dir)
+        #Create snapshot of job at this point in time (if the job was submitted via the JMS)
+        if jobstage.Stage != None:
+            user = jobstage.Job.User
+            
+            job_dir = "%s/jobs/%s" % (self.users_dir + user.username, str(jobstage.Job.JobID))
+            snap_dir = "%s/Snapshots/Stage_%s" % (job_dir, str(jobstage.Stage.StageIndex))
+                    
+            process = UserProcess(user.username, user.userprofile.Code)
+            process.run_command("chgrp jms %s -R" % job_dir)
+            os.system("chgrp jms %s -R" % job_dir)
+                    
+            self.CreateSnapshot(process, job_dir, snap_dir)
         
         
             

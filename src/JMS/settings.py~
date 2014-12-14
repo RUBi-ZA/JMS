@@ -16,8 +16,8 @@ DATABASES = {
         'NAME': 'JMS',                      # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
         'USER': 'jms',
-        'PASSWORD': '',
-        'HOST': '',      
+        'PASSWORD': 'jms82',
+        'HOST': '146.231.130.9',      
         'PORT': '',                      # Set to empty string for default.
     }
 }
@@ -184,6 +184,6 @@ AUTHENTICATION_BACKENDS = (
 AUTH_PROFILE_MODULE = 'users.UserProfile'
 
 JMS_SETTINGS = {
-    #"JMS_shared_directory": "/path/to/nfs/share",
+    "JMS_shared_directory": "/jabba/JMS"
 }
 

@@ -18,7 +18,7 @@ class Workflow(models.Model):
 
 
 class StageType(models.Model):
-	StageTypeID = models.AutoField(primary_key=True)
+	StageTypeID = models.IntegerField(primary_key=True)
 	StageTypeName = models.CharField(max_length=30)
 	
 	def __unicode__(self):
@@ -53,7 +53,7 @@ class Stage(models.Model):
 
 
 class Condition(models.Model):
-	ConditionID = models.AutoField(primary_key=True)
+	ConditionID = models.IntegerField(primary_key=True)
 	ConditionName = models.CharField(max_length=50)
 	
 	class Meta:
@@ -74,8 +74,8 @@ class StageDependency(models.Model):
 		
 
 class ParameterType(models.Model):
-	ParameterTypeID = models.AutoField(primary_key=True)
-	ParameterTypeName = models.CharField(max_length=30, db_column='ParameterName')
+	ParameterTypeID = models.IntegerField(primary_key=True)
+	ParameterTypeName = models.CharField(max_length=40, db_column='ParameterName')
 	
 	class Meta:
 		db_table = 'ParameterTypes'
@@ -145,7 +145,7 @@ class ExpectedOutput(models.Model):
 		
 
 class Status(models.Model):
-	StatusID = models.AutoField(primary_key=True)
+	StatusID = models.IntegerField(primary_key=True)
 	StatusName = models.CharField(max_length=30)
 	
 	def __unicode__(self):
@@ -170,9 +170,9 @@ class Job(models.Model):
 	JobID = models.AutoField(primary_key=True)
 	JobName = models.CharField(max_length=30)
 	JobDescription = models.TextField()
-	Workflow = models.ForeignKey(Workflow, db_column='WorkflowID', related_name='Jobs')
+	Workflow = models.ForeignKey(Workflow, db_column='WorkflowID', related_name='Jobs', blank=True, null=True)
 	User = models.ForeignKey(User, editable=False, related_name='Jobs')
-	SubmittedAt = models.DateTimeField()
+	SubmittedAt = models.DateTimeField(null=True, blank=True)
 	FinishedAt = models.DateTimeField(null=True, blank=True)
 	WorkingDirectory = models.CharField(max_length=100, null=True, blank=True)
 	LogsDirectory = models.CharField(max_length=100, null=True, blank=True)
@@ -191,7 +191,7 @@ class Job(models.Model):
 class JobStage(models.Model):
 	JobStageID = models.AutoField(primary_key=True)
 	Job = models.ForeignKey(Job, db_column='JobID', related_name='JobStages')
-	Stage = models.ForeignKey(Stage, db_column='StageID', related_name='JobStages')
+	Stage = models.ForeignKey(Stage, db_column='StageID', related_name='JobStages', blank=True, null=True)
 	ClusterJobID = models.CharField(max_length=30, null=True, blank=True)
 	State = models.ForeignKey(Status, db_column='State', related_name='JobsStages', null=True, blank=True)
 	Workflow = models.ForeignKey(Workflow, db_column="WorkflowID", related_name="JobStages", null=True, blank=True)
@@ -260,7 +260,7 @@ class JobStageParameter(models.Model):
 
 
 class AccessRight(models.Model):
-	AccessRightID = models.AutoField(primary_key=True)
+	AccessRightID = models.IntegerField(primary_key=True)
 	AccessRightName = models.CharField(max_length=30)
 	
 	class Meta:
