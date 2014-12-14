@@ -58,10 +58,20 @@ JMS_SETTINGS = {
 }
 ```
 
-### Run the server
+### Create and populate the database tables
 ``` bash
 cd /srv/JMS/src
 source venv/bin/activate
 python manage.py syncdb
+python manage.py populate_db
+```
+
+### Start the queue daemon
+```
+python manage.py queue_daemon --start
+```
+
+### Test the JMS
+```
 python manage.py runserver
 ```
