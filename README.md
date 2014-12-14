@@ -10,6 +10,10 @@ The JMS is a Django project. We will welcome any and all help in developing it f
 
 Installation
 ---
+### Prerequisites
+- MySQL server
+- NFS (or similar) mounted on all nodes of the cluster
+- Torque Resource Manager
 
 ### Setup a MySQL database
 
