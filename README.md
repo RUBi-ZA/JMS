@@ -17,7 +17,7 @@ Installation
 - [NFS (or similar) mounted on all nodes of the cluster](https://github.com/RUBi-ZA/JMS/wiki/Set-up-a-database-for-the-JMS)
 - [Torque Resource Manager](https://github.com/RUBi-ZA/JMS/wiki/Set-up-Torque)
 
-### Setup the JMS
+### 1. Download and setup the JMS project
 
 First of all, you will need to download the project from github. We recommend you download the project to the `/srv` directory so you will not need to change paths in the settings file later:
 ``` bash
@@ -58,7 +58,9 @@ JMS_SETTINGS = {
 }
 ```
 
-### Create and populate the database tables
+### 2. Create and populate the database tables
+
+With the settings.py file set up with your database details, you can now create and populate the JMS database tables:
 ``` bash
 cd /srv/JMS/src
 source venv/bin/activate
@@ -66,10 +68,23 @@ python manage.py syncdb
 python manage.py populate_db
 ```
 
-### Start the queue daemon
+### 3. Start the queue daemon
+
+The queue daemon is responsible for updating the JMS job history with details from Torque. If you don't start the queue_daemon, your job history will only be updated when a job starts or finishes i.e. no changes in state will be tracked during the job. To start the queue daemon, run the following command:
 ```
 python manage.py queue_daemon --start
 ```
+
+To restart or stop the queue daemon, run the following commands respectively:
+```
+python manage.py queue_daemon --restart
+python manage.py queue_daemon --stop
+```
+
+### 4. Set up the prologue and epilogue scripts
+
+**NB: The following must be done corectly or the JMS will not function correctly**
+The JMS prologue and epilogue can be located in the `bin` directory in the root of the project (e.g. `/srv/JMS/bin`). These scripts are used to update the state of jobs in the job history and should be copied to the mom\_priv directory of your Torque setup on each and every slave node of the cluster. By default, this directory is located at `/var/spool/torque/mom\_priv`.
 
 ### Test the JMS
 ```
