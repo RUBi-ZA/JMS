@@ -13,9 +13,9 @@ Installation
 *Note: The following instructions are for Ubuntu 14.04, but can be used as a guideline for other Linux flavours.*
 
 ### Prerequisites
-- [MySQL server](wiki/Set-up-NFS)
-- [NFS (or similar) mounted on all nodes of the cluster](wiki/Set-up-a-database-for-the-JMS)
-- [Torque Resource Manager](wiki/Set-up-Torque)
+- [MySQL server](https://github.com/RUBi-ZA/JMS/wiki/Set-up-NFS)
+- [NFS (or similar) mounted on all nodes of the cluster](https://github.com/RUBi-ZA/JMS/wiki/Set-up-a-database-for-the-JMS)
+- [Torque Resource Manager](https://github.com/RUBi-ZA/JMS/wiki/Set-up-Torque)
 
 ### Setup the JMS
 
