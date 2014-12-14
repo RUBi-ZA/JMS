@@ -83,7 +83,7 @@ python manage.py queue_daemon --stop
 
 ### 4. Set up the prologue and epilogue scripts
 
-**NB: The following must be done corectly or the JMS will not function correctly**
+**NB: The following must be done corectly or the JMS will not function properly**
 
 The JMS prologue and epilogue can be located in the `bin` directory in the root of the project (e.g. `/srv/JMS/bin`). These scripts are used to update the state of jobs in the job history and should be copied to the mom\_priv directory of your Torque setup on each and every slave node of the cluster. By default, this directory is located at `/var/spool/torque/mom_priv`.
 
