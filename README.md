@@ -10,17 +10,90 @@ The JMS is a Django project. We will welcome any and all help in developing it f
 
 Installation
 ---
-First of all, you will need to download the project from github. Create a directory on the master node (or what will be the master node) of your cluster to host the project. We recommend you create the directory at the following path so you will not need to change paths in the settings file later:
+*Note: The following instructions are for Ubuntu 14.04, but can be used as a guideline for other Linux flavours.*
 
-  `mkdir /srv/JMS`
-  
-Navigate to the directory and set the permissions:
+### Prerequisites
+- [MySQL server](https://github.com/RUBi-ZA/JMS/wiki/Set-up-a-database-for-the-JMS)
+- [NFS (or similar) mounted on all nodes of the cluster](https://github.com/RUBi-ZA/JMS/wiki/Set-up-NFS)
+- [Torque Resource Manager](https://github.com/RUBi-ZA/JMS/wiki/Set-up-Torque)
 
-  `cd /srv/JMS`
-  
-  `chmod 775 .`
-  
-Now you can download the project with the following command:
+### 1. Download and setup the JMS project
 
-  `git clone https://github.com/RUBi-ZA/JMS.git`
+First of all, you will need to download the project from github. We recommend you download the project to the `/srv` directory so you will not need to change paths in the settings file later:
+``` bash
+cd /srv
+sudo mkdir JMS
+sudo chown user:user JMS
+git clone https://github.com/RUBi-ZA/JMS.git
+sudo chown user:user JMS -R
+```
 
+Navigate to the project src directory and setup a virtual environment:
+``` bash
+cd /srv/JMS/src
+sudo apt-get install -y libmemcache-dev zlib1g-dev libssl-dev python-dev build-essential
+virtualenv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+Edit the `/srv/JMS/src/JMS/settings.py` file to include your database login details and the path to the NFS share:
+
+``` python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': 'JMS',                      # Or path to database file if using sqlite3.
+        # The following settings are not used with sqlite3:
+        'USER': 'username',
+        'PASSWORD': 'password',
+        'HOST': 'localhost', 
+        'PORT': '',                      # Set to empty string for default.
+    }
+}
+
+
+JMS_SETTINGS = {
+    "JMS_shared_directory": "/NFS/JMS/"
+}
+```
+
+### 2. Create and populate the database tables
+
+With the settings.py file set up with your database details, you can now create and populate the JMS database tables:
+``` bash
+cd /srv/JMS/src
+source venv/bin/activate
+python manage.py syncdb
+python manage.py populate_db
+```
+
+### 3. Start the queue daemon
+
+The queue daemon is responsible for updating the JMS job history with details from Torque. If you don't start the queue_daemon, your job history will only be updated when a job starts or finishes i.e. no changes in state will be tracked during the job. To start the queue daemon, run the following command:
+```
+python manage.py queue_daemon --start
+```
+
+To restart or stop the queue daemon, run the following commands respectively:
+```
+python manage.py queue_daemon --restart
+python manage.py queue_daemon --stop
+```
+
+### 4. Set up the prologue and epilogue scripts
+
+**NB: The following must be done corectly or the JMS will not function correctly**
+
+The JMS prologue and epilogue can be located in the `bin` directory in the root of the project (e.g. `/srv/JMS/bin`). These scripts are used to update the state of jobs in the job history and should be copied to the mom\_priv directory of your Torque setup on each and every slave node of the cluster. By default, this directory is located at `/var/spool/torque/mom_priv`.
+
+You will need root privileges copy the scripts to the `mom_priv` directory. If you can log into your nodes with the root user, you can use the following commands to copy the scripts across:
+```
+scp /srv/bin/prologue root@node.ip.address:/var/spool/torque/mom_priv/
+scp /srv/bin/epilogue root@node.ip.address:/var/spool/torque/mom_priv/
+```
+
+### Test the JMS
+```
+python manage.py runserver
+```
