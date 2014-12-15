@@ -1,0 +1,34 @@
+<VirtualHost *:80>
+
+NameVirtualHost jms.com:80
+
+ServerAdmin root@jms
+ServerName jms
+
+Alias /media/ /srv/JMS/media/
+Alias /assets/ /srv/JMS/static/
+Alias /static/rest_framework_swagger/ /srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework_swagger/static/rest_framework_swagger/
+Alias /static/rest_framework/ /srv/JMS/src/venv/lib/python2.7/site-packages/rest_framework/static/rest_framework/ 
+Alias /static/ /srv/JMS/src/venv/lib/python2.7/site-packages/django/contrib/admin/static/
+
+CustomLog "|/usr/sbin/rotatelogs /srv/JMS/logs/access.log.%Y%m%d-%H%M%S 5M" combined
+ErrorLog "|/usr/sbin/rotatelogs /srv/JMS/logs/error.log.%Y%m%d-%H%M%S 5M"
+LogLevel warn
+
+WSGIDaemonProcess jms processes=1 threads=15 maximum-requests=10000 python-path=/srv/JMS/src/venv/lib/python2.7/site-packages python-eggs=/srv/JMS/run/eggs
+WSGIProcessGroup jms
+WSGIScriptAlias / /srv/JMS/src/JMS/conf/apache/django.wsgi
+WSGIPassAuthorization On
+
+<Directory /srv/JMS/media>
+Order deny,allow
+Allow from all
+Options -Indexes FollowSymLinks
+</Directory>
+
+<Directory /srv/JMS/src/JMS/conf/apache>
+Order deny,allow
+Allow from all
+</Directory>
+
+</VirtualHost>
