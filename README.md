@@ -67,6 +67,8 @@ python manage.py setup <base_url>
 ```
 Where \<base_url> is the URL that you are hosting the JMS at. If running on a port other than 80, the port should also be specified e.g. `python manage.py setup http://jms.rubi.com` or `python manage.py setup 123.456.12.34:8000`. If you are [hosting with Apache](https://github.com/RUBi-ZA/JMS/wiki/Hosting-with-Apache), this URL should match the URL in the Apache hosts file. You can run set up again if you need to change the URL.
 
+*NB: The setup command generates prologue and epilogue scripts which get stored in `/NFS/JMS/scripts` (the exact path will depend on where you created your shared directory). These scripts need to be copied to `/var/spool/torque/mom_priv/` on each and every node. This is of vital importance and is required for the JMS to function correctly.* 
+
 ### 2. Start the queue daemon
 
 The queue daemon is responsible for updating the JMS job history with details from Torque. If you don't start the queue_daemon, your job history will only be updated when a job starts or finishes i.e. no changes in state will be tracked during the job. To start the queue daemon, run the following command:
