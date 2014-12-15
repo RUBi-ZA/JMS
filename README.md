@@ -102,4 +102,4 @@ python manage.py runserver
 ```
 You should now be able to browse to the JMS at http://127.0.0.1:8000
 
-For improved performance, [host the JMS with Apache](https://github.com/RUBi-ZA/JMS/wiki/Host-with-Apache) or some other production web server.
+For improved performance, [host the JMS with Apache](https://github.com/RUBi-ZA/JMS/wiki/Hosting-with-Apache) or some other production web server.
