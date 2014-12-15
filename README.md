@@ -37,7 +37,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Edit the `/srv/JMS/src/JMS/settings.py` file to include your database login details and the path to the NFS share:
+Edit the `/srv/JMS/src/JMS/settings.py` file to include your database login credentials (you should have set these when [creating your database](https://github.com/RUBi-ZA/JMS/wiki/Set-up-a-database-for-the-JMS)) and the path to the [NFS share](https://github.com/RUBi-ZA/JMS/wiki/Set-up-NFS):
 
 ``` python
 DATABASES = {
@@ -85,15 +85,21 @@ python manage.py queue_daemon --stop
 
 **NB: The following must be done corectly or the JMS will not function properly**
 
-The JMS prologue and epilogue can be located in the `bin` directory in the root of the project (e.g. `/srv/JMS/bin`). These scripts are used to update the state of jobs in the job history and should be copied to the mom\_priv directory of your Torque setup on each and every slave node of the cluster. By default, this directory is located at `/var/spool/torque/mom_priv`.
+The JMS prologue and epilogue scripts can be located in the `bin` directory in the root of the project (e.g. `/srv/JMS/bin`). These scripts are used to update the state of jobs in the job history and should be copied to the mom\_priv directory of your Torque setup on each and every slave node of the cluster. By default, this directory is located at `/var/spool/torque/mom_priv` on the cluster node.
 
-You will need root privileges copy the scripts to the `mom_priv` directory. If you can log into your nodes with the root user, you can use the following commands to copy the scripts across:
+You will need root privileges to copy the scripts to the `mom_priv` directory. If you can log into your nodes with the root user, you can use the following commands to copy the scripts across:
 ```
 scp /srv/bin/prologue root@node.ip.address:/var/spool/torque/mom_priv/
 scp /srv/bin/epilogue root@node.ip.address:/var/spool/torque/mom_priv/
 ```
+See '[Set up Torque nodes]()' for more details.
 
 ### Test the JMS
+
+To test that your installation is working, run the Django development web server:
 ```
 python manage.py runserver
 ```
+You should now be able to browse to the JMS at http://127.0.0.1:8000
+
+For improved performance, [host the JMS with Apache](https://github.com/RUBi-ZA/JMS/wiki/Host-with-Apache) or some other production web server.
