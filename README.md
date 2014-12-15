@@ -92,7 +92,7 @@ You will need root privileges to copy the scripts to the `mom_priv` directory. I
 scp /srv/bin/prologue root@node.ip.address:/var/spool/torque/mom_priv/
 scp /srv/bin/epilogue root@node.ip.address:/var/spool/torque/mom_priv/
 ```
-See '[Set up Torque nodes]()' for more details.
+See '[Set up Torque nodes](https://github.com/RUBi-ZA/JMS/wiki/Set-up-Torque#set-up-the-slave-nodes)' for more details.
 
 ### Test the JMS
 
