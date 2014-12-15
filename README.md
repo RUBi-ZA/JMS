@@ -88,7 +88,7 @@ You can add compute nodes from the JMS web interface. When you add a node via th
 
 See '[Set up Torque nodes](https://github.com/RUBi-ZA/JMS/wiki/Set-up-Torque#set-up-the-slave-nodes)' for more details.
 
-### Test the JMS
+### 4. Test the JMS
 
 To test that your installation is working, run the Django development web server:
 ```
