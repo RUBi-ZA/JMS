@@ -184,6 +184,6 @@ AUTHENTICATION_BACKENDS = (
 AUTH_PROFILE_MODULE = 'users.UserProfile'
 
 JMS_SETTINGS = {
-    "JMS_shared_directory": "/jabba/JMS"
+    "JMS_shared_directory": ""
 }
 

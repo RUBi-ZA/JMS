@@ -1,17 +1,21 @@
 from django.core.management.base import NoArgsCommand, make_option
+from django.conf import settings
 
 from job.models import AccessRight, Condition, Status, ParameterType, StageType
 from django.db import transaction
 
 class Command(NoArgsCommand):
 
-    help = "Whatever you want to print here"
+    help = "Usage: python manage.py populate_db"
 
     option_list = NoArgsCommand.option_list + (
         make_option('--verbose', action='store_true'),
     )
 
     def handle_noargs(self, **options):
+        print "\nSetting up shared directory:\n"
+        
+        
         print "\nPopulating database with required data:\n"
         
         inconsistencies = 0

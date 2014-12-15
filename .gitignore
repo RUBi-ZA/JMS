@@ -1,2 +1,4 @@
 src/venv
-/src/JMS/settings.py
+src/JMS/settings.py
+bin/torque-5.0.0-1_JMS
+logs

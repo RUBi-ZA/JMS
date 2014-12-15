@@ -1,2 +1,2 @@
 #!/bin/sh
-curl http://jms.biosci.ru.ac.za/api/jms/prologue/${2}/${1} 2> /jabba/JMS/logs/prologue/prologue.${1}.log
+curl ip.address:port_no/api/jms/prologue/${2}/${1} 2> /jabba/JMS/logs/prologue/prologue.${1}.log

@@ -1,7 +1,6 @@
 from job.models import *
 from job.Utilities import *
 import objects
-from objects import JobDetail
 
 from django.conf import settings
 from django.db import transaction
