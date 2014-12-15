@@ -58,17 +58,16 @@ JMS_SETTINGS = {
 }
 ```
 
-### 2. Create and populate the database tables
-
-With the settings.py file set up with your database details, you can now create and populate the JMS database tables:
+With the settings.py file set up with your database details and the path to your shared directory, run the following commands:
 ``` bash
 cd /srv/JMS/src
 source venv/bin/activate
 python manage.py syncdb
-python manage.py populate_db
+python manage.py setup <base_url>
 ```
+Where \<base_url> is the URL that you are hosting the JMS at. If running on a port other than 80, the port should also be specified e.g. `python manage.py setup http://jms.rubi.com` or `python manage.py setup 123.456.12.34:8000`. If you are [hosting with Apache](https://github.com/RUBi-ZA/JMS/wiki/Hosting-with-Apache), this URL should match the URL in the Apache hosts file. You can run set up again if you need to change the URL.
 
-### 3. Start the queue daemon
+### 2. Start the queue daemon
 
 The queue daemon is responsible for updating the JMS job history with details from Torque. If you don't start the queue_daemon, your job history will only be updated when a job starts or finishes i.e. no changes in state will be tracked during the job. To start the queue daemon, run the following command:
 ```
@@ -81,25 +80,18 @@ python manage.py queue_daemon --restart
 python manage.py queue_daemon --stop
 ```
 
-### 4. Set up the prologue and epilogue scripts
+### 3. Adding nodes
 
-**NB: The following must be done corectly or the JMS will not function properly**
+You can add compute nodes from the JMS web interface. When you add a node via the interface, you will aslo be given additional instructions that you need to carry out manually before the node will be operational.
 
-The JMS prologue and epilogue scripts can be located in the `bin` directory in the root of the project (e.g. `/srv/JMS/bin`). These scripts are used to update the state of jobs in the job history and should be copied to the mom\_priv directory of your Torque setup on each and every slave node of the cluster. By default, this directory is located at `/var/spool/torque/mom_priv` on the cluster node.
-
-You will need root privileges to copy the scripts to the `mom_priv` directory. If you can log into your nodes with the root user, you can use the following commands to copy the scripts across:
-```
-scp /srv/bin/prologue root@node.ip.address:/var/spool/torque/mom_priv/
-scp /srv/bin/epilogue root@node.ip.address:/var/spool/torque/mom_priv/
-```
 See '[Set up Torque nodes](https://github.com/RUBi-ZA/JMS/wiki/Set-up-Torque#set-up-the-slave-nodes)' for more details.
 
 ### Test the JMS
 
 To test that your installation is working, run the Django development web server:
 ```
-python manage.py runserver
+python manage.py runserver ip.address:8000
 ```
-You should now be able to browse to the JMS at http://127.0.0.1:8000
+You should now be able to browse to the JMS at http://ip.address:8000. The IP address you use to run the server should match the IP address used in with the `python manage.py setup <base_url>` command
 
 For improved performance, [host the JMS with Apache](https://github.com/RUBi-ZA/JMS/wiki/Hosting-with-Apache) or some other production web server.
