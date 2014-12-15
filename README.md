@@ -86,7 +86,7 @@ python manage.py queue_daemon --stop
 
 You can add compute nodes from the JMS web interface. When you add a node via the interface, you will aslo be given additional instructions that you need to carry out manually before the node will be operational.
 
-See '[Set up Torque nodes](https://github.com/RUBi-ZA/JMS/wiki/Set-up-Torque#set-up-the-slave-nodes)' for more details.
+See '[Set up Torque nodes](https://github.com/RUBi-ZA/JMS/wiki/Set-up-Torque#2-set-up-the-compute-nodes)' for more details.
 
 ### 4. Test the JMS
 
