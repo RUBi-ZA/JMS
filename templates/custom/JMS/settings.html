@@ -165,12 +165,20 @@
 					        
 					        <label>On the compute node (i.e. <span data-bind="text: NodeName"></span>):</label>
 					        <ol>
-					            <li><a href="https://github.com/RUBi-ZA/JMS/wiki/Set-up-NFS">Mount the shared directory</a></li>
+					            <li><a target="_blank" href="https://github.com/RUBi-ZA/JMS/wiki/Set-up-NFS">Mount the shared directory</a></li>
+					            <li>The host name of the node should be set to the name you gave when adding it to the JMS:
+<br>
+<pre style="word-break:normal">
+<code>sudo echo "<span data-bind="text: NodeName"></span>" > /etc/hostname</code>
+</pre>
+                                
+					            </li>
+					            
 					            <li>Install Torque
 					                <ol>
 					                    <li>Copy the Torque .tar.gz file from the <code>bin</code> directory of the JMS project to the compute node e.g. from <span data-bind="text: NodeName"></span>: <br>
 <pre style="word-break:normal">
-<code>scp username@&lt;Head node IP address&gt;:/srv/JMS/torque-5.0.0-1_JMS.tar.gz .</code>
+<code>scp username@&lt;Head node IP address&gt;:/srv/JMS/bin/torque-5.0.0-1_JMS.tar.gz .</code>
 </pre>
 					                    </li>
 					                    <li>
@@ -199,7 +207,7 @@ sh setup_torque_slave.sh &lt;head node hostname&gt; &lt;head node IP address&gt;
 <code>sudo cp /NFS/JMS/scripts/prologue /var/spool/torque/mom_priv
 sudo cp /NFS/JMS/scripts/epilogue /var/spool/torque/mom_priv</code>
 </pre>
-                                    It is important that the prologue and epilogue scripts are set up on each and every node. If you are experiencing problems with your JMS set up, this could be the cause. Users with an existing Torque installation who have their own prologue and epilogue scripts can simply copy the contents of the JMS scripts and add it to their own. 			            
+                                    Prologue and epilogue scripts <strong>must</strong> be set up on each and every node for the JMS to function. Users with an existing Torque installation who have their own prologue and epilogue scripts can simply copy the contents of the JMS scripts and add it to their own. 			            
 					            </li>
 					        </ol>
 					        
