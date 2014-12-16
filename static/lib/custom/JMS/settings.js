@@ -392,6 +392,10 @@ function SettingsViewModel() {
 	        });
 	    });
 	}
+	
+	self.ShowInstructions = function() {
+	    $("#instructions-dialog").modal();
+	}
 }
 
 var question = new QuestionModal("question-dialog");

@@ -321,7 +321,7 @@ function SettingsViewModel() {
 	
 	self.ShowAddNode = function() {
         self.LoadingNodes(false);
-        self.NewNode(new Node("", "", "", "", ""));
+        self.NewNode(new Node("", null, null, null, null));
 	    $("#node-dialog").modal();
 	}
 	
@@ -391,6 +391,10 @@ function SettingsViewModel() {
 	            }
 	        });
 	    });
+	}
+	
+	self.ShowInstructions = function() {
+	    
 	}
 }
 
