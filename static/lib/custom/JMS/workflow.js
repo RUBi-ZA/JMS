@@ -516,7 +516,7 @@ function WorkflowViewModel() {
 		}
     });
     
-    self.File = ko.observable(null);
+    self.File = ko.observable(null);    
     self.SelectedFiles = ko.observableArray();	
     self.SelectedFiles.subscribe(function(value) {
 		if(value.length > 0) {
@@ -525,6 +525,8 @@ function WorkflowViewModel() {
 			
 			if(value[0].ExistsOnServer()) {
 				self.GetWorkflowFileContent(value[0]);
+			} else {
+			    make_editor();
 			}
 		}
     });
@@ -1364,9 +1366,11 @@ function WorkflowViewModel() {
 			url: "/api/jms/files/workflows/" + self.Workflow().WorkflowID() + "/" + file.FileName(),
 			success: function(content) {
 				file.Content(content);
+				make_editor();
 			},
 			error: function() {
 				AppendAlert("danger", "Something went wrong while fetching file content.", "#workflow_options-container");
+				make_editor();
 			}
 		});
 	}
