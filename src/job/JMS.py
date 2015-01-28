@@ -806,7 +806,7 @@ class JMS:
                 
                 p.close()
                 
-                self.AddUpdateClusterJob(out.strip, job.User.username)
+                self.AddUpdateClusterJob(out.strip(), job.User.username)
                 
                 #Update job details
                 jobstage.ClusterJobID = out.strip();
@@ -865,6 +865,81 @@ class JMS:
         else:
             raise PermissionDenied
     
+    
+    
+    def RunCustomJob(self, JobName, JobDescription, Queue, Nodes, CPUs, Memory, Walltime, Commands, Files):
+        user = self.user
+        
+        jobID = 0        
+            
+        with transaction.atomic():
+            #create job
+            job = Job.objects.create(JobName=JobName, JobDescription=JobDescription, User_id=user.id, SubmittedAt=datetime.now())              
+            jobID = job.pk
+                        
+            WorkingDirectory = os.path.join(self.users_dir, user.username + "/jobs/" + str(jobID))
+            self.createJobDir(WorkingDirectory)    
+                
+            LogsDirectory = os.path.join(self.users_dir, user.username + "/jobs/" + str(jobID) + "/Logs")
+            self.createJobDir(LogsDirectory)
+            
+            #upload files
+            for f in Files:
+                full_path = os.path.join(WorkingDirectory, f.name)
+                with open(full_path, 'wb+') as destination:
+                    for chunk in f.chunks():
+                        destination.write(chunk)
+            
+                #set file permissions
+                os.chmod(full_path, 0777)
+            
+            #grant access rights
+            UserJobAccessRight.objects.create(User=user, Job=job, AccessRight_id=objects.AccessRights.Owner)
+            
+            #create jobstage
+            jobstage = JobStage.objects.create(Job=job, RequiresEditInd=False, State_id=objects.Status.Created)
+            
+            #create job file
+            job_file = '#!/bin/sh\n'
+            job_file += '#PBS -V\n'
+            job_file += '#PBS -v SCRIPT_DIR=%s,WORKING_DIR=%s\n' % (WorkingDirectory, WorkingDirectory)
+            job_file += '#PBS -W umask=022\n'
+            job_file += '#PBS -d %s\n' % WorkingDirectory
+            job_file += '#PBS -N %s\n' % JobName
+            job_file += '#PBS -e localhost:%s\n' % os.path.join(LogsDirectory, 'log.err')
+            job_file += '#PBS -o localhost:%s\n' % os.path.join(LogsDirectory, 'log.out')
+            job_file += '#PBS -q %s\n' % Queue
+            job_file += '#PBS -l nodes=%s:ppn=%s\n' % (str(Nodes), str(CPUs))
+            job_file += '#PBS -l mem=%sgb\n' % str(Memory)
+            job_file += '#PBS -l walltime=%s\n' % Walltime
+            
+            job_file += "\n\n"
+            
+            #Add commands, removing Windows-style line endings that can't be handled by qsub
+            job_file += Commands.replace('\r\n', '\n')
+            
+            #Write job file
+            job_file_path = os.path.join(WorkingDirectory, "job.pbs")
+            File.print_to_file(job_file_path, job_file, 'w', 0777)
+                        
+            #Submit to cluster
+            p = UserProcess(job.User.username, job.User.userprofile.Code)
+            
+            qsub_cmd = "qsub %s" % job_file_path
+            out = p.run_command(qsub_cmd)
+            
+            p.close()
+            
+            File.print_to_file("/obiwanNFS/open/temp.txt", out.strip(), 'w', 0777)
+            
+            #Update job details
+            jobstage.ClusterJobID = out.strip();
+            jobstage.save()
+            
+            self.AddUpdateClusterJob(out.strip(), job.User.username)
+            
+        return jobID
+
     
     
     def StopJob(self, JobID):
@@ -942,6 +1017,7 @@ class JMS:
     
     def AddUpdateClusterJob(self, job_id, username):
         user = None
+        File.print_to_file("/obiwanNFS/open/text.txt", job_id, 'a')
         try:
             user = User.objects.get(username=username)        
         except Exception, ex:
@@ -951,21 +1027,29 @@ class JMS:
         out = process.run_command("qstat -f %s" % job_id)
         process.close()
         
+        File.print_to_file("/obiwanNFS/open/text.txt", out, 'a')
+        
         job = self.ParseClusterJob(out)
         
+        File.print_to_file("/obiwanNFS/open/text.txt", str(job), 'a')
+        
+        #Get job state
+        state = objects.Status.Queued
+        if job.State == 'Q' or job.State == 'H':
+            state = objects.Status.Queued
+        elif job.State == 'R':
+            state = objects.Status.Running
+        elif job.State == 'E' or job.State == 'C':
+            state = objects.Status.Completed_Successfully
+        
         if job:
-            #Add the job to the JMS job history if it doesn't exist
+            #Add the job to the JMS job history if it doesn't exist or update it if it does exist
             try:
-                JobStage.objects.get(ClusterJobID=job_id)  
+                j = JobStage.objects.get(ClusterJobID=job_id) 
+                j.State_id = state
+                j.save()
+                
             except Exception, ex:
-                state = objects.Status.Queued
-                if job.State == 'Q' or job.State == 'H':
-                    state = objects.Status.Queued
-                elif job.State == 'R':
-                    state = objects.Status.Running
-                elif job.State == 'E' or job.State == 'C':
-                    state = objects.Status.Completed_Successfully
-                    
                 j = Job.objects.create(JobName=job.JobName, JobDescription="This job was not submitted via the JMS", User=user, BatchJobInd=False)  
                 jobstage = JobStage.objects.create(Job=j, ClusterJobID=job.ClusterJobID, RequiresEditInd=False, State_id=state)
         
@@ -1083,8 +1167,10 @@ class JMS:
                 
     
     def FinishStage(self, ClusterJobID, ExitCode):
-        try:            
+        try: 
+            File.print_to_file("/obiwanNFS/open/finish.txt", "%s %s" % (ClusterJobID, str(ExitCode)), "w")
             cluster_job = ClusterJob.objects.get(pk=ClusterJobID)
+            cluster_job.State = "C"
             cluster_job.ExitStatus = ExitCode
             cluster_job.save()
             

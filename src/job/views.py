@@ -553,7 +553,6 @@ class BatchJob(APIView):
         return Response(serializer.data)
                
 
-
 class BatchJobDetail(APIView):
     
     def get(self, request, batch_job_id):
@@ -707,26 +706,51 @@ class JobDetail(APIView):
         new_job_id = jms.RepeatJobFromStage(int(job_id), new_job_name, int(start_stage))
         
         return Response(new_job_id, status=status.HTTP_200_OK)
+
+
+
+class CustomJob(APIView):
+    permission_classes = (IsAuthenticated,)
+    
+    def post(self, request):
+        """
+        Submit a custom script to be run on the cluster
+        """
+        job_name = request.POST["JobName"]
+        description = request.POST["Description"]
+        queue = request.POST["Queue"]
+        nodes = request.POST["Nodes"]
+        cpus = request.POST["CPUs"]
+        mem = request.POST["Memory"]
+        walltime = request.POST["Walltime"]
+        commands = request.POST["Commands"]
+        
+        files = request.FILES.getlist("files")
+        
+        jms = JMS(user=request.user)
+        job_id = jms.RunCustomJob(job_name, description, queue, nodes, cpus, mem, walltime, commands, files)
+        
+        return Response(job_id)
     
     
 
 class ClusterJob(APIView):
     permission_classes = (IsAuthenticated,)
     
-    """
-    Get details of a job running on the cluster
-    """
     def get(self, request, cluster_id):
+        """
+        Get details of a job running on the cluster
+        """
         jms = JMS()
         job = jms.GetClusterJob(job_id=cluster_id, username=request.user.username, password=request.user.userprofile.Code)
         
         serializer = ClusterJobSerializer(job)
         return Response(serializer.data)
     
-    """
-    Stop a job running on the cluster
-    """
-    def delete(self, request, cluster_id):    
+    def delete(self, request, cluster_id):
+        """
+        Stop a job running on the cluster
+        """    
         password = request.user.userprofile.Code
         
         jms = JMS(user=request.user)

@@ -417,7 +417,7 @@ function WorkflowViewModel() {
 	var self = this;
 	
 	//Data
-	self.Workflows = ko.observableArray();	
+	self.Workflows = ko.observableArray();
     
     //Interface
     self.VisibleWindow = ko.observable("workflows");
@@ -1286,6 +1286,10 @@ function WorkflowViewModel() {
 			
 	}
 	
+	self.RunCustomJob = function() {
+	    $("#custom-job").submit();
+	}
+	
 	self.AddStage = function() {
 		self.ParameterSeed += 1;
 		self.StageSeed += 1;
@@ -1772,6 +1776,10 @@ function WorkflowViewModel() {
 		self.VisibleWindow("run_workflow");		
 	}
 	
+	self.ShowCustomJob = function() {
+	    self.VisibleWindow("custom");
+	}
+	
 	self.hideOption = function(option, item) {
         ko.applyBindingsToNode(option, { visible: item.available }, item);
     }
@@ -1788,4 +1796,42 @@ $(document).ready(function () {
 	ko.applyBindings(workflow, document.getElementById("workflows"));
 		
 	workflow.LoadData();	
+});
+
+$("form#custom-job").submit(function(){
+    
+    try 
+    {
+        $("#custom-submit-dialog").modal({ backdrop: "static"});
+        
+		workflow.Submitting(true);
+		
+		var formData = new FormData($(this)[0]);
+		
+		$.ajax({
+		    url: "/api/jms/jobs/custom",
+		    type: "POST",
+		    data: formData,
+		    success: function(id) {
+		        workflow.SubmitSuccess(true);
+		    }, 
+		    error: function() {
+		        workflow.SubmitSuccess(false);
+		    },
+		    complete: function() {
+		        workflow.Submitting(false);
+		    },
+            cache: false,
+            contentType: false,
+            processData: false
+		});
+		
+    } catch(err) {
+        workflow.SubmitSuccess(false);
+		workflow.Submitting(false);
+        console.log(err);   
+    }
+    
+
+    return false;
 });

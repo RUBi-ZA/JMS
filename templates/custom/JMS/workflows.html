@@ -13,7 +13,7 @@
 	<link href="{{ STATIC_URL }}lib/bootstrap/binary/css/stavatech.css" rel="stylesheet" />
 		
 	<!-- GOOGLE FONTS -->
-	<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
+	<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
     
     <style type="text/css" media="screen">
         #editor { 
@@ -587,6 +587,37 @@
 						</div>
 				   	</div>
 			 	</div>
+			 	
+			 	<div class="modal fade" id="custom-submit-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+					<div class="modal-dialog">
+						<div class="modal-content">
+						    <div class="modal-body">
+						    	<div style="text-align:center">
+						    		<div style="height:130px;" data-bind="visible: $root.Submitting()">
+										<img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px;" /> <br/>
+										<img src="{{ STATIC_URL }}img/text_loader.gif" style="height: 30px;"/> <br/>
+									</div>
+									
+						    		<div style="height:130px;" data-bind="visible: $root.Submitting() == false && $root.SubmitSuccess() == true">
+										<img src="{{ STATIC_URL }}img/success.png" style="height:100px;" /> <br/>
+										<img src="{{ STATIC_URL }}img/job_started.gif" style="height: 30px;"/> <br/>
+									</div>
+									
+						    		<div style="height:130px;" data-bind="visible: $root.Submitting() == false && $root.SubmitSuccess() == false">
+										<img src="{{ STATIC_URL }}img/error.png" style="height:100px;" /> <br/>
+										<img src="{{ STATIC_URL }}img/job_failed.gif" style="height: 30px;"/> <br/>
+									</div>
+								</div>
+						   	</div>
+						  	<div class="modal-footer" data-bind="visible: $root.Submitting() == false">
+						  		<span data-bind="if: $root.SubmitSuccess()">
+						       		<a class="btn btn-default" data-bind="attr: { href: '/jobs/#' + $root.Job().JobID() }">Go to job</a>
+						       	</span>
+						       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+							</div>
+						</div>
+				   	</div>
+			 	</div>
 			  
 				<div id="workflows-container" data-bind="visible: $root.VisibleWindow() == 'workflows'">    
 					<div class="row">
@@ -600,8 +631,11 @@
 				
 					<div class="row">
 						<div class="col-lg-12"> 
-							<div style="text-align:right;padding-right:10px;padding-bottom:10px;">
-								<div class="btn-group">
+							<div style="width:100%;padding:10px;padding-top:0;overflow:hidden;">
+								<div class="btn-group" style="float:left;">
+							  		<button class="btn btn-primary" data-bind="click: $root.ShowCustomJob"><i class="fa fa-play"></i> Custom Job</button>
+								</div>
+								<div class="btn-group" style="float:right;">
 							  		<button class="btn btn-success" data-bind="click: $root.AddWorkflow"><i class="fa fa-plus"></i> Add Workflow</button>
 							  		<button data-toggle="dropdown" class="btn btn-success dropdown-toggle"><span class="caret"></span></button>
 							  		<ul class="dropdown-menu" style="text-align:left;">
@@ -666,6 +700,105 @@
 					
 				</div>
 				<!-- /. WORKFLOWS CONTAINER -->
+				
+				
+				<!-- CUSTOM JOB CONTAINER -->
+				<div id="custom_job-container" data-bind="visible: $root.VisibleWindow() == 'custom'">	        
+					<div class="row">
+						<div class="col-md-12">						
+							<h2>Custom Job</h2>						
+						</div>
+					</div>
+					<!-- /. ROW  -->
+						    
+					<hr />
+				
+					<div class="row">
+						<div class="col-lg-12" style="text-align:right;padding:10px;padding-top:0;">
+							<a href="#" class="btn btn-warning" data-bind="click: $root.ShowWorkflows"><i class="fa fa-arrow-left"></i> Back</a>
+						</div>
+					</div>
+				
+					<div class="row">
+						<div class="col-lg-12">
+						    <h4>Job Details</h4>
+						    <hr/>
+						    <form id="custom-job">
+    				            <div class="col-lg-12">
+    								<div class="form-group">
+    									<label>Job name:</label>
+    									<input class="form-control" name="JobName" placeholder="Enter job name"></input>
+    								</div>
+    								
+    								<div class="form-group">
+    									<label>Description:</label>
+    									<textarea class="form-control" name="Description" placeholder="Enter a description"></textarea>
+    								</div>
+    							</div>
+    							
+    							<br/>
+    							<h4>Resources</h4>
+    							<hr/>
+    							
+    				            <div class="col-lg-12">
+    								<div class="form-group col-lg-6">
+    									<label>Queue:</label>
+    									<input class="form-control" name="Queue" placeholder="Enter queue name"/>
+    								</div>
+    								
+    								<div class="form-group col-lg-6">
+    									<label>Nodes:</label>
+    									<input class="form-control" name="Nodes" type="number"/>
+    								</div>
+    								
+    								<div class="form-group col-lg-6">
+    									<label>Cores:</label>
+    									<input class="form-control" name="CPUs" type="number"/>
+    								</div>
+    								
+    								<div class="form-group col-lg-6">
+    									<label>Memory (GB):</label>
+    									<input class="form-control" name="Memory" type="number"/>
+    								</div>
+    								
+    								<div class="form-group col-lg-6">
+    									<label>Walltime (hh:mm:ss):</label>
+    									<input class="form-control" name="Walltime" placeholder="Walltime e.g. 01:00:00"/>
+    								</div>
+    							</div>	
+    							
+    							<br/>	
+    							<h4>Scripts</h4>
+    							<hr/>
+    							
+    							<div class="col-lg-12">
+    							    
+    							    <div class="form-group col-lg-12">
+        								<label>Script to be submitted to cluster:</label>
+        							    <textarea name="Commands" class="form-control ace"></textarea>
+        							</div>
+    							    
+    							    <div class="form-group col-lg-12">
+        								<label>Supporting scripts:</label>
+        							    <input type="file" name="files" multiple class="form-control"/>
+        							</div>
+    							</div>
+							</form>
+						</div>
+						
+						<div class="col-lg-12" style="text-align:right;padding-right:10px;padding-bottom:10px;">
+							<div class="btn-group" style="margin-right:25px;">
+								<a href="#" class="btn btn-success" data-bind="click: $root.RunCustomJob"><i class="fa fa-play"></i> Run Job</a>
+								<button data-toggle="dropdown" class="btn btn-success dropdown-toggle"><span class="caret"></span></button>
+								<ul class="dropdown-menu" style="text-align:left;">
+									<li><a href="#" data-bind="click: $root.ScheduleJob"><i class="fa fa-clock-o"></i> Schedule Job</a></li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- /. CUSTOM JOB CONTAINER -->
+				
 				
 				<!-- CREATE WORKFLOW CONTAINER -->
 				<div id="create_workflow-container" data-bind="visible: $root.VisibleWindow() == 'create_workflow'">	        
@@ -1200,5 +1333,27 @@
                 });
             });
         }
+        
+        $('textarea.ace').each(function () {
+            var textarea = $(this);
+            
+            var editDiv = $('<div>', {
+                position: 'absolute',
+                height: 400,
+                'class': textarea.attr('class')
+            }).insertBefore(textarea);
+            
+            textarea.css('display', 'none');
+            
+            var e = ace.edit(editDiv[0]);
+            e.getSession().setValue(textarea.val());
+            e.getSession().setMode("sh");
+            e.setAutoScrollEditorIntoView(true);
+            e.setTheme("ace/theme/chrome");                
+            
+            e.getSession().on('change', function(){
+                textarea.text(e.getSession().getValue());
+            });
+        });
     </script>
 {% endblock %}

@@ -21,6 +21,8 @@ public_urls = patterns('job.views',
     url(r'jobs/batch/(?P<batch_job_id>[^/]+)/?', views.BatchJobDetail.as_view()),
     url(r'jobs/batch/?', views.BatchJob.as_view()),
     
+    url(r'jobs/custom/?', views.CustomJob.as_view()),
+    
     url(r'jobs/(?P<job_id>[^/]+)/permissions/users/(?P<user_id>[^/]+)/?', views.EditJobUserAccess.as_view()),
     url(r'jobs/(?P<job_id>[^/]+)/permissions/users/?', views.JobUserAccess.as_view()),
     url(r'jobs/(?P<job_id>[^/]+)/permissions/groups/(?P<group_id>[^/]+)/??', views.EditJobGroupAccess.as_view()),
