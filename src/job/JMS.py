@@ -12,6 +12,7 @@ import xml.etree.ElementTree as ET
 import subprocess, os, pexpect, pylibmc, sys, pxssh, socket
 from datetime import datetime
 from shutil import copyfile  
+from lxml import objectify
 
 class JMS:
     
@@ -1005,11 +1006,11 @@ class JMS:
     
     
     
-    def GetClusterJob(self, job_id, username, password):
+    def GetClusterJob(self, job_id):
         job = ClusterJob.objects.get(pk=job_id)        
         
-        job.OutputStream = self.GetFileStream(username, password, job.OutputPath.split(":")[1])
-        job.ErrorStream = self.GetFileStream(username, password, job.ErrorPath.split(":")[1])
+        job.OutputStream = self.GetFileStream(self.user.username, self.user.userprofile.Code, job.OutputPath.split(":")[1])
+        job.ErrorStream = self.GetFileStream(self.user.username, self.user.userprofile.Code, job.ErrorPath.split(":")[1])
         
         return job
     
@@ -1017,21 +1018,18 @@ class JMS:
     
     def AddUpdateClusterJob(self, job_id, username):
         user = None
-        File.print_to_file("/obiwanNFS/open/text.txt", job_id, 'a')
+        
         try:
             user = User.objects.get(username=username)        
         except Exception, ex:
             user = User.objects.create(username=username)
                
         process = UserProcess(username, user.userprofile.Code)
-        out = process.run_command("qstat -f %s" % job_id)
+        out = process.run_command("qstat -x %s" % job_id)
         process.close()
         
-        File.print_to_file("/obiwanNFS/open/text.txt", out, 'a')
-        
-        job = self.ParseClusterJob(out)
-        
-        File.print_to_file("/obiwanNFS/open/text.txt", str(job), 'a')
+        job_obj = objectify.fromstring(out)
+        job = self.ParseClusterJob(job_obj.Job)
         
         #Get job state
         state = objects.Status.Queued
@@ -1050,114 +1048,97 @@ class JMS:
                 j.save()
                 
             except Exception, ex:
-                j = Job.objects.create(JobName=job.JobName, JobDescription="This job was not submitted via the JMS", User=user, BatchJobInd=False)  
+                j = Job.objects.create(JobName=job.JobName, JobDescription="This job was submitted externally to the JMS", User=user, BatchJobInd=False)  
                 jobstage = JobStage.objects.create(Job=j, ClusterJobID=job.ClusterJobID, RequiresEditInd=False, State_id=state)
         
-        return job    
+        return job
     
     
-    
-    def ParseClusterJob(self, job_string):
-        job = ClusterJob()
+    def AddUpdateClusterJob(self, job_obj):
+        job = self.ParseClusterJob(job_obj)
         
-        job_arr = job_string.split('\n')
-        if len(job_arr) > 5:
-            i = 0
-            while i < len(job_arr):
-                line = job_arr[i].rstrip()
+        #Get user
+        user = User.objects.get(username=job_obj.euser)
         
-                if len(line) > 0 and line[0] == 'J':
-                    job.ClusterJobID = line.split(':')[1].strip()
-                    try:
-                        job = ClusterJob.objects.get(pk=job.ClusterJobID)
-                    except Exception, e:
-                        print str(e)
-                else:
-                    entry = line[4:].split(" = ")
+        #Get job state
+        state = objects.Status.Queued
+        if job.State == 'Q' or job.State == 'H':
+            state = objects.Status.Queued
+        elif job.State == 'R':
+            state = objects.Status.Running
+        elif job.State == 'E' or job.State == 'C':
+            state = objects.Status.Completed_Successfully
+        
+        if job:
+            #Add the job to the JMS job history if it doesn't exist or update it if it does exist
+            try:
+                j = JobStage.objects.get(ClusterJobID=job.ClusterJobID) 
+                j.State_id = state
+                j.save()
                 
-                    if entry[0] == "Job_Name":
-                        job.JobName = entry[1]
-                    elif entry[0] == "Job_Owner":
-                        job.JobOwner = entry[1]
-                    elif entry[0] == "resources_used.cput":
-                        job.CPUTimeUsed = entry[1]
-                    elif entry[0] == "resources_used.mem":
-                        job.MemoryUsed = entry[1]
-                    elif entry[0] == "resources_used.vmem":
-                        job.VirtualMemoryUsed = entry[1]
-                    elif entry[0] == "resources_used.walltime":
-                        job.WalltimeUsed = entry[1]
-                    elif entry[0] == "job_state":
-                        job.State = entry[1]
-                    elif entry[0] == "queue":
-                        job.Queue = entry[1]
-                    elif entry[0] == "server":
-                        job.Server = entry[1]
-                    elif entry[0] == "ctime":
-                        job.CreatedTime = entry[1]
-                    elif entry[0] == "Error_Path":
-                        job.ErrorPath = entry[1]
-                    elif entry[0] == "exec_host":
-                        job.ExecutionHost = entry[1]
-                    elif entry[0] == "mtime":
-                        job.LastModified = entry[1]
-                    elif entry[0] == "Output_Path":
-                        job.OutputPath = entry[1]
-                    elif entry[0] == "Priority":
-                        job.Priority = entry[1]
-                    elif entry[0] == "qtime":
-                        job.TimeEnteredQueue = entry[1]
-                    elif entry[0] == "Resource_List.mem":
-                        job.MemoryRequested = entry[1]
-                    elif entry[0] == "Resource_List.nodect":
-                        job.NodesAvailable = entry[1]
-                    elif entry[0] == "Resource_List.nodes":
-                        job.NodesRequested = entry[1]
-                    elif entry[0] == "Resource_List.walltime":
-                        job.WalltimeRequested = entry[1]
-                    elif entry[0] == "Variable_List":
-                        job.VariableList = entry[1]    
+            except Exception, ex:
+                
+                with transaction.atomic():
+                    j = Job.objects.create(JobName=job.JobName, JobDescription="This job was submitted externally to the JMS", User=user, BatchJobInd=False)
+                    JobStage.objects.create(Job=j, ClusterJobID=job.ClusterJobID, RequiresEditInd=False, State_id=state)
                     
-                        i += 1
-                        line = job_arr[i]
-                        while line[0] == "\t":
-                            job.VariableList += line.strip()
-                        
-                            i += 1
-                            line = job_arr[i]
-                        continue                
-                    elif entry[0] == "comment":
-                        job.Comment = entry[1]
-                    elif entry[0] == "etime":
-                        job.EligibleTime = entry[1]
-                    elif entry[0] == "exit_status":
-                        job.ExitStatus = entry[1]
-                    elif entry[0] == "submit_args":
-                        job.SubmitArgs = entry[1]
-                    
-                        i += 1
-                        line = job_arr[i]
-                        while line[0] == "\t":
-                            job.SubmitArgs += line.strip()
-                        
-                            i += 1
-                            line = job_arr[i]
-                        continue
-                    elif entry[0] == "start_time":
-                        job.StartTime = entry[1]
-                    elif entry[0] == "comp_time":
-                        job.CompletionTime = entry[1]
-                    elif entry[0] == "total_runtime":
-                        job.TotalRuntime = entry[1]
-                    elif entry[0] == "submit_host":
-                        job.SubmitHost = entry[1]
-                
-                i += 1
-                
-            job.save()
-            return job
-        else:
-            return False
+                    #grant access rights
+                    UserJobAccessRight.objects.create(User=user, Job=j, AccessRight_id=objects.AccessRights.Owner)  
+        
+        return job
+    
+    
+    
+    def ParseClusterJob(self, job):
+        j = ClusterJob()
+        
+        j.ClusterJobID = job.Job_Id
+        j.JobName = job.Job_Name
+        j.JobOwner = job.Job_Owner
+        
+        #resources requested
+        j.MemoryRequested = job.Resource_List.mem
+        j.NodesAvailable = job.Resource_List.nodect
+        j.NodesRequested = job.Resource_List.nodes
+        j.WalltimeRequested = job.Resource_List.walltime
+        
+        j.State = job.job_state
+        j.Queue = job.queue
+        j.Server = job.server
+        j.ExecutionHost = str(job.exec_host).split("/")[0]
+        j.SubmitArgs = job.submit_args
+        j.SubmitHost = ""
+        j.OutputPath = job.Output_Path
+        j.ErrorPath = job.Error_Path
+        j.Priority = job.Priority
+        
+        #time
+        j.CreatedTime = job.ctime
+        j.TimeEnteredQueue = job.qtime
+        j.EligibleTime = job.etime
+        j.LastModified = job.mtime
+        j.StartTime = job.start_time
+        
+        try:
+            j.CompletionTime = job.comp_time
+            j.ExitStatus = job.exit_status
+            j.TotalRuntime = job.comp_time - job.start_time
+        
+            #resources used
+            j.CPUTimeUsed = job.resources_used.cput
+            j.MemoryUsed = job.resources_used.mem
+            j.VirtualMemoryUsed = job.resources_used.vmem
+            j.WalltimeUsed = job.resources_used.walltime
+        except:
+            print "Could not obtain a completion time or exit status as the job is still running."
+        
+        j.VariableList = job.Variable_List
+        
+        j.Comment = job.comment
+        
+        j.save()
+        
+        return j
     
     
     def CreateSnapshot(self, process, job_dir, snap_dir):
@@ -1554,6 +1535,8 @@ class JMS:
         output += "\n" + process.run_command('qmgr -c "set server mom_job_sync = %s"' % str(MOMJobSync))
         output += "\n" + process.run_command('qmgr -c "set server moab_array_compatible = %s"' % str(MoabArrayCompatible))
         output += "\n" + process.run_command('qmgr -c "set server scheduling = %s"' % str(Scheduling))
+        
+        return output
         
     
     

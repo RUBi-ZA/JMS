@@ -12,9 +12,6 @@
 	<!-- JQUERY-UI STYLE-->
 	<link href="{{ STATIC_URL }}lib/jquery-ui-1.11.2.jms/jquery-ui.min.css" rel="stylesheet" />
 	
-	<!-- FILEMANGER ELFINDER STYLES -->
-	<link href="{{ STATIC_URL }}/lib/elfinder-2.0-rc1/css/elfinder.min.css" rel="stylesheet" />	
-	
 	<!-- CUSTOM STYLES-->
 	<link href="{{ STATIC_URL }}lib/bootstrap/binary/css/custom.css" rel="stylesheet" />
 	<link href="{{ STATIC_URL }}lib/bootstrap/binary/css/stavatech.css" rel="stylesheet" />
@@ -609,10 +606,7 @@
 						<!-- /. JOB DETAILS -->
 					</div>
 				
-					<div class="col-lg-12" data-bind="visible: $root.Job() != null && $root.LoadingClusterJob() == false"> 	
-						<div id="elfinder"></div>
-						<br/>
-					</div>
+					
 				</div>
 			</div>			
 			
@@ -639,8 +633,6 @@
 	<script type="text/javascript" src="{{ STATIC_URL }}lib/slimscroll/jQuery-slimScroll-1.3.0/jquery.slimscroll.min.js"></script>
 	<!-- SAMMY SCRIPTS -->
 	<script type="text/javascript" src="{{ STATIC_URL }}lib/sammy.js"></script>
-	<!-- FILE MANAGER ELFINDER SCRIPTS -->
-	<script type="text/javascript" src="{{ STATIC_URL }}lib/elfinder-2.0-rc1/js/elfinder.min.js"></script>	
 	<!-- CUSTOM SCRIPTS -->
 	<script src="{{ STATIC_URL }}lib/custom/JMS/custom.js"></script>
 	<script src="{{ STATIC_URL }}lib/custom/question.js"></script>

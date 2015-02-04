@@ -483,7 +483,7 @@ function JobsViewModel() {
 			self.GetJob();
 			
 			//load file manager
-			if(elf_loaded) {
+			/*if(elf_loaded) {
 				elf.options.url = '/api/jms/filemanager/' + jobs_model.job_id()	+ '/';
 				elf.exec('reload');
 			} else {
@@ -492,7 +492,7 @@ function JobsViewModel() {
 					url : '/api/jms/filemanager/' + jobs_model.job_id()	+ '/',
 					sync: 30000
 				}).elfinder('instance');
-			}
+			}*/
 			
 		} else {
 			self.LoadingJob(false);

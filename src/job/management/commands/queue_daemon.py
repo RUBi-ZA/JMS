@@ -4,30 +4,8 @@ from job.JMS import JMS
 from django.db import transaction
 
 import sys, time, subprocess
+from lxml import objectify
 from daemon import Daemon
-
-
-def UpdateJobHistory():
-    with open("/tmp/qd.log", 'w') as f:
-        cmd = "qstat -a"
-        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-        out, err = process.communicate()
-        
-        jms = JMS()
-        lines = out.splitlines()
-        count = 0
-        for line in lines:
-            print >> f, str(count)
-            print >> f, line
-            if count > 4 and len(line) > 0:
-                job_id = line[0:23].strip()
-                print >> f, job_id
-                username = line[24:35].strip()
-                print >> f, username
-                if jms.AddUpdateClusterJob(job_id, username) == False:
-                    print >> f, "Failed to add job %s to job history." % job_id
-        
-            count += 1
 
 
 class QueueDaemon(Daemon):
@@ -39,11 +17,20 @@ class QueueDaemon(Daemon):
                 count += 1
                 
                 try:
-                    UpdateJobHistory()
+                    process = subprocess.Popen("qstat -x", shell=True, stdout=subprocess.PIPE)
+                    out, err = process.communicate()
+                    
+                    data = objectify.fromstring(out)
+                    
+                    jms = JMS() 
+                    for job in data.Job:
+                        print >> f, job.Job_Id
+                        jms.AddUpdateClusterJob(job)
+                          
                 except Exception, err:
-                    print >> f, str(err)
+                    print >> f, "Error: " + str(err)
                   
-            time.sleep(15)
+            time.sleep(5)
 
                        
 class Command(NoArgsCommand):

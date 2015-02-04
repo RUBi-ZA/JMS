@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import os, socket
 from Utilities import *
+from lxml import objectify
 
 #####
 # Workflow objects
@@ -111,162 +112,7 @@ class Job:
     def __init__(self, job_id, cores):
         self.job_id = job_id
         self.cores = cores
-
-class JobDetail():
-    ClusterJobID = ""
-    JobName = ""
-    JobOwner = ""
-    
-    MemoryRequested = ""
-    NodesAvailable = ""
-    NodesRequested = ""
-    WalltimeRequested = ""
-    
-    CPUTimeUsed = ""
-    MemoryUsed = ""
-    VirtualMemoryUsed = ""
-    WalltimeUsed = ""
-    
-    State = ""
-    Queue = ""
-    Server = ""
-    ExecutionHost = ""
-    SubmitArgs = ""
-    SubmitHost = ""
-    OutputPath = ""
-    ErrorPath = ""
-    Priority = ""
-    
-    CreatedTime = ""
-    TimeEnteredQueue = ""
-    EligibleTime = ""
-    LastModified = ""
-    StartTime = ""
-    CompletionTime = ""
-    TotalRuntime = ""
-    
-    VariableList = ""
-    
-    Comment = ""
-    ExitStatus = ""    
-    
-    OutputStream = "Output stream not available"
-    ErrorStream = "Error stream not available"
-    
-    @staticmethod
-    def ParseClusterJobs(jobs_string):
-        
-        jobs = []
-        
-        jobs_arr = jobs_string.split("\n\n")
-        
-        for job_string in jobs_arr:
-            job = JobDetail.ParseClusterJob(job_string)
-            
-            if job:
-                jobs.append(job)
-        
-        return jobs        
-    
-    
-    @staticmethod
-    def ParseClusterJob(job_string):
-        job = JobDetail()
-        
-        job_arr = job_string.split('\n')
-        if len(job_arr) > 5:
-            i = 0
-            while i < len(job_arr):
-                line = job_arr[i].rstrip()
-        
-                if len(line) > 0 and line[0] == 'J':
-                    job.ClusterJobID = line.split(':')[1].strip()
-                else:
-                    entry = line[4:].split(" = ")
-                
-                    if entry[0] == "Job_Name":
-                        job.JobName = entry[1]
-                    elif entry[0] == "Job_Owner":
-                        job.JobOwner = entry[1]
-                    elif entry[0] == "resources_used.cput":
-                        job.CPUTimeUsed = entry[1]
-                    elif entry[0] == "resources_used.mem":
-                        job.MemoryUsed = entry[1]
-                    elif entry[0] == "resources_used.vmem":
-                        job.VirtualMemoryUsed = entry[1]
-                    elif entry[0] == "resources_used.walltime":
-                        job.WalltimeUsed = entry[1]
-                    elif entry[0] == "job_state":
-                        job.State = entry[1]
-                    elif entry[0] == "queue":
-                        job.Queue = entry[1]
-                    elif entry[0] == "server":
-                        job.Server = entry[1]
-                    elif entry[0] == "ctime":
-                        job.CreatedTime = entry[1]
-                    elif entry[0] == "Error_Path":
-                        job.ErrorPath = entry[1]
-                    elif entry[0] == "exec_host":
-                        job.ExecutionHost = entry[1]
-                    elif entry[0] == "mtime":
-                        job.LastModified = entry[1]
-                    elif entry[0] == "Output_Path":
-                        job.OutputPath = entry[1]
-                    elif entry[0] == "Priority":
-                        job.Priority = entry[1]
-                    elif entry[0] == "qtime":
-                        job.TimeEnteredQueue = entry[1]
-                    elif entry[0] == "Resource_List.mem":
-                        job.MemoryRequested = entry[1]
-                    elif entry[0] == "Resource_List.nodect":
-                        job.NodesAvailable = entry[1]
-                    elif entry[0] == "Resource_List.nodes":
-                        job.NodesRequested = entry[1]
-                    elif entry[0] == "Resource_List.walltime":
-                        job.WalltimeRequested = entry[1]
-                    elif entry[0] == "Variable_List":
-                        job.VariableList = entry[1]    
-                    
-                        i += 1
-                        line = job_arr[i].rstrip()
-                        while line[0] == "\t":
-                            job.VariableList += line.strip()
-                        
-                            i += 1
-                            line = job_arr[i].rstrip()
-                        continue                
-                    elif entry[0] == "comment":
-                        job.Comment = entry[1]
-                    elif entry[0] == "etime":
-                        job.EligibleTime = entry[1]
-                    elif entry[0] == "exit_status":
-                        job.ExitStatus = entry[1]
-                    elif entry[0] == "submit_args":
-                        job.SubmitArgs = entry[1]
-                    
-                        i += 1
-                        line = job_arr[i].rstrip()
-                        while line[0] == "\t":
-                            job.SubmitArgs += line.strip()
-                        
-                            i += 1
-                            line = job_arr[i].rstrip()
-                        continue
-                    elif entry[0] == "start_time":
-                        job.StartTime = entry[1]
-                    elif entry[0] == "comp_time":
-                        job.CompletionTime = entry[1]
-                    elif entry[0] == "total_runtime":
-                        job.TotalRuntime = entry[1]
-                    elif entry[0] == "submit_host":
-                        job.SubmitHost = entry[1]
-                
-                i += 1
-                
-            return job
-        else:
-            return False
-        
+       
 
 class QueueItem:
     
@@ -370,26 +216,31 @@ class Dashboard:
     def GetQueue(self, process):
         queue = []
         
-        out = process.run_command("qstat -a")
+        out = process.run_command("qstat -x")
         
-        lines = out.split('\n')
-        
-        count = 0
-        for line in lines:
-            if count > 4 and len(line) > 0:
-                job_id = line[0:23].strip()
-                username = line[24:35].strip()
-                job_name = line[45:61].strip()
-                nodes = int(line[69:74].strip())
-                cores = int(line[75:81].strip())
-                state = line[99]
-                time = line[101:].strip()
-                q = line[36:44].strip()
-                
-                queue.append(QueueItem(job_id, username, job_name, nodes, cores, state, time, q))            
+        #with open("/tmp/queue.txt", "w") as f:
+        #    print >> f, out
             
-            count += 1            
+        try:
+            data = objectify.fromstring(out)
+        except:
+            return queue
         
+        for job in data.Job:
+            job_id = str(job.Job_Id)
+            username = str(job.Job_Owner).split("@")[0]
+            job_name = str(job.Job_Name)
+            cores = 1
+            nodes = str(job.Resource_List.nodes).split(":")
+            if len(nodes) > 1:
+                cores = int(nodes[1].split("=")[1])
+            nodes = int(nodes[0])
+            state = str(job.job_state)
+            time = int(job.Walltime.Remaining)
+            q = str(job.queue)
+            
+            queue.append(QueueItem(job_id, username, job_name, nodes, cores, state, time, q))            
+            
         return queue
 
 ####

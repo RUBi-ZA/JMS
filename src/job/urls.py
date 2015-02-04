@@ -10,8 +10,6 @@ public_urls = patterns('job.views',
     url(r'files/(?P<upload_type>[^/]+)/(?P<type_id>[^/]+)/(?P<file_name>[^/]+)?', views.FileDetail.as_view()), 
     url(r'files/(?P<upload_type>[^/]+)/(?P<type_id>[^/]+)/?', views.File.as_view()), 
     
-    url(r'filemanager/(?P<job_id>[^/]+)/$', views.FileManager.as_view()),
-    
     url(r'dashboard/?', views.Dashboard.as_view()), 
     
     url(r'jobs/cluster/(?P<cluster_id>[^/]+)/?', views.ClusterJob.as_view()),

@@ -741,8 +741,8 @@ class ClusterJob(APIView):
         """
         Get details of a job running on the cluster
         """
-        jms = JMS()
-        job = jms.GetClusterJob(job_id=cluster_id, username=request.user.username, password=request.user.userprofile.Code)
+        jms = JMS(user=request.user)
+        job = jms.GetClusterJob(job_id=cluster_id)
         
         serializer = ClusterJobSerializer(job)
         return Response(serializer.data)
@@ -981,7 +981,7 @@ class Result(APIView):
             return Response(status=status.HTTP_200_OK)
         else:
             return Response("The result file was not received by the server", status=400)
-'''
+
 
 class FileManager(APIView):
     permission_classes = (IsAuthenticated,)    
@@ -1019,7 +1019,7 @@ class FileManager(APIView):
         r = requests.get(url)
         
         return Response(r.json())
-        
+'''        
 
 
 class FileDownload(APIView):
