@@ -410,6 +410,31 @@ var ExpectedOutput = function(output_id, name) {
 	}
 }
 
+var EnvironmentalVariable = function(name, value) {
+    this.VariableName = ko.observable(name);
+    this.Value = ko.observable(value);
+}
+
+var Queue = function(name, type, enabled, started, max_queuable, max_run, max_user_queuable, max_user_run, max_nodes, default_nodes, max_cpu, default_cpu, max_mem, default_mem, max_walltime, default_walltime, default_queue) {
+    this.QueueName = ko.observable(name);
+    this.Type = ko.observable(type);
+    this.Enabled = ko.observable(enabled);
+    this.Started = ko.observable(started);
+    this.MaxQueable = ko.observable(max_queuable);
+    this.MaxRun = ko.observable(max_run);
+    this.MaxUserQueable = ko.observable(max_user_queuable);
+    this.MaxUserRun = ko.observable(max_user_run);
+    this.MaxNodes = ko.observable(max_nodes);
+    this.DefaultNodes = ko.observable(default_nodes);
+    this.MaxCPUs = ko.observable(max_cpu);
+    this.DefaultCPUs = ko.observable(default_cpu);
+    this.MaxMemory = ko.observable(max_mem);
+    this.DefaultMemory = ko.observable(default_mem);
+    this.MaxWalltime = ko.observable(max_walltime);
+    this.DefaultWalltime = ko.observable(default_walltime);
+    this.DefaultQueue = ko.observable(default_queue);
+}
+
 /*=============================
   WorkflowViewModel
 ===============================*/
@@ -418,6 +443,10 @@ function WorkflowViewModel() {
 	
 	//Data
 	self.Workflows = ko.observableArray();
+	self.EnvironmentalVariables = ko.observableArray();
+	
+	self.Queues = ko.observableArray();
+	self.SelectedQueue = ko.observable();
     
     //Interface
     self.VisibleWindow = ko.observable("workflows");
@@ -467,6 +496,7 @@ function WorkflowViewModel() {
 	self.Workflow = ko.observable(new Workflow(-1, "", "", null, false));	
 	self.Stage = ko.observable(new Stage(-1, "", null, "", null, "", [], []));    
     self.StageDependency = ko.observable(new StageDependency());
+    self.StageResources = ko.observable();
     
 	self.SelectedDependencies = ko.observableArray();	
 	self.SelectedDependencies.subscribe(function(value) {
@@ -1780,8 +1810,45 @@ function WorkflowViewModel() {
 	    self.VisibleWindow("custom");
 	}
 	
+	self.ShowResources = function(data) {
+	    self.StageResources(data);
+	    $("#resources-dialog").modal();
+	}
+	
 	self.hideOption = function(option, item) {
         ko.applyBindingsToNode(option, { visible: item.available }, item);
+    }
+    
+    self.ToggleCustomResources = function() {
+        $("#custom_resources").slideToggle();
+    }
+    
+    self.GetServerSettings = function() {
+	    $.ajax({
+	        url: "/api/jms/settings/",
+	        success: function(settings) {
+	            settings = JSON.parse(settings);
+	            console.log(settings);
+	            self.LoadQueues(settings.Queues);
+	            self.Loading(false);
+	        }
+	    });
+	}
+	
+	self.LoadQueues = function(queues) {
+	    $.each(queues, function(i, q) {
+            var queue = new Queue(q.QueueName, q.Type, q.Enabled, q.Started, q.MaxQueable, q.MaxRun, q.MaxUserQueable, q.MaxUserRun, q.MaxNodes, q.DefaultNodes, q.MaxCPUs, q.DefaultCPUs, q.MaxMemory, q.DefaultMemory, q.MaxWalltime, q.DefaultWalltime, q.DefaultQueue);
+            
+            self.Queues.push(queue);
+        });
+	}
+	
+    self.AddEnvironmentalVariable = function() {
+        self.EnvironmentalVariables.push(new EnvironmentalVariable("", ""))
+    }
+    
+    self.DeleteEnvironmentalVariable = function(data) {
+        self.EnvironmentalVariables.remove(data);
     }
 }
 
@@ -1794,7 +1861,8 @@ $(document).ready(function () {
 	
 	workflow = new WorkflowViewModel();
 	ko.applyBindings(workflow, document.getElementById("workflows"));
-		
+	
+	workflow.GetServerSettings();
 	workflow.LoadData();	
 });
 
@@ -1807,6 +1875,7 @@ $("form#custom-job").submit(function(){
 		workflow.Submitting(true);
 		
 		var formData = new FormData($(this)[0]);
+		formData.append('EnvironmentalVariables', ko.toJSON(workflow.EnvironmentalVariables));
 		
 		$.ajax({
 		    url: "/api/jms/jobs/custom",

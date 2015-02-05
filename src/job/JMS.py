@@ -807,7 +807,8 @@ class JMS:
                 
                 p.close()
                 
-                self.AddUpdateClusterJob(out.strip(), job.User.username)
+                job_obj = self.GetClusterJobObject(out.strip(), job.User.username)
+                self.AddUpdateClusterJob(job_obj)
                 
                 #Update job details
                 jobstage.ClusterJobID = out.strip();
@@ -868,7 +869,7 @@ class JMS:
     
     
     
-    def RunCustomJob(self, JobName, JobDescription, Queue, Nodes, CPUs, Memory, Walltime, Commands, Files):
+    def RunCustomJob(self, JobName, JobDescription, Queue, Nodes, CPUs, Memory, Walltime, Variables, Commands, Files):
         user = self.user
         
         jobID = 0        
@@ -901,9 +902,13 @@ class JMS:
             jobstage = JobStage.objects.create(Job=job, RequiresEditInd=False, State_id=objects.Status.Created)
             
             #create job file
+            custom_vars = ""
+            for v in Variables:
+                custom_vars += ",%s=%s" % (v["VariableName"], v["Value"])
+            
             job_file = '#!/bin/sh\n'
             job_file += '#PBS -V\n'
-            job_file += '#PBS -v SCRIPT_DIR=%s,WORKING_DIR=%s\n' % (WorkingDirectory, WorkingDirectory)
+            job_file += '#PBS -v WORKING_DIR=%s%s\n' % (WorkingDirectory, custom_vars)
             job_file += '#PBS -W umask=022\n'
             job_file += '#PBS -d %s\n' % WorkingDirectory
             job_file += '#PBS -N %s\n' % JobName
@@ -931,13 +936,12 @@ class JMS:
             
             p.close()
             
-            File.print_to_file("/obiwanNFS/open/temp.txt", out.strip(), 'w', 0777)
-            
             #Update job details
             jobstage.ClusterJobID = out.strip();
             jobstage.save()
             
-            self.AddUpdateClusterJob(out.strip(), job.User.username)
+            job_obj = self.GetClusterJobObject(out.strip(), job.User.username)
+            self.AddUpdateClusterJob(job_obj)
             
         return jobID
 
@@ -981,7 +985,13 @@ class JMS:
     
     def DeleteJob(self, JobID):
         if self.GetUserJobAccess(self.user.id, JobID) <= 2:
-            self.StopJob(JobID)
+            try:
+                self.StopJob(JobID)
+            except PermissionDenied, err:
+                raise PermissionDenied
+            except Exception, err:
+                print str(err)
+            
             
             job = Job.objects.get(pk=JobID)
             user = self.user
@@ -1016,7 +1026,7 @@ class JMS:
     
     
     
-    def AddUpdateClusterJob(self, job_id, username):
+    def GetClusterJobObject(self, job_id, username):
         user = None
         
         try:
@@ -1028,30 +1038,10 @@ class JMS:
         out = process.run_command("qstat -x %s" % job_id)
         process.close()
         
-        job_obj = objectify.fromstring(out)
-        job = self.ParseClusterJob(job_obj.Job)
+        data = objectify.fromstring(out)
         
-        #Get job state
-        state = objects.Status.Queued
-        if job.State == 'Q' or job.State == 'H':
-            state = objects.Status.Queued
-        elif job.State == 'R':
-            state = objects.Status.Running
-        elif job.State == 'E' or job.State == 'C':
-            state = objects.Status.Completed_Successfully
+        return data.Job
         
-        if job:
-            #Add the job to the JMS job history if it doesn't exist or update it if it does exist
-            try:
-                j = JobStage.objects.get(ClusterJobID=job_id) 
-                j.State_id = state
-                j.save()
-                
-            except Exception, ex:
-                j = Job.objects.create(JobName=job.JobName, JobDescription="This job was submitted externally to the JMS", User=user, BatchJobInd=False)  
-                jobstage = JobStage.objects.create(Job=j, ClusterJobID=job.ClusterJobID, RequiresEditInd=False, State_id=state)
-        
-        return job
     
     
     def AddUpdateClusterJob(self, job_obj):
@@ -1069,21 +1059,30 @@ class JMS:
         elif job.State == 'E' or job.State == 'C':
             state = objects.Status.Completed_Successfully
         
-        if job:
-            #Add the job to the JMS job history if it doesn't exist or update it if it does exist
-            try:
-                j = JobStage.objects.get(ClusterJobID=job.ClusterJobID) 
-                j.State_id = state
-                j.save()
+        j = None
+        
+        #Add the job to the JMS job history if it doesn't exist or update it if it does exist
+        try:
+            j = JobStage.objects.get(ClusterJobID=job.ClusterJobID) 
+        except Exception, ex:
+            #if the job doesn't exist, create it (this will happen if the job has been submitted from the terminal)
+            with transaction.atomic():
+                j = Job.objects.create(JobName=job.JobName, JobDescription="This job was submitted externally to the JMS", User=user, BatchJobInd=False)
+                JobStage.objects.create(Job=j, ClusterJobID=job.ClusterJobID, RequiresEditInd=False, State_id=state)
                 
-            except Exception, ex:
+                #grant access rights
+                UserJobAccessRight.objects.create(User=user, Job=j, AccessRight_id=objects.AccessRights.Owner)
                 
-                with transaction.atomic():
-                    j = Job.objects.create(JobName=job.JobName, JobDescription="This job was submitted externally to the JMS", User=user, BatchJobInd=False)
-                    JobStage.objects.create(Job=j, ClusterJobID=job.ClusterJobID, RequiresEditInd=False, State_id=state)
-                    
-                    #grant access rights
-                    UserJobAccessRight.objects.create(User=user, Job=j, AccessRight_id=objects.AccessRights.Owner)  
+                j = None
+                
+        if j:        
+            #if the state of the job has changed to completed, run the FinishStage function
+            if j.State.StatusID != state and state == objects.Status.Completed_Successfully:
+                self.FinishStage(job.ClusterJobID, job.ExitStatus)
+            
+            #update the state of the stage
+            j.State_id = state
+            j.save()
         
         return job
     
@@ -1149,7 +1148,7 @@ class JMS:
     
     def FinishStage(self, ClusterJobID, ExitCode):
         try: 
-            File.print_to_file("/obiwanNFS/open/finish.txt", "%s %s" % (ClusterJobID, str(ExitCode)), "w")
+            File.print_to_file("/tmp/finish.txt", "%s %s" % (ClusterJobID, str(ExitCode)), "w")
             cluster_job = ClusterJob.objects.get(pk=ClusterJobID)
             cluster_job.State = "C"
             cluster_job.ExitStatus = ExitCode

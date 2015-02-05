@@ -724,11 +724,12 @@ class CustomJob(APIView):
         mem = request.POST["Memory"]
         walltime = request.POST["Walltime"]
         commands = request.POST["Commands"]
+        variables = json.loads(request.POST["EnvironmentalVariables"])
         
         files = request.FILES.getlist("files")
         
         jms = JMS(user=request.user)
-        job_id = jms.RunCustomJob(job_name, description, queue, nodes, cpus, mem, walltime, commands, files)
+        job_id = jms.RunCustomJob(job_name, description, queue, nodes, cpus, mem, walltime, variables, commands, files)
         
         return Response(job_id)
     
@@ -1350,7 +1351,8 @@ class Prologue(APIView):
     def get(self, request, username, cluster_job_id):
         try:
             jms = JMS()
-            jms.AddUpdateClusterJob(cluster_job_id, username)                    
+            job_obj = jms.GetClusterJobObject(cluster_job_id, username)
+            jms.AddUpdateClusterJob(job_obj)                    
         
             jms.UpdateJobState(ClusterJobID=cluster_job_id, StatusID=objects.Status.Running)            
         except Exception, e:
@@ -1369,9 +1371,8 @@ class Epilogue(APIView):
     def get(self, request, username, cluster_job_id, exit_code):
         try:
             jms = JMS()
-            jms.AddUpdateClusterJob(cluster_job_id, username)
-            
-            jms.FinishStage(cluster_job_id, int(exit_code))
+            job_obj = jms.GetClusterJobObject(cluster_job_id, username)
+            jms.AddUpdateClusterJob(job_obj) 
         except Exception, e:
             try:
                 with open("/tmp/epi.log", 'w') as f:

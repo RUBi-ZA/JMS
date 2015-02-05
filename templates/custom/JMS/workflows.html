@@ -618,6 +618,55 @@
 						</div>
 				   	</div>
 			 	</div>
+			 	
+			 	<div class="modal fade" id="resources-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+						    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						     	<h4 class="modal-title" >Stage Settings:</h4>
+						  	</div>
+						    <div class="modal-body" style="overflow:hidden">
+						    	<div class="col-lg-12" data-bind="with: $root.StageResources">
+    								<div class="form-group col-lg-12">
+									    <input type="checkbox" value="true" data-bind="checked: RequiresEdit"/> Pause workflow after stage completion 
+									</div>
+									
+    								<div class="form-group col-lg-12">
+    									<label>Queue:</label>
+    									<select class="form-control" name="Queue" placeholder="Enter queue name" data-bind="value: Queue,
+    									    options: $root.Queues, optionsText: function(item) { return item.QueueName(); }, optionsValue: function(item) {
+    									    return item.QueueName(); }">
+    									</select>
+    								</div>
+    								
+    								<div class="form-group col-lg-12">
+    									<label>Nodes:</label>
+    									<input class="form-control" name="Nodes" type="number" min="1" data-bind="value: Nodes" />
+    								</div>
+    								
+    								<div class="form-group col-lg-12">
+    									<label>Cores:</label>
+    									<input class="form-control" name="CPUs" type="number" min="1" data-bind="value: MaxCores" />
+    								</div>
+    								
+    								<div class="form-group col-lg-12">
+    									<label>Memory:</label>
+    									<input class="form-control" name="Memory" data-bind="value: Memory" />
+    								</div>
+    								
+    								<div class="form-group col-lg-12">
+    									<label>Walltime (hh:mm:ss):</label>
+    									<input class="form-control" name="Walltime" placeholder="Walltime e.g. 01:00:00" data-bind="value: Walltime"/>
+    								</div>
+    							</div>
+						   	</div>
+						  	<div class="modal-footer">
+						       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+							</div>
+						</div>
+				   	</div>
+			 	</div>
 			  
 				<div id="workflows-container" data-bind="visible: $root.VisibleWindow() == 'workflows'">    
 					<div class="row">
@@ -729,7 +778,7 @@
     				            <div class="col-lg-12">
     								<div class="form-group">
     									<label>Job name:</label>
-    									<input class="form-control" name="JobName" placeholder="Enter job name"></input>
+    									<input class="form-control" name="JobName" placeholder="Enter job name"/>
     								</div>
     								
     								<div class="form-group">
@@ -739,35 +788,95 @@
     							</div>
     							
     							<br/>
-    							<h4>Resources</h4>
+    							<h4>Settings</h4>
     							<hr/>
     							
-    				            <div class="col-lg-12">
-    								<div class="form-group col-lg-6">
-    									<label>Queue:</label>
-    									<input class="form-control" name="Queue" placeholder="Enter queue name"/>
-    								</div>
-    								
-    								<div class="form-group col-lg-6">
-    									<label>Nodes:</label>
-    									<input class="form-control" name="Nodes" type="number"/>
-    								</div>
-    								
-    								<div class="form-group col-lg-6">
-    									<label>Cores:</label>
-    									<input class="form-control" name="CPUs" type="number"/>
-    								</div>
-    								
-    								<div class="form-group col-lg-6">
-    									<label>Memory (GB):</label>
-    									<input class="form-control" name="Memory" type="number"/>
-    								</div>
-    								
-    								<div class="form-group col-lg-6">
-    									<label>Walltime (hh:mm:ss):</label>
-    									<input class="form-control" name="Walltime" placeholder="Walltime e.g. 01:00:00"/>
-    								</div>
-    							</div>	
+    				            <div class="col-lg-12" id="custom_resources">
+    				                <div class="col-lg-6">
+        								<div class="form-group col-lg-12">
+        									<label>Queue:</label>
+        									<select class="form-control" name="Queue" placeholder="Enter queue name" data-bind="value: $root.SelectedQueue,
+        									    options: $root.Queues, optionsText: function(item) { return item.QueueName(); }">
+        									</select>
+        								</div>
+        								
+        								<!-- ko with: $root.SelectedQueue -->
+        								<div class="form-group col-lg-12">
+        									<label>Nodes:</label>
+        									<input class="form-control" name="Nodes" type="number" min="1" data-bind="value: DefaultNodes, attr: { max: MaxNodes }" />
+        								</div>
+        								
+        								<div class="form-group col-lg-12">
+        									<label>Cores:</label>
+        									<input class="form-control" name="CPUs" type="number" min="1" data-bind="value: DefaultCPUs, attr: { max: MaxCPUs }" />
+        								</div>
+        								
+        								<div class="form-group col-lg-12">
+        									<label>Memory:</label>
+        									<input class="form-control" name="Memory" data-bind="value: DefaultMemory" />
+        								</div>
+        								
+        								<div class="form-group col-lg-12">
+        									<label>Walltime (hh:mm:ss):</label>
+        									<input class="form-control" name="Walltime" placeholder="Walltime e.g. 01:00:00" data-bind="value: DefaultWalltime"/>
+        								</div>
+        								<!-- /ko -->
+        							</div>
+        							
+        							<div class="col-lg-6">
+        							    <label>Environmental variables:</label>
+        							    <table class="table table-hover">
+        							        <thead>
+        							            <tr>
+            							            <th>
+            							                Variable Name
+            							            </th>
+            							            <th>
+            							                Value
+            							            </th>
+            							            <th>
+            							                
+            							            </th>
+            							        </tr>
+        							        </thead>
+        							        <tbody>
+        							            <tr>
+            							            <td>
+            							                WORKING_DIR
+            							            </td>
+            							            <td>
+            							                This variable can be used to access the working directory of your job (if needed)
+            							            </td>
+            							            <td>
+            							                
+            							            </td>
+            							        </tr>
+        							            <!-- ko foreach: $root.EnvironmentalVariables -->
+        							            <tr>       
+        							                <td>
+        							                    <input class="form-control" data-bind="value: VariableName"/>
+        							                </td>
+        							                <td>
+        							                    <input class="form-control" data-bind="value: Value"/>
+        							                </td>
+        							                <td>
+        							                    <a href="#" class="btn btn-danger btn-sm" data-bind="click: $root.DeleteEnvironmentalVariable">
+        							                        <i class="fa fa-trash-o"></i>
+        							                    </a>
+        							                </td>   
+        							            </tr>       
+        							            <!-- /ko -->
+        							        </tbody>
+        							        <tfoot>
+        							            <tr>
+            							            <td colspan="3" style="text-align:right;">
+            							                <a href="#" class="btn btn-success btn-sm" data-bind="click: $root.AddEnvironmentalVariable"><i class="fa fa-plus"></i></a>
+            							            </td>
+        							            </tr>
+        							        </tfoot>
+        							    </table>
+        							</div>
+    							</div>
     							
     							<br/>	
     							<h4>Scripts</h4>
@@ -776,7 +885,7 @@
     							<div class="col-lg-12">
     							    
     							    <div class="form-group col-lg-12">
-        								<label>Script to be submitted to cluster:</label>
+        								<label>Enter your script:</label>
         							    <textarea name="Commands" class="form-control ace"></textarea>
         							</div>
     							    
@@ -785,6 +894,8 @@
         							    <input type="file" name="files" multiple class="form-control"/>
         							</div>
     							</div>
+    							
+    							
 							</form>
 						</div>
 						
@@ -1144,12 +1255,12 @@
 								<!-- ko if: $root.Job().JobType() == 2 -->
 								<div class="form-group col-lg-12">
 						            <label>Batch job file</label>
-						            <input class="form-control" type="file" id="batch_file"></input>
+						            <input class="form-control" type="file" id="batch_file"/>
 						        </div>
 						        
 						        <div class="form-group col-lg-12">
 						            <label>Required input files</label>
-						            <input class="form-control" type="file" multiple id="input_files"></input>
+						            <input class="form-control" type="file" multiple id="input_files"/>
 						        </div>
 						        <!-- /ko -->
 								
@@ -1159,10 +1270,11 @@
 						    <!-- ko if: $root.Job().JobType() == 1 -->
 						    
 							<div class="col-lg-12" data-bind="foreach: $root.Job().Workflow().Stages">
-							
+							    
 								<h4 data-bind="text: StageName"></h4>
-								<div class="form-group">
-									<input type="checkbox" value="true" data-bind="checked: RequiresEdit"></input> Pause workflow after stage completion 
+								
+								<div class="form-group" style="padding-left:15px;">
+								    <a href="#" data-bind="click: $root.ShowResources">Stage Settings</a>
 								</div>
 								
 								<div class="col-lg-12" data-bind="foreach: Parameters">
@@ -1171,7 +1283,7 @@
 										
 										<div data-bind="if: Type() == 1">
 											<div data-bind="if: Multiple() == false">												
-												<input class="form-control" data-bind="value: Value"></input>
+												<input class="form-control" data-bind="value: Value"/>
 											</div>
 											<div data-bind="if: Multiple() == true">
 												<table class="table table-responsive">
