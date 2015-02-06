@@ -67,7 +67,7 @@ python manage.py setup <base_url>
 ```
 Where \<base_url> is the URL that you are hosting the JMS at. If running on a port other than 80, the port should also be specified e.g. `python manage.py setup http://jms.rubi.com` or `python manage.py setup 123.456.12.34:8000`. If you are [hosting with Apache](https://github.com/RUBi-ZA/JMS/wiki/Hosting-with-Apache), this URL should match the URL in the Apache hosts file. You can run set up again if you need to change the URL.
 
-**NB: The setup command generates prologue and epilogue scripts which get stored in `/NFS/JMS/scripts` (the exact path will depend on where you created your shared directory). These scripts need to be copied to `/var/spool/torque/mom_priv/` on each and every node. This is of vital importance and is required for the JMS to function correctly.**
+**NB: The setup command generates prologue and epilogue scripts which get stored in `/NFS/JMS/scripts` (the exact path will depend on where you created your shared directory). These scripts need to be copied to `/var/spool/torque/mom_priv/` on each and every node. This is no longer a requirement, but may imporve perfomance in some cases **
 
 ### 2. Start the queue daemon
 
@@ -84,7 +84,7 @@ python manage.py queue_daemon --stop
 
 ### 3. Adding nodes
 
-You can add compute nodes from the JMS web interface. When you add a node via the interface, you will aslo be given additional instructions that you need to carry out manually before the node will be operational.
+You can add compute nodes from the JMS web interface. When you add a node via the interface, you will also be given additional instructions that you need to carry out manually before the node will be operational.
 
 See '[set up Torque nodes](https://github.com/RUBi-ZA/JMS/wiki/Set-up-Torque#2-set-up-the-compute-nodes)' for more details.
 
