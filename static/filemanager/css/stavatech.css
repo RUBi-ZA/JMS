@@ -1,0 +1,303 @@
+a, a:hover , a:focus{
+	color: #0D421D;
+}
+
+.nav .open>a, .nav .open>a:hover, .nav .open>a:focus {
+	color: #0D421D;
+}
+
+.login {
+	width: 360px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 20px;
+}
+
+#login-logo {
+	width:100%;
+	height:103px;
+	width:103px;
+}
+
+#company-name {
+	font-size:16px;
+}
+
+#logo-text {
+	float: left;
+	text-align: center;
+	font-size: 30px;
+	width: 67%;
+}
+
+@media (max-width:380px){
+	#login-logo {
+		width:100%;
+		height:70px;
+		width:70px;
+	}
+
+	#logo-text {
+		float: left;
+		text-align: center;
+		font-size:24px;
+		width: 67%;	
+	}
+	
+	.login {
+		width: 95%;
+		margin-left: auto;
+		margin-right: auto;
+		margin-top: 5px;
+	}
+}
+
+@media (max-width:305px){
+	#login-logo {
+		width:100%;
+		height:50px;
+		width:50px;
+	}
+	
+	#company-name {
+		font-size:12px;
+	}
+
+	#logo-text {
+		float: left;
+		text-align: center;
+		font-size:16px;
+		width: 67%;	
+	}	
+}
+
+#wrapper {
+    width: 100%;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	overflow: hidden;
+	min-height: 352px;
+}
+
+#console-container {
+	height:100%;
+	width: 100%;
+}
+
+.navbar-brand {
+	padding: 0;
+	padding-left: 10px;
+}
+	
+.menu-bar {
+	width: 100%;
+	height: 20px;
+	background-color: #f8f8f8;
+	border-top: 1px solid #e7e7e7;
+	border-bottom: 1px solid #e7e7e7;	
+}
+
+.white {
+    background-color: white;
+}
+
+.menu-bar-title {
+	float: left;
+	padding-left: 10px;
+	font-size: 9pt;
+	padding-top: 2px;
+	color: #777;
+}
+
+.menu-bar-btn {
+	padding: 0 5px;
+	margin-bottom: 2px;
+	border: none;
+	height: 18px;
+	background-color: #f8f8f8;
+	float: right;
+}
+
+.menu-bar-btn:hover {
+	background-color: #e7e7e7;
+}
+
+.btn-white {
+    float: left;
+    background-color: white;
+}
+
+#page-container {
+    padding: 0;
+    min-height: 100px;
+    background-color: #fff;
+	position: absolute;
+	top:  101px;
+	width: 100%;
+}
+
+#nav-wrapper {
+	height: calc(100% - 20px);
+	overflow: auto;
+	position: absolute;
+    z-index: 7;
+}
+
+#page {
+	height: calc(100% - 20px);
+	overflow: hidden;
+	position: absolute;
+}
+
+#hide-nav {
+	display: none;
+}
+
+.part-page, .full-page{
+	margin:none;
+	width: 100%;
+}
+	
+@media(min-width:768px) {
+    #page-container {
+        position: inherit;
+        border-left: 1px solid #e7e7e7;	
+		top: 51px;
+		overflow: auto;
+    }
+
+	#page {
+		height: calc(100% - 20px);
+		overflow: hidden;
+	}
+	
+	.part-page {
+		margin-left:250px;
+		width: calc(100% - 250px);
+	}
+	
+	.full-page {
+		margin:none;
+		width: 100%;
+	}
+	
+	#nav-wrapper {
+		height: calc(100% - 20px);
+        position: inherit;
+        width: 250px;
+		float: left;
+		border: none;
+		border-right: 1px solid #e7e7e7;
+		background-color: #f8f8f8;
+		z-index: 0;
+    }
+	
+	.nav-hidden {
+		display:none;
+	}
+	
+	.navbar-brand {
+		width: 250px;
+	}
+	
+	#hide-nav {
+		display: block;
+	}
+}
+
+@media (max-width: 300px) {
+	.navbar-brand {
+		padding-left: 3px;
+	}
+	
+	.navbar-brand  div {
+		font-size: 12px;
+	}
+}
+
+#footer {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	background-color: #fff;
+	z-index: 7;
+}
+
+
+.level_0 {
+	height: 20px;
+}
+
+.page-container_0 {
+	bottom: 20px;
+}
+
+.level_1 {	
+	height: 150px;
+}
+
+.page-container_1 {
+	bottom: 150px;
+}
+
+.level_2 {
+	top: 101px;
+}
+
+
+@media (min-width: 768px) {
+
+	.level_2 {
+		top: 51px;
+	}
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #0D421D;
+  border-color: #0D421D;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary.focus,
+.btn-primary:active,
+.btn-primary.active,
+.open > .dropdown-toggle.btn-primary {
+  color: #fff;
+  background-color: #0D421D;
+  border-color: #fff;
+}
+.btn-primary.disabled,
+.btn-primary[disabled],
+fieldset[disabled] .btn-primary,
+.btn-primary.disabled:hover,
+.btn-primary[disabled]:hover,
+fieldset[disabled] .btn-primary:hover,
+.btn-primary.disabled:focus,
+.btn-primary[disabled]:focus,
+fieldset[disabled] .btn-primary:focus,
+.btn-primary.disabled.focus,
+.btn-primary[disabled].focus,
+fieldset[disabled] .btn-primary.focus,
+.btn-primary.disabled:active,
+.btn-primary[disabled]:active,
+fieldset[disabled] .btn-primary:active,
+.btn-primary.disabled.active,
+.btn-primary[disabled].active,
+fieldset[disabled] .btn-primary.active {
+  background-color: #0D421D;
+  border-color: #0D421D;
+}
+.btn-primary .badge {
+  color: #0D421D;
+  background-color: #fff;
+}
+
+.error-well {
+    background-color: #f2dede;
+    border-color: #ebccd1;
+    color: #a94442;
+    margin-bottom: 5px;
+}

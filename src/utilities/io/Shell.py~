@@ -1,0 +1,26 @@
+import pxssh
+
+class UserProcess:
+
+    def __init__(self, username, password, hostname="127.0.0.1"):
+        self.username = username
+        self.password = password
+        self.hostname = hostname
+        
+        self.process = pxssh.pxssh()
+        self.process.login(hostname, username, password)
+    
+    
+    def run_command(self, command, expect='[#\$] ', timeout=6):
+        self.process.sendline(command)
+        self.process.prompt(timeout=6)
+        # remove the first and last lines to cut off the terminal prompts
+        return '\n'.join(self.process.before.split('\n')[1:-1])    
+        
+    
+    def logout(self):
+        self.process.logout()
+        
+        
+    def __del__(self):
+        self.logout()

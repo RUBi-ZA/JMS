@@ -38,7 +38,7 @@ def CreateParameters(parameter, map_param_ids, stageID, jms):
         parent_id = map_param_ids[parent_id]
                     
     paramID = jms.CreateParameter(ParameterName=parameter["ParameterName"], Context=parameter["Context"], InputBy=parameter["InputBy"], 
-        Value=parameter["Value"], Multiple=parameter["Multiple"], Optional=parameter["Optional"], ParameterTypeID=parameter["ParameterType"], StageID=stageID, 
+        Value=val, Multiple=parameter["Multiple"], Optional=parameter["Optional"], ParameterTypeID=parameter["ParameterType"], StageID=stageID, 
         ParameterIndex=parameter["ParameterIndex"], ParentParameterID=parent_id)
                     
     map_param_ids[parameter["ParameterID"]] = paramID
@@ -62,7 +62,7 @@ def RecursiveCreateParameters(parameter, map_param_ids, stageID, jms):
         parent_id = map_param_ids[parent_id]
                     
     paramID = jms.CreateParameter(ParameterName=parameter["ParameterName"], Context=parameter["Context"], InputBy=parameter["InputBy"], 
-        Value=parameter["Value"], Multiple=parameter["Multiple"], Optional=parameter["Optional"], ParameterTypeID=parameter["Type"], StageID=stageID, 
+        Value=val, Multiple=parameter["Multiple"], Optional=parameter["Optional"], ParameterTypeID=parameter["Type"], StageID=stageID, 
         ParameterIndex=parameter["ParameterIndex"], ParentParameterID=parent_id)
                     
     map_param_ids[parameter["ParameterID"]] = paramID
@@ -189,8 +189,8 @@ class Dashboard(APIView):
         """
         Get queue and node usage statistics for all nodes in the cluster
         """
-        jms = JMS()
-        dashboard = jms.GetDashboard(request.user.username, request.user.userprofile.Code)
+        jms = JMS(user=request.user)
+        dashboard = jms.GetDashboard()
         return Response(json.dumps(dashboard, default=lambda o: o.__dict__, sort_keys=True))
 
 
@@ -461,7 +461,7 @@ class ExportWorkflow(APIView):
             f.write(JSONRenderer().render(serializer.data))
         
         zip_path = '/tmp/workflow_%s_%s.zip' % (str(workflow_id), request.user.username)
-        workflow_dir = '%s/%s/workflows/%s/' % (jms.users_dir, request.user.username, str(workflow_id))
+        workflow_dir = '%s/workflows/%s/' % (jms.base_dir, str(workflow_id))
         
         with ZipFile(zip_path, 'w') as myzip:
             myzip.write(json_path, "workflow.json")
@@ -646,11 +646,11 @@ class Job(APIView):
         
         stages = []
         for s in job.Stages:
-            stage = objects.JobStageInput(s["StageID"], s["Parameters"], False)
+            stage = objects.JobStageInput(s["StageID"], s["StageName"], s["Parameters"], s["RequiresEdit"], s["Queue"], s["Nodes"], s["MaxCores"], s["Memory"], s["Walltime"])
             stages.append(stage)        
         
         jms = JMS(user=request.user)        
-        job_id = jms.CreateJob(name, wokflow_id, description, stages)
+        job_id = jms.CreateWorkflowJob(name, wokflow_id, description, stages)
         
         return Response(job_id, status=200)
     
@@ -752,8 +752,6 @@ class ClusterJob(APIView):
         """
         Stop a job running on the cluster
         """    
-        password = request.user.userprofile.Code
-        
         jms = JMS(user=request.user)
         code = jms.StopClusterJob(cluster_id)
         
@@ -765,8 +763,12 @@ class JobStage(APIView):
     permission_classes = (IsAuthenticated,)    
     
     def put(self, request, job_stage_id):
-        jms = JMS()
-        jms.ContinueJob(job_stage_id)
+        '''
+        Continue a job that has been put in a held state
+        '''
+        jms = JMS(user=request.user)
+        jobstage = jms.GetJobStage(job_stage_id)
+        jms.ContinueStage(jobstage)
         
         return Response(status=status.HTTP_200_OK)
 
@@ -1020,7 +1022,7 @@ class FileManager(APIView):
         r = requests.get(url)
         
         return Response(r.json())
-'''        
+'''     
 
 
 class FileDownload(APIView):
@@ -1060,12 +1062,12 @@ class File(APIView):
         """
         Uploads files to the server and returns the list of files for a job or workflow
         """        
-        jms = JMS()
+        jms = JMS(user=request.user)
         
         if upload_type == 'jobs':
             rootpath = os.path.join(jms.users_dir, request.user.username + '/jobs/' + type_id + '/')
         elif upload_type == 'workflows':
-            rootpath = os.path.join(jms.users_dir, request.user.username + '/workflows/' + type_id + '/')
+            rootpath = os.path.join(jms.base_dir, 'workflows/' + type_id + '/')
         else:
             return Response(status=404)
              
@@ -1087,12 +1089,12 @@ class File(APIView):
         """
         Returns the list of files for a job or workflow
         """        
-        jms = JMS()
+        jms = JMS(user=request.user)
         
         if upload_type == 'jobs':
             rootpath = os.path.join(jms.users_dir, request.user.username + '/jobs/' + type_id + '/')
         elif upload_type == 'workflows':
-            rootpath = os.path.join(jms.users_dir, request.user.username + '/workflows/' + type_id + '/')
+            rootpath = os.path.join(jms.base_dir, 'workflows/' + type_id + '/')
             
         return Response(os.listdir(rootpath), status=200)
 
@@ -1105,12 +1107,12 @@ class FileDetail(APIView):
         """
         Returns the contents of a job or workflow file
         """        
-        jms = JMS()
+        jms = JMS(user=request.user)
         
         if upload_type == 'jobs':
             path = os.path.join(jms.users_dir, request.user.username + '/jobs/' + type_id + '/' + file_name)
         elif upload_type == 'workflows':
-            path = os.path.join(jms.users_dir, request.user.username + '/workflows/' + type_id + '/' + file_name)
+            path = os.path.join(jms.base_dir, 'workflows/' + type_id + '/' + file_name)
         else:
             return Response(status=404)
     
@@ -1124,12 +1126,12 @@ class FileDetail(APIView):
         """
         Delete a job or workflow file
         """    
-        jms = JMS()
+        jms = JMS(user=request.user)
         
         if upload_type == 'jobs':
             path = os.path.join(jms.users_dir, request.user.username + '/jobs/' + type_id + '/' + file_name)
         elif upload_type == 'workflows':
-            path = os.path.join(jms.users_dir, request.user.username + '/workflows/' + type_id + '/' + file_name)
+            path = os.path.join(jms.base_dir, 'workflows/' + type_id + '/' + file_name)
         else:
             return Response(status=404)
             
@@ -1137,27 +1139,27 @@ class FileDetail(APIView):
         
         return Response(status=200)
     
+    
     def put(self, request, upload_type, type_id, file_name):
         """
         Update a job or workflow file
         """
-        jms = JMS()
+        jms = JMS(user=request.user)
         
         if upload_type == 'jobs':
-            rootpath = os.path.join(jms.users_dir, request.user.username + '/jobs/' + type_id)
+            rootpath = os.path.join('/jobs/', type_id)
         elif upload_type == 'workflows':
-            rootpath = os.path.join(jms.users_dir, request.user.username + '/workflows/' + type_id)
+            rootpath = os.path.join(jms.base_dir, 'workflows/' + type_id)
         else:
             return Response(status=404)
          
         jms.createJobDir(rootpath)
         path = os.path.join(rootpath, file_name);
         
-        with open(path, 'w') as f:
-            print >> f, request.body
+        jms.CreateFile(path, request.body)
         
         return Response(os.listdir(rootpath), status=200)
-        
+       
 
 
 class Comments(APIView):
@@ -1167,7 +1169,7 @@ class Comments(APIView):
         """
         Get comments on a job
         """
-        jms = JMS()
+        jms = JMS(user=request.user)
         comments,response_code = jms.GetComments(job_id, request.user)
         serializer = CommentSerializer(comments, many=True)
             
@@ -1180,7 +1182,7 @@ class Comments(APIView):
         p = lambda:None
         p.__dict__ = json.loads(request.body)
         
-        jms = JMS()
+        jms = JMS(user=request.user)
         response_code = jms.AddComment(job_id, p.Comment, request.user)
         
         return Response(status=response_code)
@@ -1194,7 +1196,7 @@ class CommentDetail(APIView):
         """
         Delete a comment - must be your comment unless you have admin privileges for the job
         """
-        jms = JMS()
+        jms = JMS(user=request.user)
         response_code = jms.DeleteComment(comment_id, request.user)
         
         return Response(status=response_code)

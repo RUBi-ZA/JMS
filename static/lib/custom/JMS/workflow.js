@@ -558,6 +558,8 @@ function WorkflowViewModel() {
 			} else {
 			    make_editor();
 			}
+		} else {
+		    self.File(null);
 		}
     });
     
@@ -975,7 +977,7 @@ function WorkflowViewModel() {
 				var d = new Object();
 				d.StageID = dep.StageID();
 				d.ConditionID = dep.ConditionID();
-				d.Value = dep.ConditionID();
+				d.Value = dep.Value();
 				
 				s.StageDependencies.push(d);
 			});
@@ -1121,6 +1123,13 @@ function WorkflowViewModel() {
 			    $.each(self.Job().Workflow().Stages(), function(i, s) {
 				    var stage = new Object();
 				    stage.StageID = s.StageID();
+				    stage.StageName = s.StageName();
+				    stage.Queue = s.Queue();
+                	stage.Nodes = s.Nodes();
+                	stage.MaxCores = s.MaxCores();
+                	stage.Memory = s.Memory();
+                	stage.Walltime = s.Walltime();
+                	stage.RequiresEdit = s.RequiresEdit();
 				    stage.Parameters = [];
 			
 				    $.each(s.Parameters(), function(j, p) {
@@ -1882,6 +1891,9 @@ $("form#custom-job").submit(function(){
 		    type: "POST",
 		    data: formData,
 		    success: function(id) {
+		        //Set the job ID so that the "Go to Job" button works
+		        workflow.Job().JobID(id);
+		        
 		        workflow.SubmitSuccess(true);
 		    }, 
 		    error: function() {

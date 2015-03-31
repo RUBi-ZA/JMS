@@ -214,7 +214,7 @@ class JobStageSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = JobStage
-        fields = ('JobStageID', 'State', 'Workflow', 'Stage', 'JobStageParameters', 'RequiresEditInd', 'ClusterJobID')
+        fields = ('JobStageID', 'State', 'Stage', 'JobStageParameters', 'RequiresEditInd', 'ClusterJobID')
         
         
 class JobStatusSerializer(serializers.ModelSerializer):

@@ -39,6 +39,12 @@ class Command(BaseCommand):
                 os.chmod(path, 0775)
             print "%s created." % path
             
+            path = "%s/%s" % (base_path, "tmp")
+            if not os.path.exists(path):
+                os.makedirs(path)
+                os.chmod(path, 0775)
+            print "%s created." % path
+            
             with open("%s/%s" % (path, "prologue"), "w") as f:
                 print >> f, "#!/bin/sh"
                 print >> f, "curl ip.address:port_no/api/jms/prologue/${2}/${1} 2> %s/logs/prologue/prologue.${1}.log" % base_path

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User, Group
-from Utilities import *
+
+from utilities.django.fields import CharNullField
 		
 
 class Workflow(models.Model):
@@ -36,6 +37,8 @@ class Stage(models.Model):
 	Workflow = models.ForeignKey(Workflow, db_column='WorkflowID', related_name='Stages')
 	Command = models.CharField(max_length=100)
 	StageIndex = models.IntegerField()
+	
+	DeletedInd = models.BooleanField(default=False)
 	
 	#Resources
 	Queue = models.CharField(max_length=30)	
@@ -95,6 +98,8 @@ class Parameter(models.Model):
 	ParameterIndex = models.CharField(max_length=7)
 	ParentParameter = models.ForeignKey('Parameter', db_column='ParentParameterID', related_name='ChildParameters', null=True, blank=True)
 	Optional = models.BooleanField(default=False, db_column='OptionalInd')
+	
+	DeletedInd = models.BooleanField(default=False)
 	
 	class Meta:
 		db_table = 'Parameters'
@@ -192,10 +197,17 @@ class JobStage(models.Model):
 	JobStageID = models.AutoField(primary_key=True)
 	Job = models.ForeignKey(Job, db_column='JobID', related_name='JobStages')
 	Stage = models.ForeignKey(Stage, db_column='StageID', related_name='JobStages', blank=True, null=True)
-	ClusterJobID = models.CharField(max_length=30, null=True, blank=True)
+	StageName = models.CharField(max_length=100, null=True, blank=True, default=None)
+	ClusterJobID = CharNullField(max_length=30, null=True, blank=True, unique=True, default=None)
 	State = models.ForeignKey(Status, db_column='State', related_name='JobsStages', null=True, blank=True)
-	Workflow = models.ForeignKey(Workflow, db_column="WorkflowID", related_name="JobStages", null=True, blank=True)
 	RequiresEditInd = models.BooleanField(default=False)
+	
+	#Resources
+	Queue = models.CharField(max_length=30)	
+	Nodes = models.IntegerField()
+	MaxCores = models.IntegerField()
+	Memory = models.IntegerField()
+	Walltime = models.CharField(max_length=30)
 	
 	class Meta:
 		db_table = 'JobStages'
@@ -251,6 +263,7 @@ class ClusterJob(models.Model):
 class JobStageParameter(models.Model):
 	JobStageParameterID = models.AutoField(primary_key=True)
 	Parameter = models.ForeignKey(Parameter, db_column='ParameterID', related_name='JobStageParameters')
+	ParameterName = models.CharField(max_length=30, null=True, blank=True, default=None)
 	JobStage = models.ForeignKey(JobStage, db_column='JobStageID', related_name='JobStageParameters')
 	Value = models.TextField()
 	

@@ -1,0 +1,537 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+	
+	<link rel="shortcut icon" href="{{ STATIC_URL }}filemanager/images/favicon.ico" type="image/x-icon">
+	<link rel="icon" href="{{ STATIC_URL }}filemanager/images/favicon.ico" type="image/x-icon">
+
+    <title>Webinal</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="{{ STATIC_URL }}filemanager/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- MetisMenu CSS -->
+    <link href="{{ STATIC_URL }}filemanager/css/plugins/metisMenu/metisMenu.min.css" rel="stylesheet">
+    
+    <!-- Knockout Context Menu -->    
+    <link href="{{ STATIC_URL }}filemanager/js/plugins/knockout.contextmenu/css/knockout.contextmenu.css" rel="stylesheet" type="text/css" />
+
+    <!-- Custom CSS -->
+    <link href="{{ STATIC_URL }}filemanager/css/sb-admin-2.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}filemanager/css/stavatech.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}filemanager/css/filemanager.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="{{ STATIC_URL }}filemanager/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="{{ STATIC_URL }}filemanager/font-awesome/css/font-awesome-animation.min.css" rel="stylesheet" type="text/css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+	
+</head>
+
+<body>
+
+    <div id="wrapper">
+
+        <!-- Navigation -->
+        <nav id="navbar">
+            
+            <!-- Main modals -->
+        
+            <div class="modal fade" id="settings-modal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title"><i class="fa fa-gear"></i> Settings </h4>
+                        </div>
+                        <div class="modal-body">
+                            
+                            <div data-bind="visible: $root.updating_settings() == false">
+                                
+                                <div id="fm-settings" data-bind="with: $root.filemanager_settings">   
+                                    <div class="form-group">
+                                        <label>Home directory:</label>
+                                        <input class="form-control" placeholder="Enter home directory" data-bind="value: home_directory" />                                
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Text editor theme:</label>
+                                        <select class="form-control" data-bind="value: theme">
+                                            <option value="ambiance">ambiance</option>
+                                            <option value="chaos">chaos</option>
+                                            <option value="chrome">chrome</option>
+                                            <option value="clouds">clouds</option>
+                                            <option value="clouds_midnight">clouds midnight</option>
+                                            <option value="cobalt">cobalt</option>
+                                            <option value="crimson_editor">crimson editor</option>
+                                            <option value="dawn">dawn</option>
+                                            <option value="dreamweaver">dreamweaver</option>
+                                            <option value="eclipse">eclipse</option>
+                                            <option value="github">github</option>
+                                            <option value="idle_fingers">idle fingers</option>
+                                            <option value="katzenmilch">katzenmilch</option>
+                                            <option value="kr_theme">kr theme</option>
+                                            <option value="kuroir">kuroir</option>
+                                            <option value="merbivore">merbivore</option>
+                                            <option value="merbivore_soft">merbivore soft</option>
+                                            <option value="mono_industrial">mono industrial</option>
+                                            <option value="monokai">monokai</option>
+                                            <option value="pastel_on_dark">pastel on dark</option>
+                                            <option value="solarized_dark">solarized dark</option>
+                                            <option value="solarized_light">solarized light</option>
+                                            <option value="terminal">terminal</option>
+                                            <option value="textmate">textmate</option>
+                                            <option value="tomorrow">tomorrow</option>
+                                            <option value="tomorrow_night">tomorrow night</option>
+                                            <option value="tomorrow_night_blue">tomorrow night blue</option>
+                                            <option value="tomorrow_night_bright">tomorrow night bright</option>
+                                            <option value="tomorrow_night_eighties">tomorrow night eighties</option>
+                                            <option value="twilight">twilight</option>
+                                            <option value="vibrant_ink">vibrant ink</option>
+                                            <option value="xcode">xcode</option>
+                                        </select>                      
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Font size (pt):</label>
+                                        <input class="form-control" type="number" data-bind="value: font_size" />                                
+                                    </div>
+                                </div>
+                            
+                            </div>
+                            
+                            <!-- ko with: $root.settings_error -->
+                            <div class="well well-sm error-well" data-bind="visible: error">
+                                <i class="fa fa-times-circle"> Error</i>
+                                <br/>
+                                <span data-bind="text: message"></span>
+                            </div>
+                            <!-- /ko -->
+                
+                            <div data-bind="visible: $root.updating_settings()" style="text-align:center;">
+                                <i class="fa fa-spinner faa-spin animated fa-3x"></i>
+                            </div>
+                            
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bind="click: $root.saveSettings, disable: $root.updating_settings()">
+                                <i class="fa fa-save"></i>
+                                Save
+                            </button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal-dialog -->
+            </div><!-- /.modal -->
+            
+            <!--
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">
+					<div style="float:left;padding-top:3px;padding-right:5px;">
+						<img src="{{ STATIC_URL }}filemanager/images/logo.png" style="height:43px;" />
+					</div>
+					<div style="float:left;text-align:center;">
+						<span style="font-size:10px;">
+							Stavatech
+							<br>
+						</span>
+						Webinal
+					</div>
+				</a>
+            </div>
+             /.navbar-header -->
+
+            <!--<ul class="nav navbar-top-links navbar-right">                
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                        <i class="fa fa-user fa-fw"></i> {{ user.username }}  <i class="fa fa-caret-down" style="padding-left:5px;"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-user">
+                        <!--
+                        <li><a href="#"><i class="fa fa-user fa-fw"></i> User Profile</a>
+                        </li>
+                        -->
+                        <!--<li><a href="#" data-bind="click: $root.showSettingsModal"><i class="fa fa-gear fa-fw"></i> Settings</a>
+                        </li>
+                        <li class="divider"></li>
+                        <li><a href="/users/logout"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+                        </li>
+                    </ul>
+                    <!-- /.dropdown-user -->
+                <!--</li>
+                <!-- /.dropdown -->
+            <!--</ul>
+            <!-- /.navbar-top-links -->
+            
+        </nav>
+		 		
+        <div id="page-container" class="page-container_1" style="bottom:0;top:0;">
+        
+            <!-- Filemanager templates -->
+            
+            <script type="text/html" id="error-template">
+                <span style="color:maroon;width:100%;text-align:center;" data-bind="visible: error">
+                    An error occured
+                    <br/>
+                    <span data-bind="text: message"></span>
+                </span>                
+            </script>
+        
+            <!-- Filemanager modals -->
+            
+            <div class="modal fade" id="create-modal">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content" data-bind="with: $root.new_directory_object">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <!-- ko if: type() == 'file' -->
+                                <h4 class="modal-title"><i class="fa fa-file-o"></i> New file</h4>
+                            <!-- /ko -->
+                            <!-- ko if: type() == 'directory' -->
+                                <h4 class="modal-title"><i class="fa fa-folder-open-o"></i> New directory</h4>
+                            <!-- /ko -->
+                        </div>
+                        <div class="modal-body">
+                            
+                            <div data-bind="visible: $root.creating() == false">
+                                <div class="form-group">
+                                    <label>Create in:</label>
+                                    <span data-bind="text: fullpath">                            
+                                    </span>
+                                </div>
+                                    
+                                <div class="form-group">
+                                    <!-- ko if: type() == 'file' -->
+                                        <label>File name:</label>
+                                        <input class="form-control" placeholder="Enter file name" data-bind="value: name" />
+                                    <!-- /ko -->
+                                    <!-- ko if: type() == 'directory' -->
+                                        <label>Directory name:</label>
+                                        <input class="form-control" placeholder="Enter directory name" data-bind="value: name" />
+                                    <!-- /ko -->
+                                </div>
+                                
+                                <div data-bind="template: { name: 'error-template', data: $root.create_error }"></div>
+                            </div>
+                            
+                            <div data-bind="visible: $root.creating()" style="text-align:center;">
+                                <i class="fa fa-spinner faa-spin animated fa-3x"></i>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bind="click: $root.createDirectoryObject, disable: $root.creating()">
+                                <!-- ko if: type() == 'file' -->
+                                    <i class="fa fa-file"></i>
+                                <!-- /ko -->
+                                <!-- ko if: type() == 'directory' -->
+                                    <i class="fa fa-folder-open-o"></i>
+                                <!-- /ko -->
+                                Create
+                            </button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal-dialog -->
+            </div><!-- /.modal -->
+            
+            
+            <div class="modal fade" id="upload-modal">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <form id="upload">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title"><i class="fa fa-file-o"></i> Upload file</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div data-bind="visible: $root.uploading() == false">
+                                
+                                    <div class="form-group">
+                                        <label>Upload to:</label>
+                                        <span data-bind="text: $root.upload_path">                            
+                                        </span>
+                                    </div>
+                                        
+                                    <div class="form-group">
+                                        <label>File name:</label>
+                                        <input name="files" class="form-control" type="file" multiple />
+                                    </div>
+                                    
+                                    <input name="path" type="hidden" data-bind="value: $root.upload_path">
+                                    
+                                    <div data-bind="template: { name: 'error-template', data: $root.upload_error }"></div>
+                                </div>
+                                
+                                <div data-bind="visible: $root.uploading()" style="text-align:center;">
+                                    <i class="fa fa-spinner faa-spin animated fa-3x"></i>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bind="click: $root.upload, disable: $root.uploading()">
+                                <i class="fa fa-upload"></i>
+                                Upload
+                            </button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal-dialog -->
+            </div><!-- /.modal -->
+            
+            
+            <div class="modal fade" id="rename-modal">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content" data-bind="with: $root.renamed_object">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title"><i class="fa fa-file-o"></i> Rename '<span data-bind="text: name"></span>'</h4>
+                        </div>
+                        <div class="modal-body">
+                                
+                            <div class="form-group" data-bind="visible: $root.renaming() == false">
+                                <label>New name:</label>
+                                <input class="form-control" placeholder="Enter new name" data-bind="value: name" />                                
+                            </div>
+                                    
+                            <div data-bind="template: { name: 'error-template', data: $root.rename_error }"></div>
+                            
+                            <div data-bind="visible: $root.renaming()" style="text-align:center;">
+                                <i class="fa fa-spinner faa-spin animated fa-3x"></i>
+                            </div>
+                            
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bind="click: $root.rename, disable: $root.renaming()">
+                                <i class="fa fa-edit"></i>
+                                Rename
+                            </button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal-dialog -->
+            </div><!-- /.modal -->
+            
+            
+            <div class="modal fade" id="error-modal">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title"><i class="fa fa-times-circle"></i> Errors</h4>
+                        </div>
+                        <div class="modal-body" data-bind="foreach: $root.errors">
+                                
+                            <div class="well well-sm error-well">
+                                <i class="fa fa-times-circle"> Error</i>
+                                <button type="button" class="close" style="opacity:1;" data-bind="click: $root.clearError">
+                                    <span aria-hidden="true" style="color:#a94442;">&times;</span>
+                                </button>
+                                
+                                <br/>
+                                
+                                <span data-bind="text: message"></span>
+                            </div>
+                            
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bind="click: $root.clearErrors, enable: $root.errors().length > 0">
+                                <i class="fa fa-edit"></i>
+                                Clear
+                            </button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal-dialog -->
+            </div><!-- /.modal -->
+			
+			
+			
+			<!-- Filemanager -->
+			
+			<div class="menu-bar">
+				<span class="menu-bar-title">
+					File manager:
+				</span>
+			    
+				<button id="hide-nav" type="button" class="menu-bar-btn"><i class="fa fa-arrows-h"></i></button>
+			    <button type="button" class="menu-bar-btn" data-bind="click: webinal.showSettingsModal"><i class="fa fa-gear fa-fw"></i></button>
+			</div>
+				
+            
+			<div id="nav-wrapper" class="navbar-default sidebar" role="navigation">
+				<div class="sidebar-nav navbar-collapse">
+					<ul class="nav" id="side-menu">
+						
+						<li class="sidebar-search">
+							<div class="input-group custom-search-form">
+								<input type="text" class="form-control" placeholder="Filter...">
+								<span class="input-group-btn">
+									<button class="btn btn-default" type="button">
+										<i class="fa fa-filter"></i>
+									</button>
+								</span>
+							</div>							
+						</li>
+						
+                        <li>
+                            <div id="filesystem" style="width:100%">
+					
+                                <div id="cwd" style="padding-left:5px;">
+                                    <i class="fa fa-folder-open"> </i> 
+                                    <span data-bind="foreach: $root.cwd">
+                                        <a href="#" data-bind="text: name, click: function() { $root.getDirectory(fullpath()); }"></a>
+                                    </span>
+                                </div>
+                                
+                                <div class="menu-bar" style="margin-bottom:5px;">
+                                    <button type="button" class="menu-bar-btn" style="float:left;" title="Home" data-bind="click: function() { $root.getDirectory(webinal.filemanager_settings().home_directory()) }">
+                                        <i class="fa fa-home"></i>
+                                    </button>
+                                    <button type="button" class="menu-bar-btn" style="float:left;" title="New file" data-bind="click: $root.createFile">
+                                        <i class="fa fa-file-o"></i>
+                                    </button>
+                                    <button type="button" class="menu-bar-btn" style="float:left;" title="New folder" data-bind="click: $root.createDirectory">
+                                        <i class="fa fa-folder-open-o"></i>
+                                    </button>
+                                    <button type="button" class="menu-bar-btn" style="float:left;" title="Upload file" data-bind="click: $root.showUploadModal">
+                                        <i class="fa fa-upload"></i>
+                                    </button>
+                                    <button type="button" class="menu-bar-btn" style="float:left;" title="Reload directory" data-bind="click: $root.reloadDirectory">
+                                        <i id="refresh_dir" class="fa fa-refresh"></i>
+                                    </button>
+                                    <button type="button" class="menu-bar-btn" style="float:left;" title="Paste file" data-bind="visible: $root.clipboard() != null, 
+                                        click: function() { $root.paste($root.cwd()[$root.cwd().length - 1]); }">
+                                        <i class="fa fa-paste"></i>
+                                    </button>
+                                    
+                                    <button id="error-icon" type="button" class="menu-bar-btn" style="float:right;color:maroon;" title="Errors" data-bind="click: $root.showErrors, visible: $root.errors().length > 0, attr: { title: $root.errors().length + ' error/s' }">
+                                        <i class="fa fa-times-circle"></i>
+                                    </button>
+                                </div>
+                        
+                                <div id="listdir">
+                                    <div data-bind="foreach: $root.directories">
+                                        <div class="dir_object">
+                                            <i class="fa fa-folder"></i>                                 
+                                            <a href="#" data-bind="text: name, click: function() { $root.getDirectory(fullpath()); }, contextMenu: $root.dir_menu"></a>
+                                        </div>
+                                    </div>
+                                    
+                                    <div data-bind="foreach: $root.files">
+                                        <div class="dir_object">
+                                            <i class="fa fa-file-o"></i> 
+                                            <a href="#" data-bind="text: name, click: $root.getFile, contextMenu: $root.file_menu"></a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </li>
+					</ul>
+				</div>		   
+			</div>
+			
+			<div id="page" class="part-page">
+                <div id="tab-container" data-bind="foreach: $root.tabs">
+                    <div data-bind="click: $root.selectTab, attr: { class: 'tab ' + tab_class() }, contextMenu: $root.tab_menu">
+                        <div class="tab-title" data-bind="text: file().name, attr: { title: file().fullpath}"></div>
+                        <div class="tab-close">
+                            <i class="fa fa-times-circle fa-btn" data-bind="click: $root.closeTab"></i>
+                        </div>
+                    </div> 
+                </div>  
+                <!-- ko foreach: $root.tabs -->
+                    <div class="tab-page" data-bind="attr: { style: 'display:' + display(), id: 'tab_' + id() }">
+                        <div class="menu-bar white">
+                            <!-- ko if: type() == "text" -->
+                                <a href="#" class="menu-bar-btn btn-white" title="Save file" data-bind="click: $root.saveFile">
+                                    <i class="fa fa-save"></i>
+                                </a>
+                            <!-- /ko -->
+                            <a href="#" class="menu-bar-btn btn-white" title="Download file" data-bind="attr: { href: '/files/transfer?path=' + file().fullpath()}">
+                                <i class="fa fa-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                <!-- /ko -->
+			</div>
+        </div>
+        <!-- /#page-container -->
+		
+		<!--
+		<div id="footer" class="level_1">
+			<div id="console-container">
+				<div class="menu-bar">
+					<span class="menu-bar-title">
+						Console:
+					</span>
+					
+					<button id="max_footer" type="button" class="menu-bar-btn"><i class="fa fa-toggle-up"></i></button>
+					<button id="min_footer"  type="button" class="menu-bar-btn"><i class="fa fa-toggle-down"></i></button>
+				</div>
+				
+				<div class="console">
+				
+				</div>
+			</div>
+		</div>
+		-->
+
+    </div>
+    <!-- /#wrapper -->
+    
+    
+	
+    <!-- jQuery -->
+    <script src="{{ STATIC_URL }}filemanager/js/jquery.js"></script>
+    
+    <!-- Stavatech -->
+    <script src="{{ STATIC_URL }}filemanager/js/stavatech.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="{{ STATIC_URL }}filemanager/js/bootstrap.min.js"></script>
+
+    <!-- Metis Menu Plugin JavaScript -->
+    <script src="{{ STATIC_URL }}filemanager/js/plugins/metisMenu/metisMenu.min.js"></script>
+
+    <!-- Knockout JavaScript -->
+    <script src="{{ STATIC_URL }}filemanager/js/knockout-3.2.0.js"></script>
+    
+    <!-- Knockout Context Menu -->
+    <script src="{{ STATIC_URL }}filemanager/js/plugins/knockout.contextmenu/js/knockout.contextmenu.js"></script>
+    
+    <!-- Ace Code Editor -->
+    <script src="{{ STATIC_URL }}filemanager/js/plugins/ace/ace.js"></script>
+    <script src="{{ STATIC_URL }}filemanager/js/plugins/ace/ext-modelist.js"></script>
+    
+	<!-- Sammy -->
+	<script type="text/javascript" src="{{ STATIC_URL }}lib/sammy.js"></script>
+    
+    <!-- Custom Theme JavaScript -->
+    <script src="{{ STATIC_URL }}filemanager/js/webinal.js"></script>
+    <script src="{{ STATIC_URL }}filemanager/js/filemanager.js"></script>
+
+</body>
+
+</html>

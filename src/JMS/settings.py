@@ -69,6 +69,8 @@ STATIC_ROOT = '/static/'
 STATIC_URL = '/assets/'
 
 BASE = '/srv/JMS/'
+BASE_DIR = '/srv/JMS/src'
+
 # Additional locations of static files
 STATICFILES_DIRS = (
     os.path.join(BASE, "static"),  
@@ -109,6 +111,7 @@ ROOT_URLCONF = 'JMS.urls'
 WSGI_APPLICATION = 'JMS.wsgi.application'
 
 TEMPLATE_DIRS = ('/srv/JMS/templates',
+    '/srv/JMS/src/filemanager/templates'
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -129,6 +132,7 @@ INSTALLED_APPS = (
     'users',
     'interface',
     'job',
+    'filemanager'
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
@@ -178,7 +182,7 @@ SWAGGER_SETTINGS = {
 }
 
 AUTHENTICATION_BACKENDS = (
-    "users.backends.LinuxBackend",
+    "filemanager.backends.LinuxBackend",
 )
 
 AUTH_PROFILE_MODULE = 'users.UserProfile'
@@ -187,3 +191,8 @@ JMS_SETTINGS = {
     "JMS_shared_directory": "/jabba/JMS/"
 }
 
+FILEMANAGER_ROOT_URL = "/jabba/JMS/users/"
+TEMP_DIR = "/tmp/jms/"
+
+IMPERSONATOR_KEY = "/srv/JMS/src/impersonator/pub.key"
+IMPERSONATOR_URL = "127.0.0.1:8124"

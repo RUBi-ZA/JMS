@@ -680,7 +680,7 @@
 				
 					<div class="row">
 						<div class="col-lg-12"> 
-							<div class="col-lg-12" style="width:100%;padding:10px;padding-top:0;">
+							<div class="col-lg-12" style="width:100%;padding:10px;padding-top:0;overflow:hidden;">
 								<div class="btn-group" style="float:left;">
 							  		<button class="btn btn-primary" data-bind="click: $root.ShowCustomJob"><i class="fa fa-play"></i> Custom Job</button>
 								</div>
@@ -795,12 +795,14 @@
     				                <div class="col-lg-6">
         								<div class="form-group col-lg-12">
         									<label>Queue:</label>
-        									<select class="form-control" name="Queue" placeholder="Enter queue name" data-bind="value: $root.SelectedQueue,
+        									<select class="form-control" placeholder="Enter queue name" data-bind="value: $root.SelectedQueue,
         									    options: $root.Queues, optionsText: function(item) { return item.QueueName(); }">
         									</select>
         								</div>
         								
         								<!-- ko with: $root.SelectedQueue -->
+        								<input class="form-control" name="Queue" type="hidden" data-bind="value: QueueName" />
+        								
         								<div class="form-group col-lg-12">
         									<label>Nodes:</label>
         									<input class="form-control" name="Nodes" type="number" min="1" data-bind="value: DefaultNodes, attr: { max: MaxNodes }" />
@@ -917,7 +919,11 @@
 				<div id="create_workflow-container" data-bind="visible: $root.VisibleWindow() == 'create_workflow'">	        
 					<div class="row">
 						<div class="col-md-12">						
-							<h2><i class="fa fa-sitemap fa-2x"></i> <span data-bind="text: $root.Workflow().WorkflowID() < 0 ? 'Create' : 'Edit'"></span> Workflow</h2>						
+							<h2>
+							    <i class="fa fa-sitemap"></i> 
+							    <span data-bind="text: $root.Workflow().WorkflowID() < 0 ? 'Create' : 'Edit'"></span> 
+							    Workflow
+							</h2>						
 						</div>
 					</div>
 					<!-- /. ROW  -->

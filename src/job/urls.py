@@ -27,9 +27,11 @@ public_urls = patterns('job.views',
     url(r'jobs/(?P<job_id>[^/]+)/permissions/groups/?', views.JobGroupAccess.as_view()),
     url(r'jobs/(?P<job_id>[^/]+)/permissions/?', views.JobAccess.as_view()),
     
-    url(r'jobs/(?P<job_id>[^/]+)/downloads/(?P<download_type>[^/]+)/(?P<type_id>[^/]+)/?', views.FileDownload.as_view()),  
+    #url(r'jobs/(?P<job_id>[^/]+)/downloads/(?P<download_type>[^/]+)/(?P<type_id>[^/]+)/?', views.FileDownload.as_view()),  
     url(r'jobs/(?P<job_id>[^/]+)/?', views.JobDetail.as_view()),
     url(r'jobs/?', views.Job.as_view()), 
+       
+    url(r'jobstages/(?P<job_stage_id>[^/]+)/?', views.JobStage.as_view()),
     
     url(r'inputprofiles/(?P<profile_id>[^/]+)/?', views.InputProfileDetail.as_view()),  
     url(r'inputprofiles/?', views.InputProfile.as_view()),     
@@ -49,16 +51,14 @@ public_urls = patterns('job.views',
     url(r'settings/queues/(?P<queue>[^/]+)/?', views.QueueSettings.as_view()),
     url(r'settings/nodes/(?P<node_name>[^/]+)/?', views.NodeDetails.as_view()),
     url(r'settings/nodes/?', views.Nodes.as_view()),
-    url(r'settings/?', views.ServerSettings.as_view()),
-       
+    url(r'settings/?', views.ServerSettings.as_view()),  
        
     #url(r'results/get/(?P<result_id>[^/]+)/?', views.Result.as_view()),
     #url(r'results/(?P<job_stage_id>[^/]+)/?', views.GetResults.as_view()),
     #url(r'(?P<job_id>[^/]+)/comments/(?P<comment_id>[^/]+)/?', views.CommentDetail.as_view()),
-    #url(r'(?P<job_id>[^/]+)/comments?', views.Comments.as_view()),
-    #url(r'(?P<job_stage_id>[^/]+)/continue/?', views.JobStage.as_view()),    
+    #url(r'(?P<job_id>[^/]+)/comments?', views.Comments.as_view()),  
 )
-
+ 
 urlpatterns = patterns('',
 	url(r'^', include(internal_urls, namespace="internal_urls")),
 	url(r'^', include(public_urls, namespace="public_urls")),       

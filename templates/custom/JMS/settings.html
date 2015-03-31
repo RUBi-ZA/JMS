@@ -437,7 +437,10 @@ sudo service pbs_sched restart</code>
                                                                                                
                                                 <div class="form-group" style="padding:5px;padding-bottom:0px;">
                                                     <label>Queue Type</label><br>
-                                                    <input data-bind="value: Type" class="form-control" style="padding:6px 0px;"></input>
+                                                    <select data-bind="value: Type" class="form-control" style="padding:6px 0px;">
+                                                        <option value="Execution">Execution</option>
+                                                        <option value="Route">Route</option>
+                                                    </select>
                                                 </div>
                                                 
                                             </div>

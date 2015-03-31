@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 import os, socket
-from Utilities import *
+from utilities.io.shell import UserProcess
 from lxml import objectify
 
 #####
@@ -85,10 +85,16 @@ class DependencyCondition:
     
 class JobStageInput:
 
-    def __init__(self, stage_id, parameters, requires_edit):
+    def __init__(self, stage_id, stage_name, parameters, requires_edit, queue, nodes, maxcores, memory, walltime):
         self.stage_id = stage_id
+        self.stage_name = stage_name
         self.parameters = parameters
         self.requires_edit = requires_edit
+        self.queue = queue
+    	self.nodes = nodes
+    	self.maxcores = maxcores
+    	self.memory = memory
+    	self.walltime = walltime
 
 
 #####
@@ -134,7 +140,7 @@ class DiskUsage:
         self.available_space = available_space
         self.used_space = used_space
                  
-
+from django.conf import settings
 class Dashboard:
 
     def __init__(self, username, password):
@@ -142,7 +148,7 @@ class Dashboard:
         
         self.nodes = self.GetNodes(process)
         self.queue = self.GetQueue(process)        
-        self.disk = self.GetDiskUsage(process, "/obiwanNFS")
+        self.disk = self.GetDiskUsage(process, settings.JMS_SETTINGS["JMS_shared_directory"])
         
         process.close()
                             
@@ -217,9 +223,6 @@ class Dashboard:
         queue = []
         
         out = process.run_command("qstat -x")
-        
-        #with open("/tmp/queue.txt", "w") as f:
-        #    print >> f, out
             
         try:
             data = objectify.fromstring(out)
@@ -234,9 +237,14 @@ class Dashboard:
             nodes = str(job.Resource_List.nodes).split(":")
             if len(nodes) > 1:
                 cores = int(nodes[1].split("=")[1])
-            nodes = int(nodes[0])
+            nodes = nodes[0]
             state = str(job.job_state)
-            time = int(job.Walltime.Remaining)
+            
+            try:
+                time = int(job.Walltime.Remaining)
+            except:
+                time = "n/a"
+            
             q = str(job.queue)
             
             queue.append(QueueItem(job_id, username, job_name, nodes, cores, state, time, q))            

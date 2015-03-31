@@ -1,17 +1,22 @@
 from job.models import *
-from job.Utilities import *
+
+from utilities.io.shell import UserProcess
+from utilities.io.filesystem import *
+from utilities.security.cryptography import PubPvtKey
+
 import objects
 
 from django.conf import settings
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 
 import xml.etree.ElementTree as ET
-import subprocess, os, pexpect, pylibmc, sys, pxssh, socket
+import subprocess, os, pexpect, pylibmc, sys, pxssh, socket, requests, base64
 from datetime import datetime
 from shutil import copyfile  
+from lxml import objectify
 
 class JMS:
     
@@ -22,11 +27,10 @@ class JMS:
         
 
 
-    def CheckIP(self, client_IP):
-        if client_IP in self.accepted_IPs:
-            return True
-        else:
-            return False
+    def RunUserProcess(self, cmd, expect="prompt"):
+        payload = "%s\n%s\n%s" % (self.user.filemanagersettings.ServerPass, cmd, expect)
+        r = requests.post("http://%s/impersonate" % settings.IMPERSONATOR_URL, data=payload)
+        return r.text
     
     
     
@@ -266,7 +270,7 @@ class JMS:
     
     
     def SaveUserWorkflowAccessRight(self, WorkflowID, UserID, AccessRightID):
-        if self.GetWorkflowJobAccess(self.user.id, WorkflowID) <= 2:
+        if self.GetUserWorkflowAccess(self.user.id, WorkflowID) <= 2:
             access_right = None
             
             with transaction.atomic():
@@ -293,7 +297,7 @@ class JMS:
     
     
     def DeleteUserWorkflowAccessRight(self, WorkflowID, UserID):
-        if self.GetWorkflowJobAccess(self.user.id, WorkflowID) <= 2:
+        if self.GetUserWorkflowAccess(self.user.id, WorkflowID) <= 2:
             rights = UserWorkflowAccessRight.objects.filter(Workflow_id=WorkflowID, User_id=UserID)
             for right in rights:
                 if right.AccessRight_id != 1:
@@ -304,7 +308,7 @@ class JMS:
     
     
     def SaveGroupWorkflowAccessRight(self, WorkflowID, GroupID, AccessRightID):
-        if self.GetWorkflowJobAccess(self.user.id, WorkflowID) <= 2:
+        if self.GetUserWorkflowAccess(self.user.id, WorkflowID) <= 2:
             access_right = None
             
             with transaction.atomic():
@@ -334,7 +338,7 @@ class JMS:
     
     
     def DeleteGroupWorkflowAccessRight(self, WorkflowID, GroupID):
-        if self.GetWorkflowJobAccess(self.user.id, WorkflowID) <= 2:
+        if self.GetUserWorkflowAccess(self.user.id, WorkflowID) <= 2:
             rights = GroupWorkflowAccessRight.objects.filter(Workflow_id=WorkflowID, Group_id=GroupID)
             for right in rights:
                 right.delete()
@@ -712,10 +716,14 @@ class JMS:
             job_file_header += '#PBS -d %s\n' % WorkingDirectory
             
             jobstage_dict = {}
+            edit_stages = {}
             count = 1
             for jobstage in job.JobStages.filter(Stage__StageIndex__gte=StartStage).order_by('Stage__StageIndex', 'Stage__StageID'):
+                #If stage needs to be paused after completion, add to edit_stages 
+                edit_stages[jobstage.Stage.StageID] = True
+                
                 #Add stage specific parts to job file
-                jobstage_specific = '#PBS -N %s-%s\n' % (job.JobName, str(count))
+                jobstage_specific  = '#PBS -N %s-%s-JMS\n' % (job.JobName, str(count)) #if the job was submitted via the JMS, the name will end in -<stage_num>-JMS
                 jobstage_specific += '#PBS -e localhost:%s\n' % os.path.join(LogsDirectory, 'Stage-%s.err' % str(count))
                 jobstage_specific += '#PBS -o localhost:%s\n' % os.path.join(LogsDirectory, 'Stage-%s.out' % str(count))
                 jobstage_specific += '#PBS -q %s\n' % jobstage.Stage.Queue
@@ -734,6 +742,11 @@ class JMS:
                     jobstage_exit_code = ''
                     
                     for dependency in jobstage.Stage.StageDependencies.all():
+                        
+                        #If the jobstage is dependant on a stage that requires editing, the jobstage must be put in a held state
+                        if edit_stages.get(dependency.DependantOn.StageID, False):
+                            jobstage_exit_code = '#PBS -h\n'
+                        
                         try:                    
                             if dependency.Condition.ConditionID == objects.DependencyCondition.Success:
                                 jobstage_ok += ':%s' % jobstage_dict[dependency.DependantOn.StageID]
@@ -744,7 +757,7 @@ class JMS:
                             elif dependency.Condition.ConditionID == objects.DependencyCondition.Exit_Code:
                                 jobstage_exit_code = '#PBS -h\n'
                         except Exception, e:
-                            File.print_to_file("/obiwanNFS/open/dependency_log.err", str(e), 'a')
+                            File.print_to_file("/tmp/dependency_log.err", str(e), 'a')
                     
                     jobstage_deps = ''
                     
@@ -799,20 +812,17 @@ class JMS:
                 count += 1
                             
                 #Submit to cluster
-                p = UserProcess(job.User.username, job.User.userprofile.Code)
-                
                 qsub_cmd = "qsub %s" % job_file_path
-                out = p.run_command(qsub_cmd)
+                out = self.RunUserProcess(qsub_cmd)
                 
-                p.close()
-                
-                self.AddUpdateClusterJob(out.strip, job.User.username)
+                job_obj = self.GetClusterJobObject(out.strip(), job.User.username)
+                self.AddUpdateClusterJob(job_obj)
                 
                 #Update job details
                 jobstage.ClusterJobID = out.strip();
                 jobstage.State_id = objects.Status.Queued;
                 jobstage.save()
-                
+            
                 #Store cluster id in dictionary to be used for dependencies of later stages
                 jobstage_dict[jobstage.Stage.StageID] = jobstage.ClusterJobID        
         else:
@@ -842,10 +852,9 @@ class JMS:
                 
                 Directory.create_directory(working_dir, 0775)
                 
-                process = UserProcess(User.username, User.userprofile.Code)
                 os.system("cp -r %s/* %s" % (snapshot_dir, working_dir)) 
                 os.system("chgrp jms %s -R" % working_dir)
-                os.system("chmod 777 %s -R" % working_dir)
+                os.system("chmod 775 %s -R" % working_dir)
                 
                 #grant access rights
                 UserJobAccessRight.objects.create(User=User, Job=new_job, AccessRight_id=objects.AccessRights.Owner)
@@ -867,6 +876,81 @@ class JMS:
     
     
     
+    def RunCustomJob(self, JobName, JobDescription, Queue, Nodes, CPUs, Memory, Walltime, Variables, Commands, Files):
+        user = self.user
+        
+        jobID = 0        
+            
+        with transaction.atomic():
+            #create job
+            job = Job.objects.create(JobName=JobName, JobDescription=JobDescription, User_id=user.id, SubmittedAt=datetime.now())              
+            jobID = job.JobID
+                        
+            WorkingDirectory = os.path.join(self.users_dir, user.username + "/jobs/" + str(jobID))
+            self.createJobDir(WorkingDirectory)    
+                
+            LogsDirectory = os.path.join(self.users_dir, user.username + "/jobs/" + str(jobID) + "/Logs")
+            self.createJobDir(LogsDirectory)
+            
+            #upload files
+            for f in Files:
+                full_path = os.path.join(WorkingDirectory, f.name)
+                with open(full_path, 'wb+') as destination:
+                    for chunk in f.chunks():
+                        destination.write(chunk)
+            
+                #set file permissions
+                os.chmod(full_path, 0777)
+            
+            #grant access rights
+            UserJobAccessRight.objects.create(User=user, Job=job, AccessRight_id=objects.AccessRights.Owner)
+            
+            #create jobstage
+            jobstage = JobStage.objects.create(Job=job, RequiresEditInd=False, State_id=objects.Status.Created)
+            
+            #create job file
+            custom_vars = ""
+            for v in Variables:
+                custom_vars += ",%s=%s" % (v["VariableName"], v["Value"])
+            
+            job_file = '#!/bin/sh\n'
+            job_file += '#PBS -V\n'
+            job_file += '#PBS -v WORKING_DIR=%s%s\n' % (WorkingDirectory, custom_vars)
+            job_file += '#PBS -W umask=022\n'
+            job_file += '#PBS -d %s\n' % WorkingDirectory
+            job_file += '#PBS -N %s-JMS\n' % JobName
+            job_file += '#PBS -e localhost:%s\n' % os.path.join(LogsDirectory, 'log.err')
+            job_file += '#PBS -o localhost:%s\n' % os.path.join(LogsDirectory, 'log.out')
+            job_file += '#PBS -q %s\n' % Queue
+            job_file += '#PBS -l nodes=%s:ppn=%s\n' % (str(Nodes), str(CPUs))
+            job_file += '#PBS -l mem=%sgb\n' % str(Memory)
+            job_file += '#PBS -l walltime=%s\n' % Walltime
+            
+            job_file += "\n\n"
+            
+            #Add commands, removing Windows-style line endings that can't be handled by qsub
+            job_file += Commands.replace('\r\n', '\n')
+            
+            #Write job file
+            job_file_path = os.path.join(WorkingDirectory, "job.pbs")
+            File.print_to_file(job_file_path, job_file, 'w', 0777)
+                        
+            #Submit to cluster
+            
+            qsub_cmd = "qsub %s" % job_file_path
+            out = self.RunUserProcess(qsub_cmd)
+            
+            #Update job details
+            jobstage.ClusterJobID = out.strip();
+            jobstage.save()
+            
+            job_obj = self.GetClusterJobObject(out.strip(), job.User.username)
+            self.AddUpdateClusterJob(job_obj)
+            
+        return jobID
+
+    
+    
     def StopJob(self, JobID):
         if self.GetUserJobAccess(self.user.id, JobID) <= 2:
             job = Job.objects.prefetch_related("JobStages").get(pk=JobID, User__id=self.user.id)
@@ -879,18 +963,7 @@ class JMS:
     
     
     def StopClusterJob(self, ID):
-        username = self.user.username
-        password = self.user.userprofile.Code
-        
-        if password == None:
-            raise PermissionDenied
-        
-        try:
-            p = UserProcess(username, password)
-        except Exception, e:
-            raise PermissionDenied
-        
-        out = p.run_command("qdel " + ID)
+        out = self.RunUserProcess("qdel " + ID)
         
         if out.startswith('qdel: Unauthorized Request'):
             raise PermissionDenied
@@ -898,14 +971,18 @@ class JMS:
             raise Http404
         elif out.startswith('qdel: Request invalid for state of job'):
             raise Exception
-        
-        p.close()
     
         
     
     def DeleteJob(self, JobID):
         if self.GetUserJobAccess(self.user.id, JobID) <= 2:
-            self.StopJob(JobID)
+            try:
+                self.StopJob(JobID)
+            except PermissionDenied, err:
+                raise PermissionDenied
+            except Exception, err:
+                print str(err)
+            
             
             job = Job.objects.get(pk=JobID)
             user = self.user
@@ -922,233 +999,322 @@ class JMS:
              
     
     
-    def GetFileStream(self, username, password, path):
-        process = UserProcess(username, password)
-        stream = process.run_command("cat %s" % path)
-        process.close()
+    def GetFileStream(self, path):
+        stream = self.RunUserProcess("cat %s" % path)
         return stream
     
     
     
-    def GetClusterJob(self, job_id, username, password):
+    def GetClusterJob(self, job_id):
         job = ClusterJob.objects.get(pk=job_id)        
         
-        job.OutputStream = self.GetFileStream(username, password, job.OutputPath.split(":")[1])
-        job.ErrorStream = self.GetFileStream(username, password, job.ErrorPath.split(":")[1])
+        job.OutputStream = self.GetFileStream(job.OutputPath.split(":")[1])
+        job.ErrorStream = self.GetFileStream(job.ErrorPath.split(":")[1])
         
         return job
     
     
     
-    def AddUpdateClusterJob(self, job_id, username):
+    def GetClusterJobObject(self, job_id, username):
         user = None
+        
         try:
             user = User.objects.get(username=username)        
         except Exception, ex:
             user = User.objects.create(username=username)
-               
-        process = UserProcess(username, user.userprofile.Code)
-        out = process.run_command("qstat -f %s" % job_id)
+        
+        key = ""
+        with open(os.path.dirname(settings.IMPERSONATOR_KEY) + "/pvt.key", "r") as key_file:
+            key = key_file.read()
+        
+        decoded = base64.b64decode(user.filemanagersettings.ServerPass)
+        decrypted = PubPvtKey.decrypt(key, decoded)
+        credentials = decrypted.split(":")
+         
+        process = UserProcess(credentials[0], credentials[1])
+        out = process.run_command("qstat -x %s" % job_id)
         process.close()
         
-        job = self.ParseClusterJob(out)
+        data = objectify.fromstring(out)
         
-        if job:
-            #Add the job to the JMS job history if it doesn't exist
-            try:
-                JobStage.objects.get(ClusterJobID=job_id)  
-            except Exception, ex:
-                state = objects.Status.Queued
-                if job.State == 'Q' or job.State == 'H':
-                    state = objects.Status.Queued
-                elif job.State == 'R':
-                    state = objects.Status.Running
-                elif job.State == 'E' or job.State == 'C':
-                    state = objects.Status.Completed_Successfully
+        return data.Job
+        
+    
+    
+    def AddUpdateClusterJob(self, job_obj):
+        job = self.ParseClusterJob(job_obj)
+        
+        #Get user
+        username = str(job_obj.Job_Owner).split("@")[0]
+        user = User.objects.get(username=username)
+        
+        #Get job state
+        state = objects.Status.Queued
+        if job.State == 'Q' or job.State == 'H':
+            state = objects.Status.Queued
+        elif job.State == 'R':
+            state = objects.Status.Running
+        elif job.State == 'E' or job.State == 'C':
+            state = objects.Status.Completed_Successfully
+        
+        j = None
+        
+        #Add the job to the JMS job history if it doesn't exist or update it if it does exist
+        try:
+            j = JobStage.objects.get(ClusterJobID=job.ClusterJobID) 
+        except Exception, ex:
+            #If the job doesn't exist, create it (this must happen if the job has been submitted from the terminal)
+            #To avoid duplication, jobs submitted via the JMS must be created by the StartJob function and not in this function. We thus exclude jobs ending in -JMS here.
+            if not str(job.JobName).endswith("-JMS"):
+                with transaction.atomic():
+                    j = Job.objects.create(JobName=job.JobName, JobDescription="This job was submitted externally to the JMS", User=user, BatchJobInd=False)
+                    JobStage.objects.create(Job=j, ClusterJobID=job.ClusterJobID, RequiresEditInd=False, State_id=state)
                     
-                j = Job.objects.create(JobName=job.JobName, JobDescription="This job was not submitted via the JMS", User=user, BatchJobInd=False)  
-                jobstage = JobStage.objects.create(Job=j, ClusterJobID=job.ClusterJobID, RequiresEditInd=False, State_id=state)
+                    #Grant access rights
+                    UserJobAccessRight.objects.create(User=user, Job=j, AccessRight_id=objects.AccessRights.Owner)
+                
+                j = None
+                
+        if j:        
+            #If the state of the job has changed to completed, run the FinishStage function
+            if j.State.StatusID != state and state == objects.Status.Completed_Successfully:
+                self.FinishStage(job.ClusterJobID, job.ExitStatus)
+            
+            #Update the state of the stage
+            j.State_id = state
+            j.save()
         
-        return job    
+        return job
     
     
     
-    def ParseClusterJob(self, job_string):
-        job = ClusterJob()
+    def ParseClusterJob(self, job):
+        j = ClusterJob()
         
-        job_arr = job_string.split('\n')
-        if len(job_arr) > 5:
-            i = 0
-            while i < len(job_arr):
-                line = job_arr[i].rstrip()
+        j.ClusterJobID = job.Job_Id
+        j.JobName = job.Job_Name
+        j.JobOwner = job.Job_Owner
         
-                if len(line) > 0 and line[0] == 'J':
-                    job.ClusterJobID = line.split(':')[1].strip()
-                    try:
-                        job = ClusterJob.objects.get(pk=job.ClusterJobID)
-                    except Exception, e:
-                        print str(e)
-                else:
-                    entry = line[4:].split(" = ")
-                
-                    if entry[0] == "Job_Name":
-                        job.JobName = entry[1]
-                    elif entry[0] == "Job_Owner":
-                        job.JobOwner = entry[1]
-                    elif entry[0] == "resources_used.cput":
-                        job.CPUTimeUsed = entry[1]
-                    elif entry[0] == "resources_used.mem":
-                        job.MemoryUsed = entry[1]
-                    elif entry[0] == "resources_used.vmem":
-                        job.VirtualMemoryUsed = entry[1]
-                    elif entry[0] == "resources_used.walltime":
-                        job.WalltimeUsed = entry[1]
-                    elif entry[0] == "job_state":
-                        job.State = entry[1]
-                    elif entry[0] == "queue":
-                        job.Queue = entry[1]
-                    elif entry[0] == "server":
-                        job.Server = entry[1]
-                    elif entry[0] == "ctime":
-                        job.CreatedTime = entry[1]
-                    elif entry[0] == "Error_Path":
-                        job.ErrorPath = entry[1]
-                    elif entry[0] == "exec_host":
-                        job.ExecutionHost = entry[1]
-                    elif entry[0] == "mtime":
-                        job.LastModified = entry[1]
-                    elif entry[0] == "Output_Path":
-                        job.OutputPath = entry[1]
-                    elif entry[0] == "Priority":
-                        job.Priority = entry[1]
-                    elif entry[0] == "qtime":
-                        job.TimeEnteredQueue = entry[1]
-                    elif entry[0] == "Resource_List.mem":
-                        job.MemoryRequested = entry[1]
-                    elif entry[0] == "Resource_List.nodect":
-                        job.NodesAvailable = entry[1]
-                    elif entry[0] == "Resource_List.nodes":
-                        job.NodesRequested = entry[1]
-                    elif entry[0] == "Resource_List.walltime":
-                        job.WalltimeRequested = entry[1]
-                    elif entry[0] == "Variable_List":
-                        job.VariableList = entry[1]    
-                    
-                        i += 1
-                        line = job_arr[i]
-                        while line[0] == "\t":
-                            job.VariableList += line.strip()
-                        
-                            i += 1
-                            line = job_arr[i]
-                        continue                
-                    elif entry[0] == "comment":
-                        job.Comment = entry[1]
-                    elif entry[0] == "etime":
-                        job.EligibleTime = entry[1]
-                    elif entry[0] == "exit_status":
-                        job.ExitStatus = entry[1]
-                    elif entry[0] == "submit_args":
-                        job.SubmitArgs = entry[1]
-                    
-                        i += 1
-                        line = job_arr[i]
-                        while line[0] == "\t":
-                            job.SubmitArgs += line.strip()
-                        
-                            i += 1
-                            line = job_arr[i]
-                        continue
-                    elif entry[0] == "start_time":
-                        job.StartTime = entry[1]
-                    elif entry[0] == "comp_time":
-                        job.CompletionTime = entry[1]
-                    elif entry[0] == "total_runtime":
-                        job.TotalRuntime = entry[1]
-                    elif entry[0] == "submit_host":
-                        job.SubmitHost = entry[1]
-                
-                i += 1
-                
-            job.save()
-            return job
-        else:
-            return False
+        #resources requested
+        try:
+            j.MemoryRequested = job.Resource_List.mem
+        except:
+            print ""
+        try:
+            j.NodesAvailable = job.Resource_List.nodect
+        except:
+            print ""
+        try:
+            j.NodesRequested = job.Resource_List.nodes
+        except:
+            print ""
+        try:
+            j.WalltimeRequested = job.Resource_List.walltime
+        except:
+            print ""
+        
+        #resources used
+        try:
+            j.CPUTimeUsed = job.resources_used.cput
+        except:
+            print ""
+        try:    
+            j.MemoryUsed = job.resources_used.mem
+        except:
+            print ""
+        try:
+            j.VirtualMemoryUsed = job.resources_used.vmem
+        except:
+            print ""
+        try:
+            j.WalltimeUsed = job.resources_used.walltime
+        except:
+            print ""
+        
+        #other
+        try:
+            j.State = job.job_state
+        except:
+            print ""
+        try:
+            j.Queue = job.queue
+        except:
+            print ""
+        try:
+            j.Server = job.server
+        except:
+            print ""
+        try:
+            j.ExecutionHost = str(job.exec_host).split("/")[0]
+        except:
+            print ""
+        try:
+            j.SubmitArgs = job.submit_args
+        except:
+            print ""
+        try:
+            j.SubmitHost = ""
+        except:
+            print ""
+        try:
+            j.OutputPath = job.Output_Path
+        except:
+            print ""
+        try:
+            j.ErrorPath = job.Error_Path
+        except:
+            print ""
+        try:
+            j.Priority = job.Priority
+        except:
+            print ""
+        
+        #time
+        try:
+            j.CreatedTime = job.ctime
+        except:
+            print ""
+        try:
+            j.TimeEnteredQueue = job.qtime
+        except:
+            print ""
+        try:
+            j.EligibleTime = job.etime
+        except:
+            print ""
+        try:
+            j.LastModified = job.mtime
+        except:
+            print ""
+        try:
+            j.StartTime = job.start_time
+        except:
+            print "No start time available"
+        
+        #finished
+        try:
+            j.CompletionTime = job.comp_time
+            j.ExitStatus = job.exit_status
+            j.TotalRuntime = job.comp_time - job.start_time
+        except:
+            print "Could not obtain a completion time or exit status as the job is still running."
+        
+        try:
+            j.VariableList = job.Variable_List
+        except:
+            print "No variable list available"
+        try:
+            j.Comment = job.comment
+        except:
+            print "No comment available"
+        
+        j.save()
+        return j
     
     
-    def CreateSnapshot(self, process, job_dir, snap_dir):
-        Directory.create_directory(snap_dir, 0775)        
-        output = process.run_command("cp -r %s/* %s" % (job_dir, snap_dir))        
+    def CreateSnapshot(self, job_dir, snap_dir):
+        Directory.create_directory(snap_dir, 0775) 
+        output = self.RunUserProcess("cp -r %s/* %s" % (job_dir, snap_dir))       
                 
                 
+    
+    def GetJobStage(self, JobStageID):
+        try:
+            jobstage = JobStage.objects.get(pk=JobStageID)
+        except:
+            raise Http404
+            
     
     def FinishStage(self, ClusterJobID, ExitCode):
-        try:            
+        try: 
             cluster_job = ClusterJob.objects.get(pk=ClusterJobID)
-            cluster_job.ExitStatus = ExitCode
-            cluster_job.save()
+            cluster_job.State = "C"
             
-            job_exists = False
             try:
-                jobstage = JobStage.objects.get(ClusterJobID=ClusterJobID)
-                job_exists = True
-            except Exception, e:
-                job_exists = False
+                File.print_to_file("/tmp/finish.txt", "%s %s" % (ClusterJobID, str(ExitCode)), "w")
+                cluster_job.ExitStatus = ExitCode
+                cluster_job.save()
+            except:
+                File.print_to_file("/tmp/finishstage.txt", "ClusterJobID %s\n\n%s" % (ClusterJobID, str(e)), 'a')
             
-            if job_exists:
-                jobstage.State_id = objects.Status.Completed_Successfully
+            jobstage = JobStage.objects.get(ClusterJobID=ClusterJobID)
+            self.user = jobstage.Job.User
+            
+            #If RequiresEditInd is set, no dependant jobs will be released until the user has "continued" the stage.
+            if jobstage.RequiresEditInd:
+                jobstage.State_id = objects.Status.Awaiting_User_Input
                 jobstage.save()
-                
-                stage_id = jobstage.Stage.StageID
-                user = jobstage.Job.User
-                
-                jobstages = JobStage.objects.filter(Job__JobID=jobstage.Job.JobID).order_by('Stage__StageIndex', 'Stage__StageID')
-                
-                job_state = objects.Status.Running
-                exit_code_handled = False
-                for j in jobstages:                
-                    if j.Stage.StageIndex > jobstage.Stage.StageIndex:
-                    
-                        #Check exit code dependencies. ALL exit code dependencies must be satisfied for a stage to run. If ONE fails, the stage is cancelled
-                        deps_satisfied = False
-                        for dependency in j.Stage.StageDependencies.all():                    
-                            if dependency.Condition.ConditionID == objects.DependencyCondition.Exit_Code and dependency.DependantOn.StageID == stage_id:                            
-                                #if an exit code dependency fails, cancel the job
-                                if dependency.ExitCodeValue == ExitCode:
-                                    deps_satisfied = True
-                                else:
-                                    deps_satisfied = False
-                                    process.run_command("qdel %s" % j.ClusterJobID)
-                                    j.State_id = objects.Status.Stopped
-                                    j.save()
-                                    break
-                        
-                        #if all of the exit code dependencies have been satisfied, release the job stage
-                        if deps_satisfied:
-                            File.print_to_file("/obiwanNFS/open/finishstage.txt", j.ClusterJobID, 'a')
-                            process.run_command("qrls %s" % j.ClusterJobID)
-                            exit_code_handled = True
-                                                                    
-                #if the exit code is non-zero and wasn't handled by one of the dependencies, it means the stage failed
-                if int(ExitCode) != 0 and not exit_code_handled:
-                    jobstage.State_id = objects.Status.Failed
-                    jobstage.save()
-                                
-                process.close()
+            else:
+                File.print_to_file("/tmp/finishstage.txt", "here" % (ClusterJobID, str(e)), 'a')
+                self.ContinueStage(jobstage)
             
         except Exception, e:
-            File.print_to_file("/obiwanNFS/open/finishstage.txt", "%s\n\n%s" % (ClusterJobID, str(e)))
+            File.print_to_file("/tmp/finishstage.txt", "ClusterJobID %s\n\n%s" % (ClusterJobID, str(e)), 'a')
     
     
     
-    def ContinueJob(self, JobStageID):
-        jobstage = JobStage.objects.get(pk=JobStageID)
-        jobstages = JobStage.objects.prefetch_related('JobStageParameters').filter(Job__pk=jobstage.Job.JobID)
-        if len(jobstages) > jobstage.Job.CurrentStage:
-            self.StartStage(jobstages[jobstage.Job.CurrentStage])
-        else:
-            self.UpdateJobStatus(jobstage.Job.JobID, Status.Completed_Successfully)    
-        
+    def ContinueStage(self, jobstage):
+    	with open("/tmp/continuestage.txt", 'a') as f:
+    		print >> f, "here"
+    		
+		    try:
+		        stage_cluster_job = ClusterJob.objects.get(pk=jobstage.ClusterJobID)
+		        
+		        #Get all the Jobstages for this Job so that we can loop through them to check if all dependencies have been satisfied
+		        jobstages = JobStage.objects.filter(Job__JobID=jobstage.Job.JobID).order_by('Stage__StageIndex', 'Stage__StageID')
+		        
+		        exit_code_handled = False
+		        for j in jobstages:
+		            #Only check stages that come after the stage currently finishing
+		            if j.Stage.StageIndex > jobstage.Stage.StageIndex:
+		            
+		                #Check exit code dependencies. ALL exit code dependencies must be satisfied for a stage to run. If ONE fails, the stage is cancelled.
+		                deps_satisfied = True
+		                deps = j.Stage.StageDependencies.all()
+		                for dependency in deps:
+		                    #check all exit code dependencies for a jobstage
+		                    if dependency.Condition.ConditionID == objects.DependencyCondition.Exit_Code:
+		                        #get the code that the ClusterJob exited with
+		                        dep_js = jobstages.get(Stage__StageID=dependency.DependantOn.StageID)
+		                        cluster_job = ClusterJob.objects.get(pk=dep_js.ClusterJobID)
+		                        ExitCode = cluster_job.ExitStatus
+		                        
+		                        print >> f, "%s %s %s %s" % (jobstage.Stage.StageName, j.ClusterJobID, str(ExitCode), str(dependency.ExitCodeValue))
+		                        
+		                        if not ExitCode:
+		                            #If an exit code is null, the job is still running so the dependency has not been satisfied
+		                            deps_satisfied = False
+		                            break
+		                        else:
+		                            #if an exit code dependency fails, cancel the job
+		                            if dependency.ExitCodeValue != ExitCode:
+		                                deps_satisfied = False
+		                                self.RunUserProcess("qdel %s" % j.ClusterJobID)
+		                                j.State_id = objects.Status.Stopped
+		                                j.save()
+		                                break
+		                            else:
+		                                #if the exit code dependency is met for the stage that is being continued, exit_code_handled can be set to true
+		                                if stage_cluster_job.ClusterJobID == cluster_job.ClusterJobID:
+		                                    exit_code_handled = True
+		                
+		                #if all of the exit code dependencies have been satisfied, release the job stage
+		                if deps_satisfied:
+		                    print >> f, j.ClusterJobID 
+		                    self.RunUserProcess("qrls %s" % j.ClusterJobID)
+		        
+		        #if the exit code for the stage being continued is non-zero and wasn't handled by one of the dependencies, it means the stage failed
+		        if stage_cluster_job.ExitStatus != 0 and not exit_code_handled:
+		            jobstage.State_id = objects.Status.Failed
+		        else:
+		            jobstage.State_id = objects.Status.Completed_Successfully
+		            
+		        jobstage.save()
+		        
+		    except Exception, e:
+		        print >> f, "JobstageID: %s\n\n%s" % (jobstage.JobStageID, str(e)) 
+		        jobstage.State_id = objects.Status.Failed
+		        jobstage.save()
     
     
     
@@ -1164,11 +1330,10 @@ class JMS:
             job_dir = "%s/jobs/%s" % (self.users_dir + user.username, str(jobstage.Job.JobID))
             snap_dir = "%s/Snapshots/Stage_%s" % (job_dir, str(jobstage.Stage.StageIndex))
                     
-            process = UserProcess(user.username, user.userprofile.Code)
-            process.run_command("chgrp jms %s -R" % job_dir)
+            self.RunUserProcess("chgrp jms %s -R" % job_dir)
             os.system("chgrp jms %s -R" % job_dir)
                     
-            self.CreateSnapshot(process, job_dir, snap_dir)
+            self.CreateSnapshot(job_dir, snap_dir)
         
         
             
@@ -1326,15 +1491,13 @@ class JMS:
     
     
     
-    def GetDashboard(self, username, password):
-        return objects.Dashboard(username, password)
+    def GetDashboard(self):
+        return objects.Dashboard(self.user.username, self.user.userprofile.Code)
     
     
     
     def GetServerSettings(self):
-        process = UserProcess(self.user.username, self.user.userprofile.Code)
-        output = process.run_command('qmgr -c "print server"', expect=self.user.username + "@%s:" % socket.gethostname())
-        
+        output = self.RunUserProcess('qmgr -c "print server"', expect=self.user.username + "@%s:" % socket.gethostname())
         
         server = objects.TorqueServer()
         admins = {}
@@ -1458,85 +1621,80 @@ class JMS:
         
         
     def UpdateServerSettings(self, KeepCompleted, JobStatRate, SchedularIteration, NodeCheckRate, TCPTimeout, QueryOtherJobs, MOMJobSync, MoabArrayCompatible, Scheduling):
-        process = UserProcess(self.user.username, self.user.userprofile.Code)        
-        output = process.run_command('qmgr -c "set server keep_completed = %s"' % str(KeepCompleted))
-        output += "\n" + process.run_command('qmgr -c "set server job_stat_rate = %s"' % str(JobStatRate))
-        output += "\n" + process.run_command('qmgr -c "set server scheduler_iteration = %s"' % str(SchedularIteration))
-        output += "\n" + process.run_command('qmgr -c "set server node_check_rate = %s"' % str(NodeCheckRate))
-        output += "\n" + process.run_command('qmgr -c "set server tcp_timeout = %s"' % str(TCPTimeout))
-        output += "\n" + process.run_command('qmgr -c "set server query_other_jobs = %s"' % str(QueryOtherJobs))
-        output += "\n" + process.run_command('qmgr -c "set server mom_job_sync = %s"' % str(MOMJobSync))
-        output += "\n" + process.run_command('qmgr -c "set server moab_array_compatible = %s"' % str(MoabArrayCompatible))
-        output += "\n" + process.run_command('qmgr -c "set server scheduling = %s"' % str(Scheduling))
+        output = self.RunUserProcess('qmgr -c "set server keep_completed = %s"' % str(KeepCompleted))
+        output += "\n" + self.RunUserProcess('qmgr -c "set server job_stat_rate = %s"' % str(JobStatRate))
+        output += "\n" + self.RunUserProcess('qmgr -c "set server scheduler_iteration = %s"' % str(SchedularIteration))
+        output += "\n" + self.RunUserProcess('qmgr -c "set server node_check_rate = %s"' % str(NodeCheckRate))
+        output += "\n" + self.RunUserProcess('qmgr -c "set server tcp_timeout = %s"' % str(TCPTimeout))
+        output += "\n" + self.RunUserProcess('qmgr -c "set server query_other_jobs = %s"' % str(QueryOtherJobs))
+        output += "\n" + self.RunUserProcess('qmgr -c "set server mom_job_sync = %s"' % str(MOMJobSync))
+        output += "\n" + self.RunUserProcess('qmgr -c "set server moab_array_compatible = %s"' % str(MoabArrayCompatible))
+        output += "\n" + self.RunUserProcess('qmgr -c "set server scheduling = %s"' % str(Scheduling))
+        
+        return output
         
     
     
-    def CreateQueue(self, QueueName):
-        process = UserProcess(self.user.username, self.user.userprofile.Code)        
-        output = process.run_command('qmgr -c "create queue %s"' % QueueName)
+    def CreateQueue(self, QueueName):       
+        output = self.RunUserProcess('qmgr -c "create queue %s"' % QueueName)
         
     
     
-    def DeleteQueue(self, QueueName):
-        process = UserProcess(self.user.username, self.user.userprofile.Code)        
-        output = process.run_command('qmgr -c "delete queue %s"' % QueueName)
+    def DeleteQueue(self, QueueName):       
+        output = self.RunUserProcess('qmgr -c "delete queue %s"' % QueueName)
         
                 
     
     def UpdateQueue(self, QueueName, Type=None, Enabled=None, Started=None, MaxQueable=None, MaxRun=None, MaxUserQueable=None, MaxUserRun=None, MaxNodes=None, DefaultNodes=None, MaxCPUs=None, DefaultCPUs=None, MaxMemory=None, DefaultMemory=None, MaxWalltime=None, DefaultWalltime=None, DefaultQueue=False):
-        process = UserProcess(self.user.username, self.user.userprofile.Code) 
         output = ""
         
         if Type != None:
-            output += process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "queue_type", str(Type)))
+            output += self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "queue_type", str(Type)))
         if Started != None:
-            output += "\n" + process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "started", str(Started)))
+            output += "\n" + self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "started", str(Started)))
         if MaxQueable != None:
-            output += "\n" + process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "max_queuable", str(MaxQueable)))
+            output += "\n" + self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "max_queuable", str(MaxQueable)))
         if MaxRun != None:
-            output += "\n" + process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "max_running", str(MaxRun)))
+            output += "\n" + self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "max_running", str(MaxRun)))
         if MaxUserQueable != None:
-            output += "\n" + process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "max_user_queuable", str(MaxUserQueable)))
+            output += "\n" + self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "max_user_queuable", str(MaxUserQueable)))
         if MaxUserRun != None:
-            output += "\n" + process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "max_user_run", str(MaxUserRun)))
+            output += "\n" + self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "max_user_run", str(MaxUserRun)))
         if MaxNodes != None:
-            output += "\n" + process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_max.nodes", str(MaxNodes)))
+            output += "\n" + self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_max.nodes", str(MaxNodes)))
         if DefaultNodes != None:
-            output += "\n" + process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_default.nodes", str(DefaultNodes)))
+            output += "\n" + self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_default.nodes", str(DefaultNodes)))
         if MaxCPUs != None:
-            output += "\n" + process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_max.ncpus", str(MaxCPUs)))
+            output += "\n" + self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_max.ncpus", str(MaxCPUs)))
         if DefaultCPUs != None:
-            output += "\n" + process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_default.ncpus", str(DefaultCPUs)))
+            output += "\n" + self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_default.ncpus", str(DefaultCPUs)))
         if MaxMemory != None:
-            output += "\n" + process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_max.mem", str(MaxMemory)))
+            output += "\n" + self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_max.mem", str(MaxMemory)))
         if DefaultMemory != None:
-            output += "\n" + process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_default.mem", str(DefaultMemory)))
+            output += "\n" + self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_default.mem", str(DefaultMemory)))
         if MaxWalltime != None:
-            output += "\n" + process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_max.walltime", str(MaxWalltime)))
+            output += "\n" + self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_max.walltime", str(MaxWalltime)))
         if DefaultWalltime != None:
-            output += "\n" + process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_default.walltime", str(DefaultWalltime)))
+            output += "\n" + self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "resources_default.walltime", str(DefaultWalltime)))
         if Enabled != None:
-            output += "\n" + process.run_command('qmgr -c "set queue %s %s = %s"' % (QueueName, "enabled", str(Enabled)))
+            output += "\n" + self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (QueueName, "enabled", str(Enabled)))
     
     
     
     def SaveAdministrator(self, Administrators):
-        process = UserProcess(self.user.username, self.user.userprofile.Code)   
-        
-        output = process.run_command('qmgr -c "set server managers = %s@%s"' % (self.user.username, Administrators[0].Host))
-        output += process.run_command('qmgr -c "set server operators = %s@%s"' % (self.user.username, Administrators[0].Host))
+        output = self.RunUserProcess('qmgr -c "set server managers = %s@%s"' % (self.user.username, Administrators[0].Host))
+        output += self.RunUserProcess('qmgr -c "set server operators = %s@%s"' % (self.user.username, Administrators[0].Host))
         
         for a in Administrators:
             if a.Manager:
-                output += "\n" + process.run_command('qmgr -c "set server managers += %s@%s"' % (a.Username, a.Host))
+                output += "\n" + self.RunUserProcess('qmgr -c "set server managers += %s@%s"' % (a.Username, a.Host))
             if a.Operator:
-                output += "\n" + process.run_command('qmgr -c "set server operators += %s@%s"' % (a.Username, a.Host))
+                output += "\n" + self.RunUserProcess('qmgr -c "set server operators += %s@%s"' % (a.Username, a.Host))
     
     
     
-    def GetNodes(self):
-        process = UserProcess(self.user.username, self.user.userprofile.Code) 
-        out = process.run_command("qnodes -x")
+    def GetNodes(self): 
+        out = self.RunUserProcess("qnodes -x")
         
         nodes = []        
         
@@ -1559,38 +1717,36 @@ class JMS:
     
     
     
-    def AddNode(self, NodeName, NumProcessors, Properties, IPAddress):
-        process = UserProcess(self.user.username, self.user.userprofile.Code)    
-        output = process.run_command('qmgr -c "create node %s"' % NodeName)   
+    def AddNode(self, NodeName, NumProcessors, Properties, IPAddress):   
+        output = self.RunUserProcess('qmgr -c "create node %s"' % NodeName)   
         if NumProcessors:
-            output += process.run_command('qmgr -c "set node %s np = %s"' % (NodeName, str(NumProcessors)))
+            output += self.RunUserProcess('qmgr -c "set node %s np = %s"' % (NodeName, str(NumProcessors)))
         if Properties:
-            output += process.run_command('qmgr -c "set node %s properties = %s"' % (NodeName, Properties))
+            output += self.RunUserProcess('qmgr -c "set node %s properties = %s"' % (NodeName, Properties))
              
-        output += self.RestartTorqueServer(process)
+        output += self.RestartTorqueServer()
     
     
     
-    def UpdateNode(self, NodeName, NumProcessors, Properties):
-        process = UserProcess(self.user.username, self.user.userprofile.Code)     
-        output = process.run_command('qmgr -c "set node %s np = %s"' % (NodeName, str(NumProcessors)))
-        output += process.run_command('qmgr -c "set node %s properties = %s"' % (NodeName, Properties))
+    def UpdateNode(self, NodeName, NumProcessors, Properties):    
+        output = self.RunUserProcess('qmgr -c "set node %s np = %s"' % (NodeName, str(NumProcessors)))
+        output += self.RunUserProcess('qmgr -c "set node %s properties = %s"' % (NodeName, Properties))
     
     
     
-    def DeleteNode(self, NodeName):
-        process = UserProcess(self.user.username, self.user.userprofile.Code)    
-        output = process.run_command('qmgr -c "delete node %s"' % NodeName) 
-        output += self.RestartTorqueServer(process)    
+    def DeleteNode(self, NodeName):   
+        output = self.RunUserProcess('qmgr -c "delete node %s"' % NodeName) 
+        output += self.RestartTorqueServer()    
         
     
     
-    def RestartTorqueServer(self, process):
-        output = process.run_command("sudo service pbs_server restart", expect=": ", timeout=40) 
-        output = process.run_command(self.user.userprofile.Code, timeout=60)
+    def RestartTorqueServer(self):
+        output = self.RunUserProcess("sudo service pbs_server restart", expect=": ", timeout=40) 
+        output = self.RunUserProcess(self.user.filemanagersettings.ServerPass, timeout=60)
         return output
                        
         
         
     def createJobDir(self, directory):
-        Directory.create_directory(directory, 0777)        
+        self.RunUserProcess("mkdir -p %s" % directory)
+        self.RunUserProcess("chmod 777 %s -R" % directory)

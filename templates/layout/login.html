@@ -7,8 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <title>{% block title %}JMS - Login{% endblock %}</title>
-    {% block css %}
     
+    <link rel="shortcut icon" href="{{ STATIC_URL }}img/favicon.ico" type="image/x-icon">
+    
+    {% block css %}
+        
 		<!-- BOOTSTRAP STYLES-->
 		<link href="{{ STATIC_URL }}lib/bootstrap/binary/css/bootstrap.css" rel="stylesheet" />
 		 <!-- FONTAWESOME STYLES-->
@@ -63,6 +66,8 @@
 								<input class="btn btn-lg btn-primary btn-block" type="submit" value="Sign In"/>
 							
 							</form>
+							<br/>
+							To access a demo session, use 'demo' as your username and password.
 				    	</div>
 				    </div>
 		        </div>

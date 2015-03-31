@@ -142,6 +142,7 @@ var ProcessingMessage = function(success, message) {
     this.Message = ko.observable(message);
 }
 
+
 function JobsViewModel() {
 	var self = this;
     
@@ -682,6 +683,9 @@ $(function() {
 
 		// define a 'route'
 		this.get('#:job/:cluster_job', function() {
+		    // set iframe url
+		    document.getElementById('files').src = "/files/filemanager#" + this.params.job
+		    
 			jobs_model.job_id(this.params.job);
 			jobs_model.cluster_job_id(this.params.cluster_job);
 			
@@ -692,6 +696,9 @@ $(function() {
 		});
 		
 		this.get('#:job', function() {
+		    // set iframe url
+		    document.getElementById('files').src = "/files/filemanager#" + this.params.job
+		    
 			jobs_model.Job(null)	
 			jobs_model.job_id(this.params.job);
 			jobs_model.cluster_job_id(null);
@@ -703,6 +710,8 @@ $(function() {
 		});
 		
 		this.get('/jobs/', function() {
+		    // set iframe url
+		    document.getElementById('files').src = "/files/filemanager#"
 			jobs_model.LoadingJob(false);
 		});
 	});

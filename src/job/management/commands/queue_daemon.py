@@ -1,12 +1,11 @@
-from django.core.management.base import NoArgsCommand, make_option
+from django.core.management.base import NoArgsCommand, make_option  
+from django import db
 
 from job.JMS import JMS
-from django.db import transaction
 
 import sys, time, subprocess
 from lxml import objectify
-from daemon import Daemon
-
+from daemon import Daemon 
 
 class QueueDaemon(Daemon):
     def run(self):
@@ -26,10 +25,14 @@ class QueueDaemon(Daemon):
                     for job in data.Job:
                         print >> f, job.Job_Id
                         jms.AddUpdateClusterJob(job)
+                    
+                    # Reset database connection to avoid "MySQL has gone away" error after daemon 
+                    # has been running for a long time    
+                    db.close_connection() 
                           
                 except Exception, err:
                     print >> f, "Error: " + str(err)
-                  
+                
             time.sleep(5)
 
                        

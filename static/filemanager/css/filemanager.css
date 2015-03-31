@@ -1,0 +1,95 @@
+#cwd {
+
+}
+
+#listdir {
+    white-space: nowrap;
+    overflow: auto;
+}
+
+#tab-container {
+    width:100%;
+    overflow: hidden;
+}
+
+.tab {
+    max-width: 200px;
+    background-color: #f8f8f8;
+    border: none;
+    border-right: 1px solid #e7e7e7;
+    border-bottom: 1px solid #e7e7e7;
+    float: left;
+    padding: 2px 5px;  
+}
+
+.tab:hover {
+    cursor: pointer;
+}
+
+.active {
+    color: black;
+    border: 1px solid #e7e7e7;
+    border-bottom: none;
+    background-color: white;
+}
+
+.tab-title {
+    max-width: 170px;
+    overflow: hidden;
+    float: left;
+    margin-right: 2px;
+    white-space: nowrap;
+}
+
+.tab-close {
+    float: right;
+}
+
+.tab-page {
+    width: 100%;
+    height: calc(100% - 43px);
+    display: none;
+}
+
+.tab-image {
+    max-height: 100%;
+    max-width: 100%;
+}
+
+.tab-pdf {
+    width: 100%;
+    height: 100%;
+}
+
+.tab-video {
+    width: 100%;
+    height: 100%;
+}
+
+.tab-audio {
+    margin-top: 10px;
+    width: 100%;
+}
+
+.tab-text {
+    border: none;
+    width: 100%;
+    height: 100%;
+    white-space: nowrap;
+}
+
+.fa-btn {
+    padding-left: 1px;
+    padding-right: 1px;
+    border: 1px solid transparent;
+}
+
+.fa-btn:hover {
+    padding-left: 1px;
+    padding-right: 1px;
+    border: 1px outset;
+}
+
+@media (min-width:768px) {
+	
+}
