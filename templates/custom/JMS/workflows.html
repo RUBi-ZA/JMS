@@ -1,6 +1,7 @@
 {% extends "custom/JMS/master.html" %}
 
 {% block css %}
+	 
 	
 	<!-- BOOTSTRAP STYLES -->
 	<link href="{{ STATIC_URL }}lib/bootstrap/binary/css/bootstrap.css" rel="stylesheet" />
@@ -28,719 +29,505 @@
 {% endblock %}
 
 {% block content %}	
-	<script id="relatedObjectTemplate" type="text/html">
-		<!-- ko with: { Parameter: $data } -->
-		<div class="form-group">
-			<select class="form-control" data-bind="value: Parameter.Value, options: $root.PreviousObjects, 
-				optionsText: function(item) { return item.ParameterName(); }, optionsValue: function(item) { return item.ParameterID(); }">
-			</select>				
-		</div>				
-		<!-- /ko -->
-	</script>
-	
- 	<script id="complexObjectTemplate" type="text/html">
- 		<!-- ko with: { Parameter: $data } -->
-		<div class="form-group">
-			<label>Fields for <span data-bind='text: Parameter.ParameterName()'></span></label>
-			<div class="table-responsive">
-				<table class="table table-hover">
-					<thead>
-						<tr>
-							<th>Field Name</th>
-							<th>Field Type</th>
-							<th>Multiple?</th>
-							<th></th>
-						</tr>
-					</thead>
-					<tbody id="params-table-body" data-bind="foreach: Parameter.parameters">
-						<tr>
-							<td>
-								<input class="form-control" data-bind="value: ParameterName" placeholder="The text you want to display on the input page" />
-							</td>
-							<td>
-								<select class="form-control" data-bind="value: Type">
-									<option value='1'>Text</option>
-									<option value='7'>Complex Object</option>
-									<option value='8'>Related Object</option>
-								</select>
-							</td>
-							<td style="text-align: center;">
-								<input type="checkbox" value="multiple" data-bind="checked: Multiple" />
-							</td>
-							<td style="text-align:right;width:65px;">
-								
-								<a href="#" class="btn btn-danger btn-sm" data-bind="click: function() { $root.DeleteParameter($parent.Parameter.parameters, $data) }"><i class="fa fa-trash-o"></i></a>
-							</td>
-						</tr>
-						<tr data-bind="if: Type() == 7">
-							<td colspan='4' style='padding-left:20px;'>
-								<!-- ko template: { name: 'complexObjectTemplate' } -->
-        						<!-- /ko --> 
-							</td>
-						<tr>
-						<tr data-bind="if: Type() == 8">
-							<td colspan='4' style='padding-left:20px;'>
-								<!-- ko template: { name: 'relatedObjectTemplate' } -->
-        						<!-- /ko --> 
-							</td>
-						<tr>
-					</tbody>
-					<tfoot>
-						<tr>
-							<td colspan="4" style="text-align:right;">
-								<a href="#" class="btn btn-success btn-sm" data-bind="click: function() { $root.AddSubParameter(Parameter.parameters, Parameter.ParameterID()) }"><i class="fa fa-plus"></i></a>
-							</td>
-						</tr>
-					</tfoot>
-				</table>
-			</div>
-		</div>  
-		<!-- /ko -->
-	</script> 
-	
-	<script type="text/html" id="complex-object-input">
-		<!-- ko with: { Parameter: $data } -->
-		<div class="col-lg-12" style="padding-left:25px;" data-bind="foreach: Parameter.parameters">
-			<div class="form-group" data-bind="if: InputBy() == 'user'">
-				<label data-bind="text: ParameterName"></label>
-										
-				<div data-bind="if: Type() == 1">
-					<div data-bind="if: Multiple() == false">												
-						<input class="form-control" data-bind="value: Value"></input>
-					</div>
-					<div data-bind="if: Multiple() == true">
-						<table class="table table-responsive">
-							<tbody data-bind="foreach: value_items">
-								<tr>
-									<td>
-										<input class="form-control" data-bind="value: value"></input>
-									</td>
-									<td style="text-align:right;">
-										<a href="#" class="btn btn-danger btn-sm" data-bind="click: function() { $root.RemoveValue($parent, $data); }"><i class="fa fa-trash-o"></i></a>
-									</td>
-								</tr>
-							</tbody>
-							<tfoot>
-								<tr>
-									<td colspan='2' style="text-align:right">
-										<a href="#" class="btn btn-success btn-sm" data-bind="click: $root.AddValue"><i class="fa fa-plus"></i></a>
-									</td>
-								</tr>
-							</tfoot>
-						</table>
-					</div>
+    <div class="modal fade" id="question-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    </div>
+    
+	<div id="workflows" class="page-wrapper" >
+	    
+	    <!-- loading modal -->
+	    <div class="modal fade" id="loading-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+				    <div class="modal-body" style="overflow:hidden;">
+				        <div style="text-align: center;">
+	                        <img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px"> <br>
+	                        <img src="{{ STATIC_URL }}img/text_loader.gif" style="height:30px"> <br>
+                        </div>
+				    </div>
 				</div>
-				
-				<div data-bind="if: Type() == 7">
-					<div data-bind="if: Multiple() == true">
-						<select class="form-control" multiple data-bind="options: complex_objects, optionsText: function(item) { return item.Parameter().parameters()[0].Value(); }, selectedOptions: selected_parameters">
-						</select>
-						<div class='col-lg-12' style='text-align:right;'>
-							<a href="#" class="btn btn-danger btn-sm" data-bind="click: $root.DeleteComplexObject" style='margin-top:5px;'><i class="fa fa-trash-o"></i></a>
-							<a href="#" class="btn btn-warning btn-sm" data-bind="click: $root.EditComplexObject" style='margin-top:5px;'><i class="fa fa-edit"></i></a>
-							<a href="#" class="btn btn-success btn-sm" data-bind="click: $root.AddComplexObject" style='margin-top:5px;'><i class="fa fa-plus"></i></a>
-						</div>
-					</div>
-					<div data-bind="if: Multiple() == false">
-						<!-- ko template: { name: 'complex-object-input' } -->
-        				<!-- /ko --> 
-					</div>
-				</div>
-				
-				<div data-bind="if: Type() == 8 && related_parameter().Multiple() == true">
-					<div data-bind="if: Multiple() == true">
-						<select class="form-control" multiple data-bind="options: related_parameter().complex_objects(), optionsText: function(item) { return item.Parameter().parameters()[0].Value(); }, selectedOptions: related_objects">
-						</select>
-					</div>
-					
-					<div data-bind="if: Multiple() == false">
-						<select class="form-control" data-bind="options: related_parameter().complex_objects(), optionsText: function(item) { return item.Parameter().parameters()[0].Value(); },
-							value: related_objects">
-						</select>
-					</div>
-				</div>
-				
-			</div>
-		</div>
-		<!-- /ko -->
-	</script>
-	
-	<script type="text/html" id="complex-dialog">
-		
-		<div class="modal fade" data-bind="attr: { id: 'object-dialog-' + $index() }" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		   	</div>
+	 	</div>
+	 	
+	 	
+	 	<!-- add workflow modal -->
+	    <div class="modal fade" id="workflow-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-bind="with: $root.Workflow">
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
 				    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-				     	<h4 class="modal-title" id="myModalLabel">Add <span data-bind="text: $data.ParameterName"></span></h4>
+				     	<h4 class="modal-title">Add Workflow:</h4>
 				  	</div>
 				    <div class="modal-body" style="overflow:hidden;">
-				    	<!-- ko template: { name: 'complex-object-input' } -->
-						<!-- /ko --> 
+				        <div data-bind="visible: $root.creating_workflow() == false">
+				            <div class="form-group">
+				                <label>Workflow name</label>
+				                <input class="form-control" data-bind="value: WorkflowName" />
+				            </div>
+				            
+				            <div class="form-group">
+				                <label>Category</label>
+				                <select class="form-control" data-bind="value: Category, options: $root.Categories, 
+				                    optionsText: function(item) { return item.CategoryName(); },
+				                    optionsValue: function(item) { return item.CategoryID(); }" >
+				                </select>
+				                
+				                <div style="width:100%;text-align:right;">
+				                    <a href="#" data-bind="click: $root.ShowAddCategory"><i class="fa fa-plus"></i> Add new category...</a>
+				                </div>
+				            </div>
+				            
+				            <div class="form-group">
+				                <label>Description (max length: 100 characters)</label>
+				                <textarea class="form-control" data-bind="value: Description"></textarea>
+				            </div>
+				        </div>
+				        
+				        <div id="add-workflow-error"></div>
+				        
+				        <div style="text-align: center;" data-bind="visible: $root.creating_workflow">
+	                        <img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px"> <br>
+	                        <img src="{{ STATIC_URL }}img/text_loader.gif" style="height:30px"> <br>
+                        </div>
 				    </div>
-				    <div class="modal-footer">
-				    	<span data-bind='if: $root.ObjectMode() == "add"'>
-				       		<a class="btn btn-default" data-bind="click: $root.SaveComplexObject"><i class="fa fa-save"></i> Save</a>
-				       	</span>
-				       	<span data-bind='if: $root.ObjectMode() == "edit"'>
-				       		<button class="btn btn-default" data-dismiss="modal">Close</button>
-				       	</span>
+				    <div class="modal-footer" data-bind="visible: $root.creating_workflow() == false">
+				       	<button type="button" class="btn btn-success" data-bind="click: $root.AddWorkflow"><i class="fa fa-plus"></i> Add Workflow</button>
+				       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 					</div>
 				</div>
 		   	</div>
 	 	</div>
-	 	 
-	</script>
-	
-	<div class="modal fade" id="question-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    </div>
-     
-	<div id="workflows" class="page-wrapper" >
-		<div class="page-inner">
-		    
-		    <div style="text-align: center;" data-bind="visible: $root.Loading">
-				<img src="{{ STATIC_URL }}img/big_red_loader.gif"> <br>
-				<img src="{{ STATIC_URL }}img/text_loader.gif"> <br>
-			</div>
-		    
-			<div style="display:none;" data-bind="visible: $root.Loading() == false"> 
-			 	
-				<!-- ko template: { name: 'complex-dialog', foreach: $root.NewObjects } -->
-				<!-- /ko --> 
-				
-				<div class="modal fade" id="input-profile-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-							<div class="modal-header">
-						    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-						     	<h4 class="modal-title">Save Input Profile:</h4>
-						  	</div>
-						    <div class="modal-body">
-						        <div data-bind="visible: $root.InputProfileLoading() == false">
-						            <div class="form-group">
-						                <label>Input profile name</label>
-						                <input class="form-control" data-bind="value: $root.InputProfileName" />
-						            </div>
-						            
-						            <div class="form-group">
-						                <label>Description</label>
-						                <textarea class="form-control" data-bind="value: $root.InputProfileDescription"></textarea>
-						            </div>
-						        </div>
-						        
-						        <div style="text-align: center;" data-bind="visible: $root.InputProfileLoading">
-			                        <img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px"> <br>
-			                        <img src="{{ STATIC_URL }}img/text_loader.gif" style="height:30px"> <br>
-		                        </div>
-						    </div>
-						    <div class="modal-footer" data-bind="visible: $root.InputProfileLoading() == false">
-						       	<button type="button" class="btn btn-info" data-bind="click: $root.CreateInputProfile"><i class="fa fa-save"></i> Save</button>
-						       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-							</div>
-						</div>
-				   	</div>
-			 	</div>
-			 	
-			 	<div class="modal fade" id="share-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-							<div class="modal-header">
-						    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-						     	<h4 class="modal-title"><span data-bind="text: $root.Workflow().WorkflowName"></span> Access Permissions</h4>
-						  	</div>
-						    <div class="modal-body">
-						        <label>Users with access:</label>
-						        <div class="table-responsive">
-									<table class="table table-hover">
-										<thead>
-											<tr>
-												<th>Username</th>
-												<th>Access Level</th>
-												<th style="min-width:90px;">Options</th>
-											</tr>
-										</thead>
-										<tbody id="params-table-body" data-bind="foreach: $root.Workflow().UserAccessRights">
-											<tr>
-												<td>
-												    <span data-bind="text: User().Username"></span>
-												</td>
-												<td>
-												    <span data-bind="text: AccessRight().AccessRightName"></span>
-												</td>
-												<td style="text-align:right;width:65px;">
-												    <!-- ko if: AccessRight().AccessRightID() > 1 -->
-													<a href="#" class="btn btn-warning btn-sm" data-bind="click: $root.ShowEditUserAccessRight"><i class="fa fa-edit"></i></a>
-													<a href="#" class="btn btn-danger btn-sm" data-bind="click: $root.DeleteUserAccessRight"><i class="fa fa-trash-o"></i></a>
-												    <!-- /ko -->
-												</td>
-											</tr>
-										</tbody>
-										<tfoot>
-										    <tr>
-										        <td colspan='3' style="text-align:right;">
-										            <a href="#" class="btn btn-success btn-sm" data-bind="click: $root.ShowAddUserAccessRight"><i class="fa fa-plus"></i></a>	
-										        </td>
-										    </tr>									    
-										</tfoot>
-									</table>
-								</div>
-						    </div>
-						    <div class="modal-footer">
-						       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-							</div>
-						</div>
-				   	</div>
-			 	</div>
-			 	
-			 	<div class="modal fade" id="user-share-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-							<div class="modal-header">
-						    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-						     	<h4 class="modal-title">Share <span data-bind="text: $root.Workflow().WorkflowName"></span> with:</h4>
-						  	</div>
-						    <div class="modal-body" data-bind="with: $root.UserAccessRight">
-						        <div class="form-group">
-						            <label>Username</label>
-						            <!-- ko if: User().UserID() == 0 -->
-						            <input class="form-control" data-bind="value: User().Username" />
-						            <!-- /ko -->
-						            <!-- ko if: User().UserID() > 0 -->
-						            <span class="form-control" data-bind="text: User().Username"></span>
-						            <!-- /ko -->
-						        </div>
-						        <div class="form-group">
-						            <label>Access level</label>
-						            <select class="form-control" data-bind="options: $root.AccessRights, optionsText: function(item) { return item.AccessRightName() }, 
-										optionsValue: function(item) { return item; }, value: AccessRight"></select>
-						        </div>
-						    </div>
-						    <div class="modal-footer">
-						       	<button type="button" class="btn btn-info" data-bind="click: $root.SaveUserAccessRight"><i class="fa fa-save"></i> Save</button>
-						       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-							</div>
-						</div>
-				   	</div>
-			 	</div>
-			 	
-			 	<div class="modal fade" id="group-share-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-							<div class="modal-header">
-						    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-						     	<h4 class="modal-title">Share <span data-bind="text: $root.Workflow().WorkflowName"></span> with:</h4>
-						  	</div>
-						    <div class="modal-body" data-bind="with: $root.GroupAccessRight">
-						        <div class="form-group">
-						            <label>Group name</label>
-						            <input class="form-control" data-bind="value: Group().GroupName" />
-						        </div>
-						        <div class="form-group">
-						            <label>Access level</label>
-						            <select class="form-control" data-bind="options: $root.AccessRights, optionsText: function(item) { return item.AccessRightName() }, 
-										optionsValue: function(item) { return item; }, value: AccessRight"></select>
-						        </div>
-						    </div>
-						    <div class="modal-footer">
-						       	<button type="button" class="btn btn-info" data-bind="click: $root.SaveGroupAccessRight"><i class="fa fa-save"></i>Save</button>
-						       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-							</div>
-						</div>
-				   	</div>
-			 	</div>
-			 	
-			 	<div class="modal fade" id="import-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-							<div class="modal-header" data-bind="visible: $root.Importing() == false">
-						    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-						    	
-						     	<h4 class="modal-title"><i class="fa fa-download"></i> Import Workflow</h4>
-						  	</div>
-						    <div class="modal-body">
-						        <div class="form-group" data-bind="visible: $root.Importing() == false">
-						            <label>Upload workflow</label>
-						            <input class="form-control" type="file" id="import-file" />
-						        </div>
-						        
-						        <div style="text-align: center;" data-bind="visible: $root.Importing">
-			                        <img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px"> <br>
-			                        <img src="{{ STATIC_URL }}img/text_loader.gif" style="height:30px"> <br>
-		                        </div>
-						    </div>
-						    <div class="modal-footer" data-bind="visible: $root.Importing() == false">
-						       	<button type="button" class="btn btn-info" data-bind="click: $root.ImportWorkflow"><i class="fa fa-download"></i>Import</button>
-						       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-							</div>
-						</div>
-				   	</div>
-			 	</div>
-						    
-			 	
-				<div class="modal fade" id="param-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-							<div class="modal-header">
-						    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-						     	<h4 class="modal-title" id="myModalLabel">Parameter Options: <span data-bind="text: $root.Parameter().ParameterName"></span></h4>
-						  	</div>
-						    <div class="modal-body">
-						    	<label>Parameter Type</label>
-								<select class="form-control" data-bind="options: $root.ParameterTypes, optionsText: function(item) { return item.ParameterTypeName; }, optionsValue: function(item) { return item.ParameterTypeID }, value: $root.Parameter().Type">													
-								</select>
-						    	
-						    	<div class="form-group" style="padding-top:10px;overflow:hidden;">
-										
-									<div data-bind="if: $root.Parameter().Type() == 1">
-										<div class="col-lg-12" data-bind="if: $root.Parameter().InputBy() == 'system'" style="overflow:hidden">	
-											<label>Value:</label>
-											<input class="form-control" data-bind="value: $root.Parameter().Value"></input>	
-										</div>
-											
-										<div class="col-lg-12">
-											<input type="checkbox" value="multiple" data-bind="checked: $root.Parameter().Multiple"></input> Multiple inputs?
-											
-											<div class="form-group" data-bind="if: $root.Parameter().Multiple">
-												<label>Delimiter</label>
-												<input class="form-control" data-bind="value: $root.Parameter().Delimiter" />
-											</div>
-										</div>
-									</div>
-									<div data-bind="if: $root.Parameter().Type() == 2">
-										
-										<div class="col-lg-12" data-bind="if: $root.Parameter().InputBy() == 'system'">	
-											<label>Value:</label>
-											<input class="form-control" type="number" data-bind="value: $root.Parameter().Value"></input>
-										</div>
-										
-										<div class="col-lg-12" style="overflow:hidden">
-											<input type="checkbox" value="multiple" data-bind="checked: $root.Parameter().Multiple"></input> Multiple inputs?
-											
-											<div class="form-group" data-bind="if: $root.Parameter().Multiple">
-												<label>Delimiter</label>
-												<input class="form-control" data-bind="value: $root.Parameter().Delimiter" />
-											</div>
-										</div>
-									</div>
-									<div data-bind="if: $root.Parameter().Type() == 3">
-										<label>Value:</label>
-										<input class="form-control" data-bind="value: $root.Parameter().Value"></input>	
-									</div>	
-									<div data-bind="if: $root.Parameter().Type() == 4" style="overflow:hidden;">
-										<div class="col-lg-12" >
-											<input type="checkbox" value="multiple" data-bind="checked: $root.Parameter().Multiple"></input> Allow multiple options to be selected?
-											
-											<div class="form-group" data-bind="if: $root.Parameter().Multiple">
-												<label>Delimiter</label>
-												<input class="form-control" data-bind="value: $root.Parameter().Delimiter" />
-											</div>
-											
-											<div class="table-responsive">
-												<table class="table table-hover">
-													<thead>
-														<tr>
-															<th>Option Text</th>
-															<th>Option Value</th>
-															<th></th>
-														</tr>
-													</thead>
-													<tbody id="params-table-body" data-bind="foreach: $root.Parameter().ParameterOptions">
-														<tr>
-															<td>
-																<input class="form-control" data-bind="value: ParameterOptionText" placeholder="The text you want to display on the input page" />
-															</td>
-															<td>
-																<input class="form-control" data-bind="value: ParameterOptionValue" placeholder="The value you want to send to as a parameter" />
-															</td>
-															<td style="text-align:right;width:65px;">
-																<a href="#" class="btn btn-danger btn-sm" data-bind="click: $root.DeleteParameterOption"><i class="fa fa-trash-o"></i></a>
-															</td>
-														</tr>
-													</tbody>
-													<tfoot>
-														<tr>
-															<td colspan="3" style="text-align:right;">
-																<a href="#" class="btn btn-success btn-sm" data-bind="click: $root.AddParameterOption"><i class="fa fa-plus"></i></a>
-															</td>
-														</tr>
-													</tfoot>
-												</table>
-											</div>
-										</div>
-									</div>
-									<div data-bind="if: $root.Parameter().Type() == 5 && $root.Parameter().InputBy() == 'user'">
-										<input type="checkbox" value="multiple" data-bind="checked: $root.Parameter().Multiple"></input> Upload multiple files?
-									</div>	
-									<div data-bind="if: $root.Parameter().Type() == 6 && $root.Parameter().InputBy() == 'system'">
-										<select class="form-control" data-bind="options: $root.PreviousParameters, optionsText: function(item) { return item.ParameterName(); }, 
-											optionsValue: function(item) { return item.ParameterID(); }, value: $root.Parameter().Value" >
-										</select>
-									</div>
-									<div data-bind="if: $root.Parameter().Type() == 7 && $root.Parameter().InputBy() == 'user'">
-										<span class="col-lg-12" style="font-size:8pt;padding:0px;padding-bottom:10px;">												
-											Complex objects are submitted as a JSON string. The receiving script should be set up to handle this.
-										</span>
-										<div class="col-lg-12">
-											
-											<input type="checkbox" value="multiple" data-bind="checked: $root.Parameter().Multiple"></input> Multiple inputs?<br/><br/>
-											
-											<div  data-bind="template: { name: 'complexObjectTemplate', data: $root.Parameter()}">
-											</div>
-										</div>
-									</div>						
-								</div>	
-						   	</div>
-						  	<div class="modal-footer">
-						       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-							</div>
-						</div>
-				   	</div>
-			 	</div>
-			 	
-			 	<div class="modal fade" id="dependency-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-							<div class="modal-header">
-						    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-						     	<h4 class="modal-title" ><span data-bind="text: $root.StageDependency().editing() > 0 ? 'Edit' : 'Add'"></span> Stage Dependency:</h4>
-						  	</div>
-						    <div class="modal-body">
-						    	<div class="form-group">
-									<label>Stage:</label>
-									<select class="form-control" data-bind="options: $root.Workflow().Stages, optionsText: function(item) { return item.StageName(); },
-										optionsValue: function(item) { return item.StageID() }, value: $root.StageDependency().StageID, optionsAfterRender: hideOption">
-									</select>
-								</div>
-								
-						    	<div class="form-group">
-									<label>Condition:</label>
-									<select class="form-control" data-bind="value: $root.StageDependency().ConditionID">
-										<option value="1">Stage completed successfully</option>
-										<option value="2">Stage completed with errors</option>
-										<option value="3">Stage completed</option>
-										<option value="4">Exit code</option>
-									</select>
-								</div>
-								
-						    	<div class="form-group" data-bind="visible: $root.StageDependency().ConditionID() == 4">
-									<label>Exit Code:</label>
-									<input class="form-control" data-bind="value: $root.StageDependency().Value" />
-								</div>
-						   	</div>
-						  	<div class="modal-footer">
-						       	<button type="button" class="btn btn-info" data-bind="click: $root.SaveStageDependency">
-						       		<i class="fa fa-save"></i> 
-						       		Save
-						       	</button>
-						       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-							</div>
-						</div>
-				   	</div>
-			 	</div>
-			 	
-			 	<div class="modal fade" id="submit-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-						    <div class="modal-body">
-						    	<div style="text-align:center">
-						    		<div style="height:130px;" data-bind="visible: $root.Submitting()">
-										<img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px;" /> <br/>
-										<img src="{{ STATIC_URL }}img/text_loader.gif" style="height: 30px;"/> <br/>
-									</div>
-						    		<div style="height:130px;" data-bind="visible: $root.Submitting() == false && $root.SubmitSuccess() == true">
-										<img src="{{ STATIC_URL }}img/success.png" style="height:100px;" /> <br/>
-										<img src="{{ STATIC_URL }}img/job_started.gif" style="height: 30px;"/> <br/>
-									</div>
-									
-						    		<div style="height:130px;" data-bind="visible: $root.Submitting() == false && $root.SubmitSuccess() == false">
-										<img src="{{ STATIC_URL }}img/error.png" style="height:100px;" /> <br/>
-										<img src="{{ STATIC_URL }}img/job_failed.gif" style="height: 30px;"/> <br/>
-									</div>
-									
-									<br/>
-									
-									Creating job...
-									<img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:16px;" data-bind="visible: $root.SubmitStatus() == 0 && $root.Submitting() == true" />
-									<span data-bind="visible: $root.SubmitStatus() >= 1">done!</span>
-									<span data-bind="visible: $root.SubmitStatus() == 0 && $root.SubmitSuccess() == false">failed!</span>
-									</br>
-								
-									Uploading files...
-									<img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:16px;" data-bind="visible: $root.SubmitStatus() == 1 && $root.Submitting() == true" />
-									<span data-bind="visible: $root.SubmitStatus() >= 2">done!</span>
-									<span data-bind="visible: $root.SubmitStatus() == 1 && $root.SubmitSuccess() == false">failed!</span>
-									</br>
-								
-									Starting job...
-									<img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:16px;" data-bind="visible: $root.SubmitStatus() == 2 && $root.Submitting() == true" />
-									<span data-bind="visible: $root.SubmitStatus() >= 3">done!</span>
-									<span data-bind="visible: $root.SubmitStatus() == 2 && $root.SubmitSuccess() == false">failed!</span>
-									
-								</div>
-						   	</div>
-						  	<div class="modal-footer" data-bind="visible: $root.Submitting() == false">
-						  		<span data-bind="if: $root.SubmitSuccess()">
-						       		<a class="btn btn-default" data-bind="attr: { href: '/jobs/#' + $root.Job().JobID() }">Go to job</a>
-						       	</span>
-						       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-							</div>
-						</div>
-				   	</div>
-			 	</div>
-			 	
-			 	<div class="modal fade" id="custom-submit-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-						    <div class="modal-body">
-						    	<div style="text-align:center">
-						    		<div style="height:130px;" data-bind="visible: $root.Submitting()">
-										<img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px;" /> <br/>
-										<img src="{{ STATIC_URL }}img/text_loader.gif" style="height: 30px;"/> <br/>
-									</div>
-									
-						    		<div style="height:130px;" data-bind="visible: $root.Submitting() == false && $root.SubmitSuccess() == true">
-										<img src="{{ STATIC_URL }}img/success.png" style="height:100px;" /> <br/>
-										<img src="{{ STATIC_URL }}img/job_started.gif" style="height: 30px;"/> <br/>
-									</div>
-									
-						    		<div style="height:130px;" data-bind="visible: $root.Submitting() == false && $root.SubmitSuccess() == false">
-										<img src="{{ STATIC_URL }}img/error.png" style="height:100px;" /> <br/>
-										<img src="{{ STATIC_URL }}img/job_failed.gif" style="height: 30px;"/> <br/>
-									</div>
-								</div>
-						   	</div>
-						  	<div class="modal-footer" data-bind="visible: $root.Submitting() == false">
-						  		<span data-bind="if: $root.SubmitSuccess()">
-						       		<a class="btn btn-default" data-bind="attr: { href: '/jobs/#' + $root.Job().JobID() }">Go to job</a>
-						       	</span>
-						       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-							</div>
-						</div>
-				   	</div>
-			 	</div>
-			 	
-			 	<div class="modal fade" id="resources-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-							<div class="modal-header">
-						    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-						     	<h4 class="modal-title" >Stage Settings:</h4>
-						  	</div>
-						    <div class="modal-body" style="overflow:hidden">
-						    	<div class="col-lg-12" data-bind="with: $root.StageResources">
-    								<div class="form-group col-lg-12">
-									    <input type="checkbox" value="true" data-bind="checked: RequiresEdit"/> Pause workflow after stage completion 
-									</div>
-									
-    								<div class="form-group col-lg-12">
-    									<label>Queue:</label>
-    									<select class="form-control" name="Queue" placeholder="Enter queue name" data-bind="value: Queue,
-    									    options: $root.Queues, optionsText: function(item) { return item.QueueName(); }, optionsValue: function(item) {
-    									    return item.QueueName(); }">
-    									</select>
-    								</div>
-    								
-    								<div class="form-group col-lg-12">
-    									<label>Nodes:</label>
-    									<input class="form-control" name="Nodes" type="number" min="1" data-bind="value: Nodes" />
-    								</div>
-    								
-    								<div class="form-group col-lg-12">
-    									<label>Cores:</label>
-    									<input class="form-control" name="CPUs" type="number" min="1" data-bind="value: MaxCores" />
-    								</div>
-    								
-    								<div class="form-group col-lg-12">
-    									<label>Memory:</label>
-    									<input class="form-control" name="Memory" data-bind="value: Memory" />
-    								</div>
-    								
-    								<div class="form-group col-lg-12">
-    									<label>Walltime (hh:mm:ss):</label>
-    									<input class="form-control" name="Walltime" placeholder="Walltime e.g. 01:00:00" data-bind="value: Walltime"/>
+	 	
+	 	
+	 	<!-- add category modal -->
+	    <div class="modal fade" id="add-category-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+				    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				     	<h4 class="modal-title">Add Category:</h4>
+				  	</div>
+				    <div class="modal-body" style="overflow:hidden;">
+				        <div data-bind="visible: $root.creating_category() == false">
+				            <div class="form-group">
+				                <label>Category name</label>
+				                <input class="form-control" data-bind="value: $root.new_category_name" />
+				            </div>
+				        </div>
+				        
+				        <div id="add-category-error"></div>
+				        
+				        <div style="text-align: center;" data-bind="visible: $root.creating_category">
+	                        <img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px"> <br>
+	                        <img src="{{ STATIC_URL }}img/text_loader.gif" style="height:30px"> <br>
+                        </div>
+				    </div>
+				    <div class="modal-footer" data-bind="visible: $root.creating_category() == false">
+				       	<button type="button" class="btn btn-success" data-bind="click: $root.AddCategory"><i class="fa fa-plus"></i> Add Category</button>
+				       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+		   	</div>
+	 	</div>
+	 	
+	 	<!-- edit category modal -->
+	    <div class="modal fade" id="edit-category-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-bind="with: $root.Category">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+				    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				     	<h4 class="modal-title">Edit Category:</h4>
+				  	</div>
+				    <div class="modal-body" style="overflow:hidden;">
+				        <div data-bind="visible: $root.creating_category() == false">
+				            <div class="form-group">
+				                <label>Category name</label>
+				                <input class="form-control" data-bind="value: $root.new_category_name" />
+				            </div>
+				            
+				            <div id="edit-category-error"></div>
+				        </div>
+				        
+				        <div style="text-align: center;" data-bind="visible: $root.creating_category">
+	                        <img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px"> <br>
+	                        <img src="{{ STATIC_URL }}img/text_loader.gif" style="height:30px"> <br>
+                        </div>
+				    </div>
+				    <div class="modal-footer" data-bind="visible: $root.creating_category() == false">
+				       	<button type="button" class="btn btn-info" data-bind="click: $root.UpdateCategory"><i class="fa fa-save"></i> Save</button>
+				       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+		   	</div>
+	 	</div>
+	 	
+	 	<!-- publish modal -->
+	    <div class="modal fade" id="publish-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+				    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				     	<h4 class="modal-title">Publish workflow:</h4>
+				  	</div>
+				    <div class="modal-body" style="overflow:hidden;">
+				        <div class="col-lg-12">
+				            <div class="col-lg-12">
+				                Make sure that have saved the tool, before you publish.<br/><br/>
+				            </div>
+				            
+				            <div class="col-lg-4" style="text-align:center">
+        				        <label>Major Release</label>
+    							<input class="form-control" type="number" data-bind="value: $root.major"/>
+			                </div>
+			                
+				            <div class="col-lg-4" style="text-align:center">
+        				        <label>Minor Release</label>
+    							<input class="form-control" type="number" data-bind="value: $root.minor"/>
+                            </div>
+                            
+				            <div class="col-lg-4" style="text-align:center">
+        				        <label>Patch Release</label>
+    							<input class="form-control" type="number" data-bind="value: $root.patch"/>
+    		                </div>
+    							
+                		</div>
+				    </div>
+				    <div class="modal-footer">
+				       	<button type="button" class="btn btn-success" data-bind="click: $root.PublishVersion"><i class="fa fa-plus"></i> Publish</button>
+				       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+		   	</div>
+	 	</div>
+	 	
+	 	
+	 	<!-- permissions modal -->
+	    <div class="modal fade" id="permissions-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content" data-bind="with: $root.Workflow">
+					<div class="modal-header">
+				    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				     	<h4 class="modal-title">Share Workflow: <span data-bind='text: WorkflowName'></span></h4>
+				  	</div>
+				    <div class="modal-body" style="overflow:hidden;">
+				        <div data-bind="visible: $root.loading_perms() == false">
+				            <div class="form-group">
+				                <label>Workflow Owner</label><br/>
+				                <span data-bind="text: User().Username"></span>
+				            </div>
+    			                
+				            <div class="form-group">
+        							<input type="checkbox" data-bind="checked: $root.Workflow().PublicInd, event: { change: $root.UpdateWorkflowAvailability }"/>
+            				        <label>Make publically available?</label><br/>
+            				        <span class="col-lg-12" style="font-size:8pt;padding:0px;padding-bottom:10px;">												
+										Publically available workflows can be <strong>run</strong> by anyone on the system.
+									</span>
+                            </div>
+				            
+				            <div class="form-group">
+				                <div id="table-responsive" style="overflow-y:auto; padding:15px;padding-bottom:15px;">
+								    <div style="width:100%">
+								        <label>
+								            User Permissions
+								        </label>
+									    <br>
+                				        <span style="font-size:8pt;padding:0px;padding-bottom:10px;">												
+        									Please note that for a user to run a workflow successfully, the user should also have permission to run all the tools that make
+        									up that workflow.
+        								</span>
+								        <hr class="st-hr"/>
+    									<div>
+    									    <table class="table table-striped table-hover" style="text-align:center">
+    											<thead>
+    											 	<tr>
+    											 		<th style="text-align:center">User</th>
+    											 		<th style="text-align:center">Run</th>
+    											 		<th style="text-align:center">Export</th>
+    											 		<th style="text-align:center">Edit</th>
+    											 		<th style="text-align:center">Publish</th>
+    											 		<th style="text-align:center">Admin</th>
+    											 		<th style="text-align:center"></th>
+    											 	</tr>
+    											</thead>
+    											<!-- ko if: UserWorkflowPermissions().length > 0 -->
+    											<tbody data-bind="foreach: UserWorkflowPermissions" style="padding-bottom:40px;">
+    												<tr>
+    												    <td data-bind="text: User().Username"></td>
+    												    <td>
+    												        <!-- ko if: Run() == true -->
+    												            <i class="fa fa-check-square-o"></i> 
+    												        <!-- /ko -->
+    												        <!-- ko if: Run() == false -->
+    												            <i class="fa fa-times"></i> 
+    												        <!-- /ko -->
+    												    </td>
+    												    <td>
+    												        <!-- ko if: Export() == true -->
+    												            <i class="fa fa-check-square-o"></i> 
+    												        <!-- /ko -->
+    												        <!-- ko if: Export() == false -->
+    												            <i class="fa fa-times"></i> 
+    												        <!-- /ko -->
+    												    </td>
+    												    <td>
+    												        <!-- ko if: Edit() == true -->
+    												            <i class="fa fa-check-square-o"></i> 
+    												        <!-- /ko -->
+    												        <!-- ko if: Edit() == false -->
+    												            <i class="fa fa-times"></i> 
+    												        <!-- /ko -->
+    												    </td>
+    												    <td>
+    												        <!-- ko if: Publish() == true -->
+    												            <i class="fa fa-check-square-o"></i> 
+    												        <!-- /ko -->
+    												        <!-- ko if: Publish() == false -->
+    												            <i class="fa fa-times"></i> 
+    												        <!-- /ko -->
+    												    </td>
+    												    <td>
+    												        <!-- ko if: Admin() == true -->
+    												            <i class="fa fa-check-square-o"></i> 
+    												        <!-- /ko -->
+    												        <!-- ko if: Admin() == false -->
+    												            <i class="fa fa-times"></i> 
+    												        <!-- /ko -->
+    												    </td>
+    												    <td style="text-align:center;">
+    												    	<a href="#" data-bind="click: $root.EditShare" class="btn btn-warning">
+    												    	    <i class="fa fa-edit"></i>
+    												    	</a>
+    												    	<a href="#" data-bind="click: $root.UnshareWorkflow" class="btn btn-danger">
+    												    	    <i class="fa fa-trash-o"></i>
+    												    	</a>
+    													</td>
+    												</tr>
+    											</tbody>
+    											<!-- /ko -->
+    											<!-- ko if: UserWorkflowPermissions().length == 0 -->
+    											<tbody>
+    											    <tr>
+    											        <td colspan="6">
+    											            This workflow has not been shared with any other users.
+    											        </td>
+    											        <td></td>
+    											    </tr>
+    											</tbody>
+    											<!-- /ko -->
+    											<tfoot>
+    											    <tr>
+    											        <td colspan="6"></td>
+    											        <td style="text-align:center;">
+    												    	<a href="#" class="btn btn-success" data-bind="click: $root.ShowShareWorkflow">
+    												    	    <i class="fa fa-plus"></i>
+    												    	</a>
+    													</td>
+    											    </tr>
+    											</tfoot>
+    										</table>
+    									</div>
     								</div>
     							</div>
-						   	</div>
-						  	<div class="modal-footer">
-						       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-							</div>
-						</div>
-				   	</div>
-			 	</div>
-			  
-				<div id="workflows-container" data-bind="visible: $root.VisibleWindow() == 'workflows'">    
-					<div class="row">
-						<div class="col-md-12">
-							<h2><i class="fa fa-sitemap"></i> Workflows</h2>   
-						</div>
+				            </div>
+				        </div>
+				        
+				        <div id="permissions-error"></div>
+				        
+				        <div style="text-align: center;" data-bind="visible: $root.loading_perms">
+	                        <img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px"> <br>
+	                        <img src="{{ STATIC_URL }}img/text_loader.gif" style="height:30px"> <br>
+                        </div>
+				    </div>
+				    <div class="modal-footer" data-bind="visible: $root.loading_perms() == false">
+				       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 					</div>
-					<!-- /. ROW  -->
-						    
-					<hr />
-				
-					<div class="row">
-						<div class="col-lg-12"> 
-							<div class="col-lg-12" style="width:100%;padding:10px;padding-top:0;overflow:hidden;">
-								<div class="btn-group" style="float:left;">
-							  		<button class="btn btn-primary" data-bind="click: $root.ShowCustomJob"><i class="fa fa-play"></i> Custom Job</button>
-								</div>
-								<div class="btn-group" style="float:right;">
-							  		<button class="btn btn-success" data-bind="click: $root.AddWorkflow"><i class="fa fa-plus"></i> Add Workflow</button>
-							  		<button data-toggle="dropdown" class="btn btn-success dropdown-toggle"><span class="caret"></span></button>
-							  		<ul class="dropdown-menu" style="text-align:left;">
-										<li><a href="#" data-bind="click: $root.ShowImportWorkflow"><i class="fa fa-download"></i> Import Workflow</a></li>										
-							  		</ul>
-								</div>
-							</div>
-						</div>
-						
+				</div>
+		   	</div>
+	 	</div>
+	 	
+	 	<!-- share modal -->
+	    <div class="modal fade" id="share-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+				    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				     	<h4 class="modal-title">Share tool:</h4>
+				  	</div>
+				    <div class="modal-body" style="overflow:hidden;">
+				        <div data-bind="visible: $root.sharing() == false">
+    				        <div class="col-lg-12" data-bind="with: $root.NewShare">
+    			                
+    				            <div class="form-group">
+            				        <label>Username</label>
+        							<input class="form-control" type="text" data-bind="value: User().Username"/>
+                                </div>
+                                
+                                <label>Permissions</label>
+                                <hr/>
+    				            <div class="col-lg-12">
+        				            <div class="form-group">
+            							<input type="checkbox" data-bind="checked: Run"/>
+                				        <label>Run?</label>
+        			                </div>
+        				            
+        				            <div class="form-group">
+            							<input type="checkbox" data-bind="checked: Export"/>
+                				        <label>Export?</label>
+        			                </div>
+        				            
+        				            <div class="form-group">
+            							<input type="checkbox" data-bind="checked: Edit"/>
+                				        <label>Edit?</label>
+        			                </div>
+        				            
+        				            <div class="form-group">
+            							<input type="checkbox" data-bind="checked: Publish"/>
+                				        <label>Publish?</label>
+        			                </div>
+        				            
+        				            <div class="form-group">
+            							<input type="checkbox" data-bind="checked: Admin"/>
+                				        <label>Administrate?</label>
+        			                </div>
+        						</div>	
+                    		</div>
+    				        
+    				        <div id="share-error"></div>
+				        </div>
+				        
+				        <div style="text-align: center;" data-bind="visible: $root.sharing">
+	                        <img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px"> <br>
+	                        <img src="{{ STATIC_URL }}img/text_loader.gif" style="height:30px"> <br>
+                        </div>
+				    </div>
+				    <div class="modal-footer" data-bind="visible: $root.sharing() == false">
+				       	<button type="button" class="btn btn-success" data-bind="click: $root.ShareWorkflow"><i class="fa fa-share"></i> Share</button>
+				       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+		   	</div>
+	 	</div>
+	 	
+	 	<!-- /. END MODALS -->
+	 	
+	 	
+    	<div class="page-inner">
+    		<div style="text-align: center;display:none">
+    			<img src="{{ STATIC_URL }}img/big_red_loader.gif"> <br>
+    			<img src="{{ STATIC_URL }}img/text_loader.gif"> <br>
+    		</div>
+    	    
+    		<div>
+    		    <div id="workflow-list">    
+    				<div class="row">
+    					<div class="col-md-12">
+    						<h2><i class="fa fa-sitemap"></i> Workflows</h2>
+    					</div>
+    				</div>
+    				<!-- /. ROW  -->
+    					    
+    				<hr />
+    			
+    				<div class="row">
+    					<div class="col-lg-12"> 
+    						<div class="col-lg-12" style="width:100%;padding:10px;padding-top:0;">
+    							<div class="btn-group" style="float:right;">
+    						  		<button class="btn btn-success" data-bind="click: $root.ShowAddWorkflow" ><i class="fa fa-plus"></i> Add Workflow</button>
+    						  		<button data-toggle="dropdown" class="btn btn-success dropdown-toggle"><span class="caret"></span></button>
+    						  		<ul class="dropdown-menu" style="text-align:left;">
+    									<li>
+    									    <a href="#">
+    									        <i class="fa fa-download"></i> 
+    									        Import Workflow
+    									    </a>
+    									</li>	
+    									<li>
+    									    <a href="#" data-bind="click: $root.ShowAddCategory">
+        									    <i class="fa fa-plus"></i> 
+        									    Add Category
+    									    </a>
+    									</li>										
+    						  		</ul>
+    							</div>
+    						</div>
+    					</div>
+    				</div>
+    				<!-- /. ROW -->
+    				
+    				<div class="row">	
 						<div class="col-lg-12"> 
 						    <div class="panel panel-danger">
 								<div class="panel-heading" style="overflow:hidden;">
 									<label>Workflows:</label>
-									
 									<div class="st-filter">
-										Filter: <input data-bind="value: $root.WorkflowFilter" />
 									</div>
 								</div>
 								<div class="panel-body" style="overflow-y:auto;padding:0px;">
-									<div id="table-responsive" style="max-height:550px;overflow-y:auto; padding:15px;padding-bottom:100px;">
-										<table id="workflows-table" class="table table-striped table-hover" style="min-width:500px;">
-											<thead>
-											 	<tr>
-											 		<th>Workflow ID</th>
-											 		<th>Workflow Name</th>
-											 		<th>Description</th>
-											 		<th>Accessibility</th>
-											 		<th style="width:220px;text-align:center;">Options</th>
-											 	</tr>
-											</thead>
-											<tbody data-bind="foreach: $root.Workflows" style="padding-bottom:40px;">
-												<tr data-bind="visible: $root.FilterWorkflow($data)">
-												    <td data-bind="text: WorkflowID"></td>
-												    <td data-bind="text: WorkflowName"></td>
-												    <td data-bind="text: Description"></td>
-												    <td data-bind="text: Accessibility"></td>
-												    <td style="text-align:center;">
-												    	<div class="btn-group">
-													  		<button class="btn btn-danger" data-bind="click: $root.ShowRunWorkflow"><i class="fa fa-play"></i> Run</button>
-													  		<button data-toggle="dropdown" class="btn btn-danger dropdown-toggle"><span class="caret"></span></button>
-													  		<ul class="dropdown-menu" style="text-align:left;">
-																<li><a href="#" data-bind="click: $root.EditWorkflow"><i class="fa fa-edit"></i> Edit</a></li>
-																<li><a href="#" data-bind="click: $root.ShowShareWorkflow"><i class="fa fa-share-square-o"></i> Share</a></li>
-																<li><a href="#" data-bind="attr: { href: '/api/jms/workflows/' + WorkflowID() + '/export' } "><i class="fa fa-upload"></i> Export</a></li>
-																<li style="border-bottom:1px solid rgba(0, 0, 0, .15)"></li>
-																<li><a href="#" data-bind="click: $root.DeleteWorkflow"><i class="fa fa-trash-o"></i> Delete</a></li>
-													  		</ul>
-														</div>
-												    </td>
-												</tr>
-											</tbody>
-										</table>
+								    
+									<div id="table-responsive" style="overflow-y:auto; padding:15px;padding-bottom:15px;" data-bind="foreach: $root.Categories">
+									    <div style="width:100%">
+									        <a class="st-link-header-2" data-bind="click: $root.ToggleVisible">
+									            <!-- ko if: Visible() == false -->
+									                <i class="fa fa-plus-square-o"></i> 
+									            <!-- /ko -->
+									            
+									            <!-- ko if: Visible() == true -->
+									                <i class="fa fa-minus-square-o"></i> 
+									            <!-- /ko -->
+									            
+									            <span data-bind="text: CategoryName()"></span>
+									            (<span data-bind="text: Workflows().length"></span>)
+									        </a>
+									        <a href="#" title="Edit category" style="float:right" data-bind="click: $root.ShowUpdateCategory">
+									            <i class="fa fa-edit"></i>
+									        </a>
+									        <hr class="st-hr"/>
+        									<div data-bind="attr: { id: 'category_' + CategoryID() }" style="display:none">
+        									    <table class="table table-striped table-hover" style="min-width:500px;">
+        											<thead>
+        											 	<tr>
+        											 		<th>Workflow Name</th>
+        											 		<th>Description</th>
+        											 		<th style="text-align:center;">Public?</th>
+        											 		<th style="text-align:center;">Latest Version</th>
+        											 		<th style="width:220px;text-align:center;">Options</th>
+        											 	</tr>
+        											</thead>
+        											<tbody data-bind="foreach: Workflows" style="padding-bottom:40px;">
+        												<tr >
+        												    <td data-bind="text: WorkflowName"></td>
+        												    <td data-bind="text: Description"></td>
+        												    <td style="text-align:center;">
+        												        <!-- ko if: PublicInd() == true -->
+        												            <i class="fa fa-check-square-o"></i> 
+        												        <!-- /ko -->
+        												        
+        												        <!-- ko if: PublicInd() == false -->
+        												            <i class="fa fa-times"></i> 
+        												        <!-- /ko -->
+        												    </td>
+        												    <td style="text-align:center;" data-bind="text: WorkflowVersions()[WorkflowVersions().length-1].WorkflowVersionNum"></td>
+        												    <td style="text-align:center;">
+        												    	<div class="btn-group">
+        													  		<a class="btn btn-danger" data-bind="attr: { href: '#run/' + WorkflowID()}"><i class="fa fa-play"></i> Run</a>
+        													  		<button data-toggle="dropdown" class="btn btn-danger dropdown-toggle"><span class="caret"></span></button>
+        													  		<ul class="dropdown-menu" style="text-align:left;">
+        																<li><a href="#" data-bind="attr: { href: '#edit/' + WorkflowID()}"><i class="fa fa-edit"></i> Edit</a></li>
+        																<li><a href="#" data-bind="click: $root.ShowWorkflowPermissions"><i class="fa fa-share-square-o"></i> Share</a></li>
+        																<li><a href="#" data-bind="attr: { href: '/api/jms/workflows/' + WorkflowVersions()[0].WorkflowVersionID + '/export' } "><i class="fa fa-upload"></i> Export</a></li>
+        																<li style="border-bottom:1px solid rgba(0, 0, 0, .15)"></li>
+        																<li><a href="#" data-bind="click: function() { $root.DeleteWorkflow($data, $parent); }"><i class="fa fa-trash-o"></i> Delete</a></li>
+        													  		</ul>
+        														</div>
+        												    </td>
+        												</tr>
+        											</tbody>
+        										</table>
+        									</div>
+        								</div>
 									</div>									
 										        
 									<div class="col-lg-12 panel-footer" style="padding-top:10px;background:white;">
-										<label>No. of Workflows: </label> <span data-bind="text: Workflows().length"></span>
+										<label>No. of Workflows: </label> <span data-bind="text: $root.NumWorkflows"></span>
 									</div>
 								</div>
 							</div>
@@ -748,16 +535,12 @@
 					
 					</div>
 					<!-- /. ROW  -->
-					
-				</div>
-				<!-- /. WORKFLOWS CONTAINER -->
-				
-				
-				<!-- CUSTOM JOB CONTAINER -->
-				<div id="custom_job-container" data-bind="visible: $root.VisibleWindow() == 'custom'">	        
-					<div class="row">
-						<div class="col-md-12">						
-							<h2>Custom Job</h2>						
+    			</div>
+    			
+    			<div id="workflow-editor" style="display:none" data-bind="with: $root.WorkflowVersion">
+    			    <div class="row">
+						<div class="col-md-12">
+							<h2><i class="fa fa-sitemap"></i> Edit: <span data-bind="text: Workflow().WorkflowName"></span></h2>
 						</div>
 					</div>
 					<!-- /. ROW  -->
@@ -766,641 +549,179 @@
 				
 					<div class="row">
 						<div class="col-lg-12" style="text-align:right;padding:10px;padding-top:0;">
-							<a href="#" class="btn btn-warning" data-bind="click: $root.ShowWorkflows"><i class="fa fa-arrow-left"></i> Back</a>
-						</div>
-					</div>
-				
-					<div class="row">
-						<div class="col-lg-12">
-						    <h4>Job Details</h4>
-						    <hr/>
-						    <form id="custom-job">
-    				            <div class="col-lg-12">
-    								<div class="form-group">
-    									<label>Job name:</label>
-    									<input class="form-control" name="JobName" placeholder="Enter job name"/>
-    								</div>
-    								
-    								<div class="form-group">
-    									<label>Description:</label>
-    									<textarea class="form-control" name="Description" placeholder="Enter a description"></textarea>
-    								</div>
-    							</div>
-    							
-    							<br/>
-    							<h4>Settings</h4>
-    							<hr/>
-    							
-    				            <div class="col-lg-12" id="custom_resources">
-    				                <div class="col-lg-6">
-        								<div class="form-group col-lg-12">
-        									<label>Queue:</label>
-        									<select class="form-control" placeholder="Enter queue name" data-bind="value: $root.SelectedQueue,
-        									    options: $root.Queues, optionsText: function(item) { return item.QueueName(); }">
-        									</select>
-        								</div>
-        								
-        								<!-- ko with: $root.SelectedQueue -->
-        								<input class="form-control" name="Queue" type="hidden" data-bind="value: QueueName" />
-        								
-        								<div class="form-group col-lg-12">
-        									<label>Nodes:</label>
-        									<input class="form-control" name="Nodes" type="number" min="1" data-bind="value: DefaultNodes, attr: { max: MaxNodes }" />
-        								</div>
-        								
-        								<div class="form-group col-lg-12">
-        									<label>Cores:</label>
-        									<input class="form-control" name="CPUs" type="number" min="1" data-bind="value: DefaultCPUs, attr: { max: MaxCPUs }" />
-        								</div>
-        								
-        								<div class="form-group col-lg-12">
-        									<label>Memory:</label>
-        									<input class="form-control" name="Memory" data-bind="value: DefaultMemory" />
-        								</div>
-        								
-        								<div class="form-group col-lg-12">
-        									<label>Walltime (hh:mm:ss):</label>
-        									<input class="form-control" name="Walltime" placeholder="Walltime e.g. 01:00:00" data-bind="value: DefaultWalltime"/>
-        								</div>
-        								<!-- /ko -->
-        							</div>
-        							
-        							<div class="col-lg-6">
-        							    <label>Environmental variables:</label>
-        							    <table class="table table-hover">
-        							        <thead>
-        							            <tr>
-            							            <th>
-            							                Variable Name
-            							            </th>
-            							            <th>
-            							                Value
-            							            </th>
-            							            <th>
-            							                
-            							            </th>
-            							        </tr>
-        							        </thead>
-        							        <tbody>
-        							            <tr>
-            							            <td>
-            							                WORKING_DIR
-            							            </td>
-            							            <td>
-            							                This variable can be used to access the working directory of your job (if needed)
-            							            </td>
-            							            <td>
-            							                
-            							            </td>
-            							        </tr>
-        							            <!-- ko foreach: $root.EnvironmentalVariables -->
-        							            <tr>       
-        							                <td>
-        							                    <input class="form-control" data-bind="value: VariableName"/>
-        							                </td>
-        							                <td>
-        							                    <input class="form-control" data-bind="value: Value"/>
-        							                </td>
-        							                <td>
-        							                    <a href="#" class="btn btn-danger btn-sm" data-bind="click: $root.DeleteEnvironmentalVariable">
-        							                        <i class="fa fa-trash-o"></i>
-        							                    </a>
-        							                </td>   
-        							            </tr>       
-        							            <!-- /ko -->
-        							        </tbody>
-        							        <tfoot>
-        							            <tr>
-            							            <td colspan="3" style="text-align:right;">
-            							                <a href="#" class="btn btn-success btn-sm" data-bind="click: $root.AddEnvironmentalVariable"><i class="fa fa-plus"></i></a>
-            							            </td>
-        							            </tr>
-        							        </tfoot>
-        							    </table>
-        							</div>
-    							</div>
-    							
-    							<br/>	
-    							<h4>Scripts</h4>
-    							<hr/>
-    							
-    							<div class="col-lg-12">
-    							    
-    							    <div class="form-group col-lg-12">
-        								<label>Enter your script:</label>
-        							    <textarea name="Commands" class="form-control ace"></textarea>
-        							</div>
-    							    
-    							    <div class="form-group col-lg-12">
-        								<label>Supporting scripts:</label>
-        							    <input type="file" name="files" multiple class="form-control"/>
-        							</div>
-    							</div>
-    							
-    							
-							</form>
-						</div>
-						
-						<div class="col-lg-12" style="text-align:right;padding-right:10px;padding-bottom:10px;">
-							<div class="btn-group" style="margin-right:25px;">
-								<a href="#" class="btn btn-success" data-bind="click: $root.RunCustomJob"><i class="fa fa-play"></i> Run Job</a>
-								<button data-toggle="dropdown" class="btn btn-success dropdown-toggle"><span class="caret"></span></button>
-								<ul class="dropdown-menu" style="text-align:left;">
-									<li><a href="#" data-bind="click: $root.ScheduleJob"><i class="fa fa-clock-o"></i> Schedule Job</a></li>
-								</ul>
-							</div>
-						</div>
-					</div>
-				</div>
-				<!-- /. CUSTOM JOB CONTAINER -->
-				
-				
-				<!-- CREATE WORKFLOW CONTAINER -->
-				<div id="create_workflow-container" data-bind="visible: $root.VisibleWindow() == 'create_workflow'">	        
-					<div class="row">
-						<div class="col-md-12">						
-							<h2>
-							    <i class="fa fa-sitemap"></i> 
-							    <span data-bind="text: $root.Workflow().WorkflowID() < 0 ? 'Create' : 'Edit'"></span> 
-							    Workflow
-							</h2>						
-						</div>
-					</div>
-					<!-- /. ROW  -->
-						    
-					<hr />
-				
-					<div class="row">
-						<div class="col-lg-12"> 
-						    
-							<div id="workflow_back-container" class="col-lg-12" style="text-align:right;padding-right:10px;padding-bottom:10px;">
-								<a href="#" class="btn btn-warning" data-bind="click: $root.ShowWorkflows"><i class="fa fa-arrow-left"></i> Back</a>
-							</div>
-																		
-							<div id="workflow_name-container" class="col-lg-12">
-								<div class="form-group">
-									<h4>Workflow name:</h4>
-									<input class="form-control" data-bind="value: $root.Workflow().WorkflowName" placeholder="Enter workflow name"></input>
-								</div>
-								
-								<div class="form-group">
-									<label>Description:</label>
-									<textarea class="form-control" data-bind="value: $root.Workflow().Description" placeholder="Enter a description"></textarea>
-								</div>
-														
-								<div class="col-lg-12" style="text-align:right;padding-right:10px;padding-bottom:10px;">
-									<a id="save_workflow_btn" href="#" class="btn btn-info" style="width:138px" data-bind="click: $root.SaveWorkflow, disable: $root.Loading">
-										<i class="fa fa-save"></i> 
-										<img src="{{ STATIC_URL }}img/small_blue_loader.gif" style="display:none" />
-										<span>Save Workflow</span>
-									</a>
-								</div>
-							</div>        
-						
-							<div id="workflow_options-container" class="col-lg-3">
-								<h4>Stages:</h4>
+						    <a href="#" class="btn btn-info" style="width:100px" data-bind="click: $root.UpdateWorkflow">
+								<i class="fa fa-save"></i> 
+								Save
+							</a>
 							
-								<div class="col-lg-12" style="text-align:right;padding-right:10px;padding-bottom:10px;">
-									<select multiple class="form-control" data-bind="options: $root.Workflow().Stages, optionsText: function(item) { return item.StageName; }, selectedOptions: $root.SelectedStages">										
-									</select>
-								</div>
-							
-								<div class="col-lg-12" style="padding-right:10px;padding-bottom:20px;">
-									<div style="float:left">
-										<a href="#" class="btn btn-default" data-bind="click: $root.ShiftStageDown, visible: $root.SelectedStages().length == 1 && $root.Workflow().Stages().length > 1">
-											<i class="fa fa-arrow-down"></i>
-										</a>
-										<a href="#" class="btn btn-default" data-bind="click: $root.ShiftStageUp, visible: $root.SelectedStages().length == 1 && $root.Workflow().Stages().length > 1">
-											<i class="fa fa-arrow-up"></i>
-										</a>
-									</div>
-									<div style="float:right">
-										<a href="#" class="btn btn-danger" data-bind="click: $root.DeleteStage, visible: $root.SelectedStages().length > 0"><i class="fa fa-trash-o"></i></a>
-										<a href="#" class="btn btn-success" data-bind="click: $root.AddStage"><i class="fa fa-plus"></i></a>
-									</div>
-								</div>
-								
-								<h4>Files/Scripts</h4>
-								
-								<div class="col-lg-12" style="text-align:right;padding-right:10px;padding-bottom:10px;">
-									<input class="form-control" type="file" id="files" name="file" multiple></input>							
-								</div>	
-							
-								<div class="col-lg-12" style="text-align:right;padding-right:10px;padding-bottom:20px;">
-									<a href="#" id="upload_file_btn" class="btn btn-info" data-bind="click: $root.UploadWorkflowFiles">
-										<i class="fa fa-upload"></i>
-										<img src="{{ STATIC_URL }}img/small_blue_loader.gif" style="display:none" />
-										<span></span>
-									</a>
-								</div>
-								
-								<div class="col-lg-12" style="text-align:right;padding-right:10px;padding-bottom:10px;">
-									<select multiple class="form-control" data-bind="options: $root.Workflow().files, selectedOptions: $root.SelectedFiles, optionsText: function(item) { return item.FileName() }">										
-									</select>
-								</div>
-							
-								<div class="col-lg-12" style="text-align:right;padding-right:10px;padding-bottom:20px;">
-									<a href="#" class="btn btn-danger" data-bind="click: $root.DeleteWorkflowFiles, visible: $root.SelectedFiles().length > 0"><i class="fa fa-trash-o"></i></a>
-									<a href="#" class="btn btn-success" data-bind="click: $root.AddWorkflowFile"><i class="fa fa-plus"></i></a>
-								</div>
-							</div>
-						
-							<div id="stage-container" data-bind="visible: $root.SelectedStages().length > 0" class="col-lg-9">
-								<h4>Edit Stage:</h4>
-							
-								<div class="form-group">
-									<label>Stage name:</label>
-									<input class="form-control" data-bind="value: $root.Stage().StageName" placeholder="Enter stage name"></input>
-								</div>	
-							
-								<div class="form-group">
-									<label>Stage dependencies:</label>
-									<select multiple class="form-control"data-bind="options: $root.Stage().StageDependencies(), 
-										optionsText: function(item) { return item.StageName(); }, selectedOptions: $root.SelectedDependencies">
-									</select>
-									
-									<div class="col-lg-12" style="text-align:right;padding:10px;">
-										<a href="#" class="btn btn-danger" data-bind="click: $root.DeleteStageDependency, visible: $root.SelectedDependencies().length > 0"> <i class="fa fa-trash-o"></i></a>
-										<a href="#" class="btn btn-warning" data-bind="click: $root.ViewEditStageDependency, visible: $root.SelectedDependencies().length > 0"> <i class="fa fa-edit"></i></a>
-										<a href="#" class="btn btn-success" data-bind="click: $root.ViewAddStageDependency"> <i class="fa fa-plus"></i></a>
-									</div>
-								</div>							
-							
-								<div class="form-group">
-									<label>Stage type:</label>
-									<div class="radio" data-bind="foreach: $root.StageTypes">
-		                            	<label>
-		                                	<input type="radio" name="type" data-bind="value: StageTypeID, checked: $root.Stage().StageType"> 
-		                                	<span data-bind="text: StageTypeName"></span>
-		                            	</label>
-		                            	<br/>
-		                            </div>
-								</div>							
-							
-								<div id="command_type-container" data-bind="visible: $root.Stage().StageType() <= 2" class="col-lg-12">								
-									<div class="form-group">
-										<label>Command (without parameters):</label>
-										<input class="form-control" data-bind="value: $root.Stage().Command" placeholder="Enter the terminal command to run the utility"></input>
-									</div>
-								</div>	
-								
-								<div id="workflow_type-container" data-bind="visible: $root.Stage().StageType() == 3" class="col-lg-12" style="display:none">
-									<div class="form-group">
-										<label>Workflow:</label>
-										<select class="form-control" data-bind="foreach: $root.Workflows">
-											<option data-bind="value: WorkflowID, visible: function() { return WorkflowID != $root.Workflow().WorkflowID() }, text: WorkflowName"></option>
-										</select>							
-									</div>
-								</div> 
-							
-								<div class="col-lg-12" data-bind="visible: $root.Stage().StageType() != 3">
-									<div class="form-group">
-										<label>Parameters:</label>
-									</div>	
-								
-									<div class="table-responsive">
-										<!-- ko with: { parameters: $root.Stage().Parameters } -->
-										<table class="table table-hover">
-											<thead>
-												<tr>
-													<th>Parameter ID</th>
-													<th>Parameter Name</th>
-													<th>Context</th>
-													<th style="text-align:center;">Optional</th>
-													<th>Input By</th>
-													<th></th>
-													<th></th>
-												</tr>
-											</thead>
-											<tbody id="params-table-body" data-bind="foreach: parameters">
-												<tr>
-													<td>
-														<span class="form-control" data-bind="text: ParameterID"></span>
-													</td>
-													<td>
-														<input class="form-control" data-bind="value: ParameterName" placeholder="Label for the parameter input field" />
-													</td>
-													<td>
-														<input class="form-control" data-bind="value: Context" placeholder="e.g. -i '${VALUE}', --input, etc. Leave blank for none..." />
-													</td>
-													<td style="text-align:center;">
-														<input data-bind="checked: Optional" value="optional" type="checkbox" />
-													</td>
-													<td>
-														<select class="form-control" data-bind="value: InputBy">
-															<option value="user">User</option>
-															<option value="system">System</option>
-														</select>													
-													</td>													
-													<td style="width:100px;">
-														<a href="#" class="btn btn-warning btn-sm" data-bind="click: $root.ParameterOptions">Parameter Options</a>
-													</td>
-													<td style="text-align:right;width:65px;">
-														<a href="#" class="btn btn-danger btn-sm" data-bind="click: function() { $root.DeleteParameter($parent.parameters, $data) }"><i class="fa fa-trash-o"></i></a>
-													</td>
-												</tr>
-											</tbody>
-											<tfoot>
-												<tr>
-													<td colspan="7" style="text-align:right;">
-														<a href="#" class="btn btn-success btn-sm" data-bind="click: $root.AddParameter"><i class="fa fa-plus"></i></a>
-													</td>
-												</tr>
-											</tfoot>
-										</table>
-										<!-- /ko -->
-									</div>
-								</div> 
-							
-								<div class="col-lg-12" data-bind="visible: $root.Stage().StageType() != 3">
-									<div class="form-group">
-										<label>Expected Outputs:</label>
-									</div>	
-								
-									<div class="table-responsive">
-										<table class="table table-hover">
-											<thead>
-												<tr>
-													<th>Output File Name</th>
-													<th></th>
-												</tr>
-											</thead>
-											<tbody id="params-table-body" data-bind="foreach: $root.Stage().ExpectedOutputs">
-												<tr>
-													<td>
-														<input class="form-control" data-bind="value: ExpectedOutputFileName" />
-													</td>
-													<td style="text-align:right;width:65px;">
-														<a href="#" class="btn btn-danger btn-sm" data-bind="click: $root.DeleteExpectedOutput"><i class="fa fa-trash-o"></i></a>
-													</td>
-												</tr>
-											</tbody>
-											<tfoot>
-												<tr>
-													<td colspan="6" style="text-align:right;">
-														<a href="#" class="btn btn-success btn-sm" data-bind="click: $root.AddExpectedOutput"><i class="fa fa-plus"></i></a>
-													</td>
-												</tr>
-											</tfoot>
-										</table>
-									</div>
-								</div>
-								
-								<div class="col-lg-12" data-bind="visible: $root.Stage().StageType() != 3">
-									<div class="form-group">
-										<label>Default Resources:</label>
-									</div>	
-								
-									<div style="padding-left:10px;">
-									    <div class="form-group">
-										    <label>Queue</label>
-										    <input class="form-control" placeholder="batch" data-bind="value: $root.Stage().Queue" />
-									    </div>
-									    									    
-									    <div class="form-group">
-										    <label>Nodes</label>
-										    <input class="form-control" placeholder="1" data-bind="value: $root.Stage().Nodes" />
-									    </div>
-									    									    
-									    <div class="form-group">
-										    <label>Processors</label>
-										    <input class="form-control" type="number" placeholder="10" data-bind="value: $root.Stage().MaxCores" />
-									    </div>
-									    									    
-									    <div class="form-group">
-										    <label>Memory (GB)</label>
-										    <input class="form-control" type="number" placeholder="1" data-bind="value: $root.Stage().Memory" />
-									    </div>
-									    									    
-									    <div class="form-group">
-										    <label>Walltime</label>
-										    <input class="form-control" placeholder="HH:MM:SS" data-bind="value: $root.Stage().Walltime" />
-									    </div>
-									</div>
-								</div>
-							
-							</div>  
-							
-							<div id="stage-container" data-bind="with: $root.File" class="col-lg-9">
-								<h4>Edit File:</h4>
-							
-								<div class="form-group">
-									<label>File name:</label>
-									<input class="form-control" data-bind="value: FileName" placeholder="Enter file name"></input>
-								</div>	
-								
-								<div class="col-lg-12" style="text-align:right;padding-right:10px;padding-bottom:10px;">
-									<a href="#" id="save_workflow_file_btn" class="btn btn-info" title="Save file" data-bind="click: $root.SaveWorkflowFile">
-										<i class="fa fa-save"></i>
-										<img src="{{ STATIC_URL }}img/small_blue_loader.gif" style="display:none" />
-									</a>
-								</div>
-								
-								<div class="col-lg-12">
-									<textarea spellcheck="false" data-editor="python" style="height:630px;max-height:630px;width:100%;" data-bind="value: Content"></textarea>
-								</div>
-							
-							</div>              
-							 
-						</div>
-					</div>
-					<!-- /. ROW  -->
-				
-				</div>
-				<!-- /. CREATE WORKFLOW CONTAINER -->
-				
-				<!-- RUN WORKFLOW CONTAINER -->
-				<div id="run_workflow-container" data-bind="if: $root.VisibleWindow() == 'run_workflow'">	        
-					<div class="row">
-						<div class="col-md-12">						
-							<h2><i class="fa fa-sitemap fa-2x"></i> Run Job</h2>						
-						</div>
-					</div>
-					<!-- /. ROW  -->
-						    
-					<hr />
-				
-					<div class="row">
-						<div class="col-lg-12">
-						    
-							<div class="col-lg-12" style="text-align:right;padding-right:10px;padding-bottom:10px;">
-								<a href="#" class="btn btn-warning" data-bind="click: $root.ShowWorkflows" style="margin-right:25px;"><i class="fa fa-arrow-left"></i> Back</a>
-							</div>
-							
-							<div class="col-lg-12">
-								<h3 data-bind="text: $root.Job().Workflow().WorkflowName"></h3>
-								<span data-bind="text: $root.Job().Workflow().Description"></span>
-								<hr>
-						    </div>
-							
-							<div class="col-lg-12">
-								<div class="form-group">
-									<h4>Job Name</h4>
-									<input class="form-control" data-bind="value: $root.Job().JobName" />							
-								</div>
-								
-								<div class="form-group">
-									<h4>Description</h4>
-									<textarea class="form-control" data-bind="value: $root.Job().Description"></textarea>						
-								</div>
-								
-								<div class="form-group col-lg-6">
-									<label>Job Type</label>
-									<select class="form-control" data-bind="value: $root.Job().JobType">
-									    <option value='1'>Normal</option>
-									    <option value='2'>Batch</option>
-									</select>						
-								</div>
-								
-								<div class="form-group col-lg-6">
-									<label>Input Profile</label>
-									<select class="form-control" data-bind="enable: $root.Job().JobType() == 1, options: $root.Job().Workflow().InputProfiles, optionsText: function(item) { return item.InputProfileName(); },
-									    value: $root.Job().InputProfile"></select>						
-								</div>
-								
-								<!-- ko if: $root.Job().JobType() == 2 -->
-								<div class="form-group col-lg-12">
-						            <label>Batch job file</label>
-						            <input class="form-control" type="file" id="batch_file"/>
-						        </div>
-						        
-						        <div class="form-group col-lg-12">
-						            <label>Required input files</label>
-						            <input class="form-control" type="file" multiple id="input_files"/>
-						        </div>
-						        <!-- /ko -->
-								
-								<hr>
-						    </div>
-						    
-						    <!-- ko if: $root.Job().JobType() == 1 -->
-						    
-							<div class="col-lg-12" data-bind="foreach: $root.Job().Workflow().Stages">
-							    
-								<h4 data-bind="text: StageName"></h4>
-								
-								<div class="form-group" style="padding-left:15px;">
-								    <a href="#" data-bind="click: $root.ShowResources">Stage Settings</a>
-								</div>
-								
-								<div class="col-lg-12" data-bind="foreach: Parameters">
-									<div class="form-group" data-bind="if: InputBy() == 'user'">
-										<label data-bind="text: ParameterName"></label>
-										
-										<div data-bind="if: Type() == 1">
-											<div data-bind="if: Multiple() == false">												
-												<input class="form-control" data-bind="value: Value"/>
-											</div>
-											<div data-bind="if: Multiple() == true">
-												<table class="table table-responsive">
-													<tbody data-bind="foreach: value_items">
-														<tr>
-															<td>
-																<input class="form-control" data-bind="value: value"></input>
-															</td>
-															<td style="text-align:right;">
-																<a href="#" class="btn btn-danger btn-sm" data-bind="click: function() { $root.RemoveValue($parent, $data); }"><i class="fa fa-trash-o"></i></a>
-															</td>
-														</tr>
-													</tbody>
-													<tfoot>
-														<tr>
-															<td colspan='2' style="text-align:right">
-																<a href="#" class="btn btn-success btn-sm" data-bind="click: $root.AddValue"><i class="fa fa-plus"></i></a>
-															</td>
-														</tr>
-													</tfoot>
-												</table>
-											</div>
-										</div>
-										<div data-bind="if: Type() == 2">
-											<div data-bind="if: Multiple() == false">												
-												<input class="form-control" type="number" data-bind="value: Value"></input>
-											</div>
-											<div data-bind="if: Multiple() == true">
-												<table class="table table-responsive">
-													<tbody data-bind="foreach: value_items">
-														<tr>
-															<td>
-																<input class="form-control" type="number" data-bind="value: value"></input>
-															</td>
-															<td style="text-align:right;">
-																<a href="#" class="btn btn-danger btn-sm" data-bind="click: function() { $root.RemoveValue($parent, $data); }"><i class="fa fa-trash-o"></i></a>
-															</td>
-														</tr>
-													</tbody>
-													<tfoot>
-														<tr>
-															<td colspan='2' style="text-align:right">
-																<a href="#" class="btn btn-success btn-sm" data-bind="click: $root.AddValue"><i class="fa fa-plus"></i></a>
-															</td>
-														</tr>
-													</tfoot>
-												</table>
-											</div>
-										</div>
-										<div data-bind="if: Type() == 3">
-											<input type="checkbox" data-bind="checked: Value"></input>
-										</div>
-										<div data-bind="if: Type() == 4">
-											<select class="form-control" data-bind="options: ParameterOptions, optionsText: function(item) { return item.ParameterOptionText; }, 
-												optionsValue: function(item) { return item.ParameterOptionValue; }, value: Value, attr: { multiple: Multiple }, selectedOptions: selected_values"></select>
-										</div>
-										<div data-bind="if: Type() == 5">
-											<input class="form-control" type="file" data-bind="attr: { multiple: Multiple, id: 'param_' + ParameterID(), name: 'param_' + ParameterID() }"></input>
-										</div>
-										<div data-bind="if: Type() == 7">
-											<div data-bind="if: Multiple() == true">
-												<select class="form-control" multiple data-bind="options: complex_objects, optionsText: function(item) { return item.Parameter().parameters()[0].Value(); }, selectedOptions: selected_parameters">
-												</select>
-												<div class='col-lg-12' style='text-align:right;'>
-													<a href="#" class="btn btn-danger btn-sm" data-bind="click: $root.DeleteComplexObject" style='margin-top:5px;'><i class="fa fa-trash-o"></i></a>
-													<a href="#" class="btn btn-warning btn-sm" data-bind="click: $root.EditComplexObject" style='margin-top:5px;'><i class="fa fa-edit"></i></a>
-													<a href="#" class="btn btn-success btn-sm" data-bind="click: $root.AddComplexObject" style='margin-top:5px;'><i class="fa fa-plus"></i></a>
-												</div>
-											</div>
-											<div data-bind="if: Multiple() == false">
-												<!-- ko template: { name: 'complex-object-input' } -->
-        										<!-- /ko --> 
-											</div>
-										</div>										
-									</div>	
-								</div>
-								
-								<div class="col-lg-12">
-									<hr style="border-top: 1px solid #ddd;"/>
-								</div>
-							</div>
-							
-							<!-- /ko -->					    
-						    		
-							<div class="col-lg-12" style="text-align:right;padding-right:10px;padding-bottom:10px;">
-								<div class="btn-group" style="margin-right:25px;">
-									<a href="#" class="btn btn-success" data-bind="click: $root.CreateJob"><i class="fa fa-play"></i> Run Job</a>
-									<button data-toggle="dropdown" class="btn btn-success dropdown-toggle"><span class="caret"></span></button>
-									<ul class="dropdown-menu" style="text-align:left;">
-										<li><a href="#" data-bind="click: $root.ScheduleJob"><i class="fa fa-clock-o"></i> Schedule Job</a></li>
-										<!-- ko if: $root.Job().JobType() == 1 -->
-										<li><a href="#" data-bind="click: $root.SaveInputProfile"><i class="fa fa-save"></i> Save Input Profile</a></li>
-										<!-- /ko -->
-									</ul>
-								</div>
-							</div>
-						
+							<a href="#" class="btn btn-warning" data-bind="attr: { href: '/workflows/#' }">
+							    <i class="fa fa-arrow-left"></i> 
+							    Back
+							</a>
 						</div>
 					</div>
 					<!-- /. ROW  -->
 					
-				</div>
-				<!-- RUN WORKFLOW -->
+					<div id="edit-workflow-error">
+					</div>
+				    
+				    <div class="row">
+				        <div class="col-lg-12">							
+						    <div role="tabpanel">
+						        <ul class="nav nav-tabs" role="tablist">
+                                    <li role="presentation" class="active">
+                                        <a href="#general" aria-controls="general" role="tab" data-toggle="tab">General</a>
+                                    </li>
+                                    <li role="presentation">
+                                        <a href="#workflow" aria-controls="workflow" role="tab" data-toggle="tab">Workflow</a>
+                                    </li>
+                                    <li role="presentation">
+                                        <a href="#versions" aria-controls="versions" role="tab" data-toggle="tab">Versions</a>
+                                    </li>  
+						        </ul>
+						        <div class="tab-content">
+						            <div role="tabpanel" class="tab-pane fade in active" id="general">
+						                <div class="col-lg-12">
+                                            <h4>Workflow Details</h4>
+            							    <hr/>
+                                            <div class="col-lg-12">
+                                            	<div class="form-group">
+                                            		<label>Workflow name</label>
+                                            		<input class="form-control" data-bind="value: Workflow().WorkflowName" placeholder="Enter workflow name"></input>
+                                            	</div>
+                                            </div>
+                                            
+                                            <div class="col-lg-6">
+                                            	<div class="form-group">
+                                            		<label>Created On</label>
+                                            		<label class="form-control" data-bind="text: DatePublished"></label>
+                                            	</div>
+                                            </div>
+                                            
+                                            <div class="col-lg-6">
+                                            	<div class="form-group">
+                                            		<label>Category</label>
+                                                    <select class="form-control" data-bind="value: Workflow().Category, options: $root.Categories, 
+                                                        optionsText: function(item) { return item.CategoryName(); },
+                                                        optionsValue: function(item) { return item.CategoryID(); }" >
+                                                    </select>
+                                            	</div>
+                                            </div>
+                                            
+                                            <div class="col-lg-12">
+                                            	<div class="form-group">
+                                            		<label>Short Description (Max 100 characters)</label>
+                                            		<textarea class="form-control" data-bind="value: ShortDescription" placeholder="Enter a description less than 100 characters in length"></textarea>
+                                            	</div>
+                                            </div>
+                                            	
+                                            <div class="col-lg-12">
+                                                <div class="form-group">
+                                            		<label>Long Description</label>
+                                            		<textarea class="form-control" data-bind="value: LongDescription" placeholder="Enter a long description"></textarea>
+                                            	</div>
+                                            </div>
+						                </div>
+						            </div>
+						            <div role="tabpanel" class="tab-pane fade" id="workflow">
+						                <div class="col-lg-12">
+						                    
+						                    <h4>Workflow Design</h4>
+                                            <hr/>
+                                            Edit your workflow by adding and removing tools. Create relationships by dragging between two tools.
+                                            <hr/>
+                                            
+                                            <div class="col-lg-12">
+                                                <iframe id="workflow-visualizer" style="width:100%;height:840px;border:none;" 
+                                                    data-bind="attr: { src: '/workflows/visualize/#' + $root.WorkflowVersion().Workflow().WorkflowID() }">
+                                                </iframe>
+                                            </div>
+						                    
+						                </div>
+						            </div>
+						            <div role="tabpanel" class="tab-pane fade" id="versions">
+						                <div class="col-lg-12">
+						                    <h4>Version Control</h4>
+                                            <hr/>
+                                            Publish new versions of this workflow or revert to older versions:
+                                            <hr/>
+                                            <div class="col-lg-2">
+                                                <div class="form-group" style="overflow:hidden">
+                                                    <label>Releases</label>
+                                                    <select multiple class="form-control" style="padding:0;height:230px;", data-bind="options: Workflow().WorkflowVersions,
+                                                        optionsText: function(item) { return item.WorkflowVersionNum(); }, selectedOptions: $root.SelectedVersions">
+                                                    </select>
+                									
+                                                    <a href="#" style="float:right;margin-top:5px;" class="btn btn-success" data-bind="click: $root.ShowPublishVersion">
+                                                        <i class="fa fa-plus"></i>
+                                                    </a>
+                								</div>
+                								
+                                                <div id="version-tool-error" class="form-group" style="overflow:hidden">
+                                                    
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-10" data-bind="with: $root.SelectedVersion">
+                                                
+                                                <h4>Version: <span data-bind="text: WorkflowVersionNum"></span></h4>
+                                                <hr/>
+                                                
+                                                <div class="col-lg-12">
+                								    <div class="col-lg-12">
+                        								<a href="#" style="float:right;margin-top:5px;" class="btn btn-warning" data-bind="click: $root.RevertVersion">
+                                                            <i class="fa fa-mail-reply"></i> Revert
+                                                        </a>
+                                                        
+                    									<h4>Version Details</h4>
+                    									<hr/>
+                                            			<div class="col-lg-12">
+                            								<div class="form-group">
+                            									<label>Date Published</label><br/>
+                            									<span data-bind="text: DatePublished"></span>
+                            								</div>
+                            								
+                            								<div class="form-group">
+                            									<label>Short Description</label><br/>
+                            									<span data-bind="text: ShortDescription"></span>
+                            								</div>
+                            								
+                            								<div class="form-group">
+                            									<label>Long Description</label><br/>
+                            									<span data-bind="text: LongDescription"></span>
+                            								</div>
+                        								</div>
+                    								</div>
+                								</div>   
+                                            </div>
+						                </div>
+						            </div>
+						        </div>
+						    </div>
+						</div>
+					</div>
+    			</div>
+    			
+    			<div id="workflow-runner" style="display:none">
+    			    <div class="row">
+						<div class="col-md-12">
+							<h2><i class="fa fa-sitemap"></i> Run Workflow</h2>
+						</div>
+					</div>
+					<!-- /. ROW  -->
+						    
+					<hr />
 				
-			</div>
-			<!-- WORKFLOWS -->
-				       
-		</div>
-		<!-- /. PAGE INNER  -->
-	</div>
-	<!-- /. PAGE WRAPPER  -->
+					<div class="row">
+						<div class="col-lg-12" style="text-align:right;padding:10px;padding-top:0;">
+							<a href="#" class="btn btn-warning" data-bind="attr: { href: '/workflows/#' }"><i class="fa fa-arrow-left"></i> Back</a>
+						</div>
+					</div>
+					<!-- /. ROW  -->
+    			</div>
+    			
+    		</div>
+    	</div>
+    </div>
 {% endblock %}
 
 {% block scripts %}	
@@ -1413,67 +734,12 @@
 	<script src="{{ STATIC_URL }}lib/bootstrap/binary/js/bootstrap.min.js"></script>
 	<!-- METISMENU SCRIPTS -->
 	<script src="{{ STATIC_URL }}lib/bootstrap/binary/js/jquery.metisMenu.js"></script>
-	<!-- ACE EDITOR -->
-	<script src="{{ STATIC_URL }}lib/ace-editor/ace.js"></script>
-    <script src="{{ STATIC_URL }}lib/ace-editor/ext-modelist.js"></script>
 	<!-- KNOCKOUT SCRIPTS -->
 	<script src="{{ STATIC_URL }}lib/knockout-3.0.0.js"></script>
+	<!-- SAMMY SCRIPTS -->
+	<script src="{{ STATIC_URL }}lib/sammy.js"></script>
 	<!-- CUSTOM SCRIPTS -->
 	<script src="{{ STATIC_URL }}lib/custom/JMS/custom.js"></script>
 	<script src="{{ STATIC_URL }}lib/custom/question.js"></script>
 	<script src="{{ STATIC_URL }}lib/custom/JMS/workflow.js"></script>
-	
-    <script>
-        var editor;
-        var mode;
-        function make_editor () {
-            $('textarea[data-editor]').each(function () {
-                var textarea = $(this);
-                
-                var modelist = ace.require('ace/ext/modelist');
-                mode = modelist.getModeForPath(workflow.File().FileName()).mode
-
-                var editDiv = $('<div>', {
-                    position: 'absolute',
-                    width: textarea.width(),
-                    height: textarea.height(),
-                    'class': textarea.attr('class')
-                }).insertBefore(textarea);
-
-                textarea.css('visibility', 'hidden');
-
-                editor = ace.edit(editDiv[0]);
-                editor.getSession().setValue(textarea.val());
-                editor.getSession().setMode(mode);
-                editor.setAutoScrollEditorIntoView(true);
-                editor.setTheme("ace/theme/chrome");                
-                
-                editor.getSession().on('change', function(){
-                    workflow.File().Content(editor.getSession().getValue());
-                });
-            });
-        }
-        
-        $('textarea.ace').each(function () {
-            var textarea = $(this);
-            
-            var editDiv = $('<div>', {
-                position: 'absolute',
-                height: 400,
-                'class': textarea.attr('class')
-            }).insertBefore(textarea);
-            
-            textarea.css('display', 'none');
-            
-            var e = ace.edit(editDiv[0]);
-            e.getSession().setValue(textarea.val());
-            e.getSession().setMode("sh");
-            e.setAutoScrollEditorIntoView(true);
-            e.setTheme("ace/theme/chrome");                
-            
-            e.getSession().on('change', function(){
-                textarea.text(e.getSession().getValue());
-            });
-        });
-    </script>
 {% endblock %}

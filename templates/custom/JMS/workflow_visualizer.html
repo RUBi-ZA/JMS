@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width">
+		<link rel="shortcut icon" type="image/png" href="../../img/favicon.png">
+        <title>Workflow Visualizer</title>
+		
+    	<!-- BOOTSTRAP STYLES -->
+    	<link href="{{ STATIC_URL }}lib/bootstrap/binary/css/bootstrap.css" rel="stylesheet" />
+
+		<link rel="stylesheet" href="{{ STATIC_URL }}lib/custom/jsplumb/css/workflow-visualizer.css">
+	    <link rel="stylesheet" href="{{ STATIC_URL }}lib/bootstrap/binary/css/font-awesome.css" />
+    </head>
+    
+    <body data-library="jquery" id="visualization">
+        <div class="modal fade" id="question-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        </div>
+        
+        <div class="modal fade" style="overflow-y:auto" id="dependency-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+				    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				     	<h4 class="modal-title">Add Dependency:</h4>
+				  	</div>
+				    <div class="modal-body" style="overflow:hidden;" data-bind="with: $root.Dependency">
+				        <div data-bind="visible: $root.loading_dependency() == false">
+				            <div class="form-group">
+				                <label>Target Stage</label>
+				                <label class="form-control" data-bind="text: StageOI().ToolVersion().Tool().ToolName"></label>
+				            </div>
+				            
+				            <div class="form-group">
+				                <label>Dependant On</label>
+				                <label class="form-control" data-bind="text: DependantOn().ToolVersion().Tool().ToolName"></label>
+				            </div>
+				            
+				            <div class="form-group">
+				                <label>Condition</label>
+				                <select class="form-control" data-bind="value: Condition, options: $root.Conditions, 
+				                    optionsText: function(item) { return item.ConditionName; },
+				                    optionsValue: function(item) { return item.ConditionID; }" >
+				                </select>
+				            </div>
+				            
+				            <div class="form-group" data-bind="if: Condition() == 4">
+				                <label>Exit Code</label>
+				                <input type='number' class="form-control" data-bind="value: ExitCodeValue" />
+				            </div>
+				        </div>
+				        
+				        <div id="dependency-error"></div>
+				        
+				        <div style="text-align: center;" data-bind="visible: $root.loading_dependency">
+	                        <img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px"> <br>
+	                        <img src="{{ STATIC_URL }}img/text_loader.gif" style="height:30px"> <br>
+                        </div>
+				    </div>
+				    <div class="modal-footer" data-bind="visible: $root.loading_dependency() == false">
+				       	<button type="button" class="btn btn-success" data-bind="click: $root.AddDependency"><i class="fa fa-plus"></i> Add</button>
+				       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+		   	</div>
+        </div>
+        
+        <div class="modal fade" style="overflow-y:auto" id="edit-dependency-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-bind="with: $root.Dependency">
+            <div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+				    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				     	<h4 class="modal-title">Edit Dependency:</h4>
+				  	</div>
+				    <div class="modal-body" style="overflow:hidden;">
+				        <div data-bind="visible: $root.loading_dependency() == false">
+				            <div class="form-group">
+				                <label>Target Stage</label>
+				                <label class="form-control" data-bind="text: StageOI().ToolVersion().Tool().ToolName"></label>
+				            </div>
+				            
+				            <div class="form-group">
+				                <label>Dependanct On</label>
+				                <label class="form-control" data-bind="text: DependantOn().ToolVersion().Tool().ToolName"></label>
+				            </div>
+				            
+				            <div class="form-group">
+				                <label>Condition</label>
+				                <select class="form-control" data-bind="value: Condition, options: $root.Conditions, 
+				                    optionsText: function(item) { return item.ConditionName; },
+				                    optionsValue: function(item) { return item.ConditionID; }" >
+				                </select>
+				            </div>
+				            
+				            <div class="form-group" data-bind="if: Condition() == 4">
+				                <label>Exit Code</label>
+				                <input type='number' class="form-control" data-bind="value: ExitCodeValue" />
+				            </div>
+				        </div>
+				        
+				        <div id="dependency-error"></div>
+				        
+				        <div style="text-align: center;" data-bind="visible: $root.loading_dependency">
+	                        <img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px"> <br>
+	                        <img src="{{ STATIC_URL }}img/text_loader.gif" style="height:30px"> <br>
+                        </div>
+				    </div>
+				    <div class="modal-footer" data-bind="visible: $root.loading_dependency() == false">
+				       	<button type="button" class="btn btn-danger" style="float:left;" data-bind="click: $root.DeleteDependency"><i class="fa fa-trash-o"></i> Delete</button>
+				       	
+				       	<button type="button" class="btn btn-info" data-bind="click: $root.EditDependency"><i class="fa fa-save"></i> Save</button>
+				       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+		   	</div>
+        </div>
+        
+        <div class="modal fade" style="overflow-y:auto" id="stage-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-bind="with: $root.Stage">
+            <div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+				    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				     	<h4 class="modal-title">Edit Stage:</h4>
+				  	</div>
+				    <div class="modal-body" style="overflow:hidden;">
+				        <div data-bind="visible: $root.loading_dependency() == false">
+				            <div class="form-group">
+				                <label>Tool Name</label>
+				                <label class="form-control" data-bind="text: ToolVersion().Tool().ToolName"></label>
+				            </div>
+				            
+				            <div class="form-group">
+				                <label>Tool Version</label>
+				                <select class="form-control" data-bind="value: ToolVersion().ToolVersionNum, 
+				                    options: ToolVersion().Tool().ToolVersions, 
+				                    optionsText: function(item) { return item.ToolVersionNum },
+				                    optionsValue: function(item) { return item.ToolVersionNum }">
+				                </select>
+				            </div>
+				            
+				            <div class="form-group">
+				                <label>Create checkpoint before starting stage? </label>
+				                <input type="checkbox" data-bind="checked: Checkpoint"/>
+				            </div>
+				            
+				            <div class="form-group">
+				                <div id="table-responsive" style="overflow-y:auto; padding:15px;padding-bottom:15px;">
+								    <div style="width:100%">
+								        <label>
+								            Auto-populated parameters
+								        </label>
+									    <br>
+                				        <span style="font-size:8pt;padding:0px;padding-bottom:10px;">												
+        									The following parameters will not require user input when run - they can be populated by previous stages or 
+        									the value can be manually defined below.
+        								</span>
+								        <hr class="st-hr"/>
+    									<div>
+    									    <table class="table table-striped table-hover" style="text-align:center">
+    											<thead>
+    											 	<tr>
+    											 		<th style="text-align:center">Parameter</th>
+    											 		<th style="text-align:center">Populated by</th>
+    											 		<th style="text-align:center">Value</th>
+    											 		<th style="text-align:center"></th>
+    											 	</tr>
+    											</thead>
+    											<!-- ko if: StageParameters().length > 0 -->
+    											<tbody data-bind="foreach: StageParameters">
+        											<tr>
+        											    <td>
+        											        <select class="form-control" data-bind="value: Parameter, 
+        											            foreach: $root.Stage().ToolVersion().ToolParameters">
+        											                <option data-bind="value: ParameterID, text: ParameterName"></option>
+        											        </select>
+        											    </td>
+        											    <td>
+        											        <select class="form-control" data-bind="value: StageParameterType, options: $root.StageParameterTypes,
+        											            optionsText: function(item) { return item.StageParameterTypeName() },
+        											            optionsValue: function(item) { return item.StageParameterTypeID() }">
+        											        </select>
+        											    </td>
+        											    <td>
+        											        <!-- ko if: StageParameterType() == 1 -->
+        											            <input class="form-control" data-bind="value: Value" />
+        											        <!-- /ko -->
+        											        <!-- ko if: StageParameterType() == 2 -->
+        											            <select class="form-control" data-bind="value: Value, options: $root.previous_parameters,
+        											                optionsText: function(item) { return item.ParameterName() + ' (' + item.ToolVersion().Tool().ToolName() + ')' },
+        											                optionsValue: function(item) { return item.ParameterID() }"></select>
+        											        <!-- /ko -->
+        											        <!-- ko if: StageParameterType() == 3 -->
+        											            <select class="form-control" data-bind="value: Value, options: $root.previous_outputs,
+        											                optionsText: function(item) { return item.OutputName() + ' (' + item.ToolVersion().Tool().ToolName() + ')' },
+        											                optionsValue: function(item) { return item.ExpectedOutputID() }"></select>
+        											        <!-- /ko -->
+        											    </td>
+        											    <td style="text-align:center;">
+        											        <a href="#" data-bind="click: $root.DeleteStageParameter" class="btn btn-danger">
+    												    	    <i class="fa fa-trash-o"></i>
+    												    	</a>
+    												    </td>
+        											</tr>
+    											</tbody>
+    											<!-- /ko -->
+    											<!-- ko if: StageParameters().length == 0 -->
+    											<tbody>
+    											    <tr>
+    											        <td colspan="6">
+    											            No parameters will be automatically populated.
+    											        </td>
+    											        <td></td>
+    											    </tr>
+    											</tbody>
+    											<!-- /ko -->
+    											<tfoot>
+    											    <tr>
+        											    <td colspan='3'></td>
+        											    <td>
+        											        <a href="#" class="btn btn-success" data-bind="click: $root.AddStageParameter">
+    												    	    <i class="fa fa-plus"></i>
+    												    	</a>
+        											    </td>
+    											    </tr>
+    											</tfoot>
+    										</table>
+    									</div>
+    								</div>
+    							</div>
+				            </div>
+				        </div>
+				        
+				        <div id="stage-error"></div>
+				        
+				        <div style="text-align: center;" data-bind="visible: $root.loading_dependency">
+	                        <img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px"> <br>
+	                        <img src="{{ STATIC_URL }}img/text_loader.gif" style="height:30px"> <br>
+                        </div>
+				    </div>
+				    <div class="modal-footer" data-bind="visible: $root.loading_dependency() == false">
+				       	<button type="button" class="btn btn-danger" style="float:left;" data-bind="click: $root.DeleteStage"><i class="fa fa-trash-o"></i> Delete</button>
+				       	
+				       	<button type="button" class="btn btn-info" data-bind="click: $root.EditStage"><i class="fa fa-save"></i> Save</button>
+				       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+		   	</div>
+        </div>
+        
+        <div class="col-lg-2">
+            <div class="form-group" style="overflow:hidden">
+        
+                <label>Tools</label>
+                <select id="tool-selector" multiple class="form-control" data-bind="options: $root.Tools,
+                    optionsText: function(item) { return item.ToolName(); }, selectedOptions: $root.SelectedTools,
+                    event: { dblclick: $root.AddTools }">
+                </select>
+				
+                <button href="#" style="float:right;margin-top:5px;" class="btn btn-success" data-bind="click: $root.AddTools,
+                    enable: $root.SelectedTools().length > 0">
+                    <i class="fa fa-plus"></i>
+                </button>
+			</div>
+        </div>
+        
+        <div class="col-lg-10">
+            <label>Workflow</label>
+            <!-- visualzer -->
+            <div class="visualizer" id="visualizer" data-bind="foreach: Stages">
+                <div class="w" data-bind="attr: { id: 'stage_' + StageID() }, 
+                    event: { dblclick: $root.ShowEditStage },
+                    style: { left: left_co_ord() + 'px', top: top_co_ord() + 'px' }">
+                    <div style="text-align:center;">
+                        <u>
+                            <span style="font-weight:bold" data-bind="text: ToolVersion().Tool().ToolName"></span>
+                        </u>
+                        <br/>
+                        <span data-bind="text: ToolVersion().ToolVersionNum"></span>
+                        <br/>
+                        Level <span data-bind="text: StageLevel"></span>
+                    </div>
+                    <div class="ep"></div>
+                </div>
+            </div>
+            <!-- /visualzer -->
+        </div>
+		
+		<!-- JQUERY SCRIPTS -->
+		<script src="{{ STATIC_URL }}lib/jsplumb/js/external/jquery-1.9.0-min.js"></script>
+        <script src="{{ STATIC_URL }}lib/jsplumb/js/external/jquery-ui-1.9.2.min.js"></script>
+        <script src="{{ STATIC_URL }}lib/jsplumb/js/external/jquery.ui.touch-punch-0.2.2.min.js"></script>
+    	<!-- BOOTSTRAP SCRIPTS -->
+    	<script src="{{ STATIC_URL }}lib/bootstrap/binary/js/bootstrap.min.js"></script>
+    	<!-- SAMMY SCRIPTS -->
+    	<script src="{{ STATIC_URL }}lib/sammy.js"></script>
+        <!-- KNOCKOUT SCRIPTS -->
+        <script src="{{ STATIC_URL }}lib/knockout-3.0.0.js"></script>
+        <!-- JSPLUMB SCRIPTS -->
+        <script src="{{ STATIC_URL }}lib/jsplumb/js/jquery.jsPlumb-1.7.5-min.js"></script>
+		<!-- CUSTOM SCRIPTS -->
+    	<script src="{{ STATIC_URL }}lib/custom/jsplumb/js/custom.js"></script>
+    	<script src="{{ STATIC_URL }}lib/custom/question.js"></script>
+		<script src="{{ STATIC_URL }}lib/custom/jsplumb/js/workflow-visualizer.js"></script>
+		
+        
+    </body>
+</html>

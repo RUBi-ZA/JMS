@@ -116,8 +116,7 @@ class JMS:
     
     def DeleteStage(self, StageID):
         stage = self.GetStage(StageID)
-        stage.DeletedInd = True
-        stage.save()
+        stage.delete()
         
     
     
@@ -168,8 +167,7 @@ class JMS:
     
     def DeleteParameter(self, ParameterID):
         param = self.GetParameter(ParameterID)
-        param.DeletedInd = True
-        param.save()
+        param.delete()
     
     
     
@@ -356,9 +354,12 @@ class JMS:
     def GetUserJobAccess(self, UserID, JobID):
         access_level = objects.AccessRights.No_Access
         try:
+            File.print_to_file("/tmp/accesslevel.txt", "Checking access level %s %s" % (UserID, JobID), 'w')
             uwa = UserJobAccessRight.objects.get(User_id=UserID, Job_id=JobID)
-            access_level = uwa.AccessRight.AccessRightID
-        except:
+            access_level = uwa.AccessRight_id
+            File.print_to_file("/tmp/accesslevel.txt", str(access_level), 'a')
+        except Exception, err:
+            File.print_to_file("/tmp/accesslevel.txt", str(err), 'a')
             access_level = objects.AccessRights.No_Access
             
         return access_level
@@ -919,7 +920,8 @@ class JMS:
             UserJobAccessRight.objects.create(User=user, Job=job, AccessRight_id=objects.AccessRights.Owner)
             
             #create jobstage
-            jobstage = JobStage.objects.create(Job=job, RequiresEditInd=False, State_id=objects.Status.Created)
+            jobstage = JobStage.objects.create(Job=job, StageName="Custom Job", RequiresEditInd=False, Queue=Queue,
+                        Nodes=Nodes, MaxCores=CPUs, Memory=Memory, Walltime=Walltime, State_id=objects.Status.Created)
             
             #create job file
             custom_vars = ""
@@ -1102,9 +1104,8 @@ class JMS:
             if not str(job.JobName).endswith("-JMS"):
                 with transaction.atomic():
                     j = Job.objects.create(JobName=job.JobName, JobDescription="This job was submitted externally to the JMS", User=user, BatchJobInd=False)
-                    JobStage.objects.create(Job=j, ClusterJobID=job.ClusterJobID, RequiresEditInd=False, State_id=state)
+                    JobStage.objects.create(Job=j, ClusterJobID=job.ClusterJobID, State_id=state)
                     
-                    #Grant access rights
                     UserJobAccessRight.objects.create(User=user, Job=j, AccessRight_id=objects.AccessRights.Owner)
                 
                 j = None
@@ -1276,12 +1277,20 @@ class JMS:
             jobstage = JobStage.objects.get(ClusterJobID=ClusterJobID)
             self.user = jobstage.Job.User
             
+            #If Stage == None, then this was a custom job. Set status to completed successfully if exit code is 0
+            if jobstage.Stage == None:
+                if ExitCode == 0:
+                    jobstage.State_id = objects.Status.Completed_Successfully
+                else:
+                    jobstage.State_id = objects.Status.Failed
+                
+                jobstage.save()
             #If RequiresEditInd is set, no dependant jobs will be released until the user has "continued" the stage.
-            if jobstage.RequiresEditInd:
+            elif jobstage.RequiresEditInd:
                 jobstage.State_id = objects.Status.Awaiting_User_Input
                 jobstage.save()
             #If the jobstage has not failed or been stopped, continue the dependant jobs
-            elif jobstage.State.StatusID != objects.Status.Failed or jobstage.State.StatusID != objects.Status.Stopped:
+            elif jobstage.State.StatusID != objects.Status.Failed and jobstage.State.StatusID != objects.Status.Stopped:
                 self.ContinueStage(jobstage)
             
         except Exception, e:
@@ -1532,7 +1541,15 @@ class JMS:
     
     
     def GetDashboard(self):
-        return objects.Dashboard(self.user.username, self.user.userprofile.Code)
+        key = ""
+        with open(os.path.dirname(settings.IMPERSONATOR_KEY) + "/pvt.key", "r") as key_file:
+            key = key_file.read()
+        
+        decoded = base64.b64decode(self.user.filemanagersettings.ServerPass)
+        decrypted = PubPvtKey.decrypt(key, decoded)
+        credentials = decrypted.split(":")
+         
+        return objects.Dashboard(credentials[0], credentials[1])
     
     
     

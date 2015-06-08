@@ -11,25 +11,28 @@ from rest_framework.response import Response
 
 import os, json, mimetypes, platform, shutil, traceback, requests
 
-from models import *
-from objects import *
+from filemanager.models import *
+from filemanager.objects import *
+
+from job.JMS import JMS
+from job import objects
 
 from utilities.security.cryptography import PubPvtKey
 
 #Global variables and functions
 PROJECT_PATH = settings.BASE_DIR
 VIRTUAL_ACTIVATE = os.path.join(PROJECT_PATH, "venv/bin/activate")
-ROOT = settings.FILEMANAGER_ROOT_URL
+ROOT = settings.FILEMANAGER_SETTINGS["root_url"]
    
 def RunUserProcess(user, command):
     payload = "%s\n%s\nprompt" % (user.filemanagersettings.ServerPass, command)
-    r = requests.post("http://%s/impersonate" % settings.IMPERSONATOR_URL, data=payload)
+    r = requests.post("http://%s/impersonate" % settings.IMPERSONATOR_SETTINGS["url"], data=payload)
     return r.text
 
 
     
 def CreateTempDir(user):
-    tmp_dir = os.path.join(settings.TEMP_DIR, "." + user.username)
+    tmp_dir = os.path.join(settings.FILEMANAGER_SETTINGS["temp_dir"], "." + user.username)
     if not os.path.exists(tmp_dir):
         os.makedirs(tmp_dir)
         os.chmod(tmp_dir, 0777)
@@ -62,9 +65,15 @@ class DirectoryDetail(APIView):
         """
         Get directory path and listing details for given path
         """
-        try:            
+        try:   
             path = request.GET.get("path", os.path.abspath(os.path.sep))
-            out = RunUserProcess(request.user, "python %s/manage.py acl GET_DIR %s" % (PROJECT_PATH, path))
+            path_arr = path.split("/")
+            job_id = path_arr[1]
+            
+            jms = JMS(user=request.user)
+            job = jms.GetJob(job_id)
+            
+            out = RunUserProcess(job.User, "python %s/manage.py acl GET_DIR %s" % (PROJECT_PATH, path))
                 
             return ACLResponse(out)
             
@@ -132,8 +141,12 @@ class FileDetail(APIView):
         """
         Fetch file located at a given path. This is done by creating a temporary file that is accessible by the web server and then returning the temporary file.
         """
-        try:  
+        try: 
             filepath = request.GET.get("path", os.path.abspath(os.path.sep))
+            job_id = filepath.split("/")[1]
+            
+            jms = JMS(user=request.user)
+            job = jms.GetJob(job_id)
             
             #Get file type
             mimetypes.init()
@@ -146,10 +159,10 @@ class FileDetail(APIView):
                 response = HttpResponse("", content_type=type)
                 return response
             else:
-                tmp_dir = CreateTempDir(request.user)
+                tmp_dir = CreateTempDir(job.User)
                 
                 cmd = "python %s/manage.py acl CREATE_TEMP_FILE %s %s" % (PROJECT_PATH, filepath, os.path.join(tmp_dir, os.path.basename(filepath)))                
-                out = RunUserProcess(request.user, cmd)
+                out = RunUserProcess(job.User, cmd)
                 
                 tmp_file = out.strip().strip("\\r").strip("\r").strip("\n")              
                 
@@ -201,13 +214,17 @@ class FileTransfer(APIView):
         """
         Download file located at a given path
         """
-        try:
-            filepath = request.GET.get("path", os.path.abspath(os.path.sep))        
-                           
-            tmp_dir = CreateTempDir(request.user)
+        try:       
+            filepath = request.GET.get("path", os.path.abspath(os.path.sep))
+            job_id = filepath.split("/")[1]
+            
+            jms = JMS(user=request.user)
+            job = jms.GetJob(job_id)
+            
+            tmp_dir = CreateTempDir(job.User)
             
             cmd = "python %s/manage.py acl CREATE_TEMP_FILE %s %s" % (PROJECT_PATH, filepath, os.path.join(tmp_dir, os.path.basename(filepath)))       
-            out = RunUserProcess(request.user, cmd)
+            out = RunUserProcess(job.User, cmd)
             
             tmp_file = out.strip().strip("\\r").strip("\r").strip("\n")              
             

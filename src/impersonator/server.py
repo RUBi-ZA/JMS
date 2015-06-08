@@ -20,13 +20,11 @@ class Impersonator(Resource):
         with open("pvt.key", "r") as key_file:
             self.key = key_file.read()
             
-            
     def authenticate(self, username, password, venv=None):
         process = self.processes.get(username)
         if process == None:
             process = subprocess.Popen('su %s -c " python login.py %s %s"' % (username, username, password), shell=True, stdout=subprocess.PIPE)
             output, error = process.communicate()
-            print output
             
             if output.startswith("0"): 
                 self.processes.add(username, "")
@@ -35,34 +33,53 @@ class Impersonator(Resource):
             
         return True
     
-    
     def render_POST(self, request):
         try:
+            print "### Received request ###"
+            
             data = request.content.read()
-            print data
+            data_lines = data.split("\n")
             
-            data_arr = data.split("\n")
-            
-            decoded = base64.b64decode(data_arr[0])
+            #get credentials
+            decoded = base64.b64decode(data_lines[0])
             decrypted = PubPvtKey.decrypt(self.key, decoded)
-            credentials = decrypted.split(":")            
-                        
-            command = data_arr[1]
+            credentials = decrypted.split(":")
+            
+            command = data_lines[1]
+            prompt = "prompt"
+            sudo = False
+            if len(data_lines) > 2:
+                prompt = data_lines[2]
+                if len(data_lines) > 3:
+                    sudo = data_lines[3].lower() == "true"
+            
+            #if command should be run as sudo
+            if sudo:
+                command = 'sudo -S %s' % command
                     
-            if self.authenticate(credentials[0], credentials[1]):           
-                print "Permission granted. Running '%s' as '%s'..." % (command, credentials[0])
-                cmd = "su - %s -c '%s'" % (credentials[0], command)
-                print cmd
-                process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-                output, error = process.communicate()
-                print output
+            if self.authenticate(credentials[0], credentials[1]):
+                print "Permission granted."
+                print "Running '%s' as '%s'" % (command, credentials[0])
                 
+                cmd = "su - %s -c '%s'" % (credentials[0], command)
+                process = subprocess.Popen(cmd, shell=True, 
+                    stdin=subprocess.PIPE, stderr=subprocess.PIPE, 
+                    stdout=subprocess.PIPE, universal_newlines=True)
+                    
+                if sudo:
+                    #handle sudo prompt
+                    output, error = process.communicate(credentials[1] + "\n")
+                else:
+                    output, error = process.communicate()
+                               
+                output = str(output).strip("None")
                 return output
             else:
-                print "Permission denied!"
+                print "Permission denied\n"
                 
                 request.setResponseCode(403)
-                return "Permission denied!"
+                return "Permission denied"
+            
         except Exception, err:
             print(err)
             
@@ -84,4 +101,3 @@ with cd(path):
         factory = Site(root)
         reactor.listenTCP(port, factory)
         reactor.run()
-

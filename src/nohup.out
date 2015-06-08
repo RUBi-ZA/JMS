@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "impersonator/server.py", line 90, in <module>
+    resource = Impersonator()
+  File "impersonator/server.py", line 20, in __init__
+    with open("pvt.key", "r") as key_file:
+IOError: [Errno 2] No such file or directory: 'pvt.key'

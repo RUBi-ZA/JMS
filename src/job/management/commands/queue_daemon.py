@@ -3,7 +3,7 @@ from django import db
 
 from job.JMS import JMS
 
-import sys, time, subprocess
+import sys, time, subprocess, traceback
 from lxml import objectify
 from daemon import Daemon 
 
@@ -24,12 +24,15 @@ class QueueDaemon(Daemon):
                     jms = JMS() 
                     for job in data.Job:
                         print >> f, job.Job_Id
-                        jms.AddUpdateClusterJob(job)
+                        try:
+                            jms.AddUpdateClusterJob(job)
+                        except Exception, err:
+                            print >> f, ''.join(traceback.format_exception(*sys.exc_info()))
                     
                     # Reset database connection to avoid "MySQL has gone away" error after daemon 
                     # has been running for a long time    
                     db.close_connection() 
-                          
+                    
                 except Exception, err:
                     print >> f, "Error: " + str(err)
                 
@@ -41,7 +44,6 @@ class Command(NoArgsCommand):
     help = "Usage: python manage.py queue_daemon"
 
     option_list = NoArgsCommand.option_list + (
-        make_option('--verbose', action='store_true'),
         make_option('--start', action='store_true'),
         make_option('--restart', action='store_true'),
         make_option('--stop', action='store_true'),

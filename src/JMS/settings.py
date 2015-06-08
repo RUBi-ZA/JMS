@@ -12,15 +12,18 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'JMS',                      # Or path to database file if using sqlite3.
+        'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': 'JMS2',                      # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
         'USER': 'jms',
-        'PASSWORD': '',
-        'HOST': '',      
+        'PASSWORD': 'jms82',
+        'HOST': '146.231.130.9',      
         'PORT': '',                      # Set to empty string for default.
     }
 }
+
+BASE = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(__file__)) 
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
@@ -51,7 +54,7 @@ USE_TZ = False
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/var/www/example.com/media/"
-MEDIA_ROOT = '/srv/JMS/media'
+MEDIA_ROOT = os.path.join(BASE, "media")
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -62,14 +65,11 @@ MEDIA_URL = '/media/'
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/var/www/example.com/static/"
-STATIC_ROOT = '/static/'
+#STATIC_ROOT = os.path.join(BASE, "static")
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
 STATIC_URL = '/assets/'
-
-BASE = '/srv/JMS/'
-BASE_DIR = '/srv/JMS/src'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
@@ -110,8 +110,9 @@ ROOT_URLCONF = 'JMS.urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'JMS.wsgi.application'
 
-TEMPLATE_DIRS = ('/srv/JMS/templates',
-    '/srv/JMS/src/filemanager/templates'
+TEMPLATE_DIRS = (
+    os.path.join(BASE, 'templates'),
+    os.path.join(BASE, 'src/filemanager/templates')
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -131,7 +132,7 @@ INSTALLED_APPS = (
     #my apps
     'users',
     'interface',
-    'job',
+    'jobs',
     'filemanager'
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
@@ -188,11 +189,19 @@ AUTHENTICATION_BACKENDS = (
 AUTH_PROFILE_MODULE = 'users.UserProfile'
 
 JMS_SETTINGS = {
-    "JMS_shared_directory": "/jabba/JMS/"
+    "JMS_shared_directory": "/jabba/JMS/",
+    "resource_manager": {
+        "name": "torque",
+        "log_file": os.path.join(BASE, "logs/torque.log")
+    }
 }
 
-FILEMANAGER_ROOT_URL = "/jabba/JMS/users/"
-TEMP_DIR = "/tmp/jms/"
+FILEMANAGER_SETTINGS = {
+    "root_url": os.path.join(JMS_SETTINGS["JMS_shared_directory"], "users/"),
+    "temp_dir": "/tmp/jms/"
+}
 
-IMPERSONATOR_KEY = "/srv/JMS/src/impersonator/pub.key"
-IMPERSONATOR_URL = "127.0.0.1:8124"
+IMPERSONATOR_SETTINGS = {
+    "key": os.path.join(BASE_DIR, "impersonator/pub.key"),
+    "url": "127.0.0.1:8124"
+}

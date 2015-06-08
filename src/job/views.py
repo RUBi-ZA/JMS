@@ -345,7 +345,7 @@ class Workflows(APIView):
                         CreateStage(current_stage, workflowID, map_ids, map_param_ids, jms)
             
             #create the directory where the workflow scripts will be stored
-            jms.createJobDir(os.path.join(jms.users_dir, request.user.username + "/workflows/" + str(workflowID)))
+            jms.createJobDir(jms.base_dir + "/workflows/" + str(workflowID))
                             
         #we will only get here if the update has executed successfully            
         data = jms.GetWorkflow(workflowID)
@@ -505,7 +505,7 @@ class ImportWorkflow(APIView):
             
             #Create workflow    
             workflowID = jms.CreateWorkflow(WorkflowName=workflow.WorkflowName, Description=workflow.Description)
-            script_dir = os.path.join(jms.users_dir, request.user.username + "/workflows/" + str(workflowID))
+            script_dir = os.path.join(jms.base_dir, "workflows/" + str(workflowID))
             
             #create workflow stages
             map_ids = {}

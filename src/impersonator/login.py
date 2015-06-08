@@ -2,7 +2,7 @@
 
 import sys
 
-sys.path.append("/srv/JMS/src")
+sys.path.append("..")
 from utilities.io.shell import UserProcess
 
 username = sys.argv[1]

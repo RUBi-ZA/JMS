@@ -178,12 +178,6 @@ setupAjax();
                     $('div.sidebar-collapse').removeClass('collapse')
                 }
             });
-            
-            
-
-         	
-
-            
      
         },
 

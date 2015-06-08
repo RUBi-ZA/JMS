@@ -1,37 +1,17 @@
 #!/usr/bin/env python
-import os, sys, base64
+import os, sys, base64, subprocess
 from datetime import datetime
 
 from twisted.web.server import Site
 from twisted.web.resource import Resource
 from twisted.internet import reactor
 
-sys.path.append("/srv/development/Webinal")
+sys.path.append("/srv/JMS/src")
 from utilities.structures import TimeExpiredDict
-from utilities.io.shell import UserProcess
+from utilities.context_managers import cd
 from utilities.security.cryptography import PubPvtKey
 
-   
-def authenticate(username, password, venv=None):
-    process = self.processes.get(username)
-    if process == None:
-        try:
-            process = UserProcess(username, password)
-            if venv:    
-                out = process.run_command("source %s" % venv)
-                
-            self.processes.add(username, process)
-        
-        except pxssh.ExceptionPxssh, e:
-            print(e)
-            return False
-        except Exception, err:
-            print(err)
-            return False
-        
-    return True
-    
-    
+import pxssh
 
 class Impersonator(Resource):
     
@@ -39,40 +19,84 @@ class Impersonator(Resource):
         self.processes = TimeExpiredDict(600)
         with open("pvt.key", "r") as key_file:
             self.key = key_file.read()
-    
+            
+    def authenticate(self, username, password, venv=None):
+        process = self.processes.get(username)
+        if process == None:
+            process = subprocess.Popen('su %s -c " python login.py %s %s"' % (username, username, password), shell=True, stdout=subprocess.PIPE)
+            output, error = process.communicate()
+            print output
+            
+            if output.startswith("0"): 
+                self.processes.add(username, "")
+            else:
+                return False
+            
+        return True
     
     def render_POST(self, request):
         try:
             data = request.content.read()
-            print data
+            data_lines = data.split("\n")
             
-            data_arr = data.split("\n")
-            
-            decoded = base64.b64decode(data_arr[0])
+            #get credentials
+            decoded = base64.b64decode(data_lines[0])
             decrypted = PubPvtKey.decrypt(self.key, decoded)
-            credentials = decrypted.split(":")            
-                        
-            command = data_arr[1]
+            credentials = decrypted.split(":")
+            
+            command = data_lines[1]
+            prompt = "prompt"
+            sudo = False
+            if len(data_lines) > 2:
+                prompt = data_lines[2]
+                if len(data_lines) > 3:
+                    sudo = data_lines[3].lower() == "true"
+            
+            #if command should be run as sudo
+            if sudo:
+                command = 'sudo -S %s' % command
                     
-            if authenticate(credentials[0], credentials[1]):           
-                print "Permission granted. Running '%s' as '%s'..." % (command, credentials[0])            
-                output = self.processes.get(credentials[0]).run_command(command)            
-                print output
+            if self.authenticate(credentials[0], credentials[1]):
+                print "Permission granted."
+                print "Running '%s' as '%s'" % (command, credentials[0])
                 
+                cmd = "su - %s -c '%s'" % (credentials[0], command)
+                process = subprocess.Popen(cmd, shell=True, 
+                    stdin=subprocess.PIPE, stderr=subprocess.PIPE, 
+                    stdout=subprocess.PIPE, universal_newlines=True)
+                    
+                if sudo:
+                    #handle sudo prompt
+                    output, error = process.communicate(credentials[1] + "\n")
+                else:
+                    output, error = process.communicate()
+                               
+                output = str(output).strip("None")
                 return output
             else:
-                print "Permission denied!"
-                request.setResponseCode(401)
-                return "Permission denied!"
+                print "Permission denied\n"
+                
+                request.setResponseCode(403)
+                return "Permission denied"
+            
         except Exception, err:
             print(err)
+            
             request.setResponseCode(400)
-            return "Bad Request"
+            return "Bad Request" 
 
 
-root = Resource()
-root.putChild("impersonate", Impersonator())
-factory = Site(root)
-reactor.listenTCP(8123, factory)
-reactor.run()
+resource = Impersonator()
 
+path = os.path.dirname(os.path.realpath(__file__))
+with cd(path):
+    if __name__ == "__main__":
+        port = 8123
+        if len(sys.argv) > 1:
+            port = int(sys.argv[1])
+            
+        root = Resource()
+        root.putChild("impersonate", resource)
+        factory = Site(root)
+        reactor.listenTCP(port, factory)
+        reactor.run()

@@ -6,6 +6,12 @@ from django.db import transaction
 
 import os
 
+def create_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+        os.chmod(path, 0775)
+    print "%s created." % path
+
 class Command(BaseCommand):
     args = '<base_url>'
     help = "Usage: python manage.py setup <base_url>"
@@ -15,44 +21,32 @@ class Command(BaseCommand):
             print "\nSetting up shared directory:\n"
             base_path = settings.JMS_SETTINGS["JMS_shared_directory"]
             
-            path = "%s/%s" % (base_path, "users")
-            if not os.path.exists(path):
-                os.makedirs(path)
-                os.chmod(path, 0775)
-            print "%s created." % path
+            path = os.path.join(base_path, "users")
+            create_dir(path)
             
-            path = "%s/%s" % (base_path, "logs/prologue")
-            if not os.path.exists(path):
-                os.makedirs(path)
-                os.chmod(path, 0775)
-            print "%s created." % path
+            path = os.path.join(base_path, "workflows")
+            create_dir(path)
             
-            path = "%s/%s" % (base_path, "logs/epilogue")
-            if not os.path.exists(path):
-                os.makedirs(path)
-                os.chmod(path, 0775)
-            print "%s created." % path
+            path = os.path.join(base_path, "logs/prologue")
+            create_dir(path)
             
-            path = "%s/%s" % (base_path, "scripts")
-            if not os.path.exists(path):
-                os.makedirs(path)
-                os.chmod(path, 0775)
-            print "%s created." % path
+            path = os.path.join(base_path, "logs/epilogue")
+            create_dir(path)
             
-            path = "%s/%s" % (base_path, "tmp")
-            if not os.path.exists(path):
-                os.makedirs(path)
-                os.chmod(path, 0775)
-            print "%s created." % path
+            path = os.path.join(base_path, "scripts")
+            create_dir(path)
+            
+            path = os.path.join(base_path, "tmp")
+            create_dir(path)
             
             with open("%s/%s" % (path, "prologue"), "w") as f:
                 print >> f, "#!/bin/sh"
-                print >> f, "curl ip.address:port_no/api/jms/prologue/${2}/${1} 2> %s/logs/prologue/prologue.${1}.log" % base_path
+                print >> f, "curl <base_url>/api/jms/prologue/${2}/${1} 2> %s/logs/prologue/prologue.${1}.log" % base_path
             print "Prologue script created."
             
             with open("%s/%s" % (path, "epilogue"), "w") as f:
                 print >> f, "#!/bin/sh"
-                print >> f, "curl ip.address:port_no/api/jms/epilogue/${2}/${1}/${10} 2> %s/logs/epilogue/epilogue.${1}.log" % base_path
+                print >> f, "curl <base_url>/api/jms/epilogue/${2}/${1}/${10} 2> %s/logs/epilogue/epilogue.${1}.log" % base_path
             print "Epilogue script created."
             
             print "\nPopulating database with required data:\n"
@@ -89,9 +83,8 @@ class Command(BaseCommand):
                 ParameterType(ParameterTypeID=3, ParameterTypeName="True/False").save()
                 ParameterType(ParameterTypeID=4, ParameterTypeName="Options").save()
                 ParameterType(ParameterTypeID=5, ParameterTypeName="File").save()
-                ParameterType(ParameterTypeID=6, ParameterTypeName="Parameter value from previous stage").save()
-                ParameterType(ParameterTypeID=7, ParameterTypeName="Complex object").save()
-                ParameterType(ParameterTypeID=8, ParameterTypeName="Related object").save()
+                ParameterType(ParameterTypeID=6, ParameterTypeName="Complex object").save()
+                ParameterType(ParameterTypeID=7, ParameterTypeName="Related object").save()
                 num = len(ParameterType.objects.all())
                 if num == 8:
                     print "Parameter types added successfully"

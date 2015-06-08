@@ -14,11 +14,27 @@ def index(request):
 
 
 @login_required(login_url="/account/login")
+def tools(request):
+	c = {}
+	c.update(csrf(request))
+	
+	return render(request, 'custom/JMS/tools.html', c)
+
+
+@login_required(login_url="/account/login")
 def workflows(request):
 	c = {}
 	c.update(csrf(request))
 	
 	return render(request, 'custom/JMS/workflows.html', c)
+
+
+@login_required(login_url="/account/login")
+def workflow_visualizer(request):
+	c = {}
+	c.update(csrf(request))
+	
+	return render(request, 'custom/JMS/workflow_visualizer.html', c)
 
 
 @login_required(login_url="/account/login")

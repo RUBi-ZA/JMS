@@ -11,7 +11,7 @@ function QuestionModal(modal_id) {
                 '<img src="/assets/img/question.png" style="padding-left:5px;" />' +
                 '<span class="modal-title" style="font-weight:bold;font-size:16pt;" id="question-heading"></span>' +
 	        '</div>' +
-	        '<div class="modal-body">' +
+	        '<div class="modal-body" style="overflow:hidden;">' +
 	          	'<div>' +
 			        '<div class="tab-pane">' +
 				        '<span id="question-content"></span>' +
@@ -21,6 +21,8 @@ function QuestionModal(modal_id) {
 				    '<img src="/assets/img/big_red_loader.gif" style="height:100px;"/>' +
 				    '<br/>' +
 				    '<img src="/assets/img/text_loader.gif" style="height:30px;"/>' +	
+			    '</div>' +
+			    '<div id="question-error">' +
 			    '</div>' +
 	        '</div>' +
 	        '<div class="modal-footer" id="question-footer">' +
@@ -63,12 +65,16 @@ function QuestionModal(modal_id) {
 		});
 		
 		qm.Yes = yes_action;
-				
+		
 		if(typeof no_action != "undefined") {
 		    qm.No = no_action;
 		}
 		
         qm.ToggleLoading(false);       
+    }
+    
+    qm.ShowError = function(message) {
+        AppendAlert("danger", message, "#question-error");
     }
     
     qm.Yes = function() {

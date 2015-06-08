@@ -197,17 +197,17 @@ class JobStage(models.Model):
 	JobStageID = models.AutoField(primary_key=True)
 	Job = models.ForeignKey(Job, db_column='JobID', related_name='JobStages')
 	Stage = models.ForeignKey(Stage, db_column='StageID', related_name='JobStages', blank=True, null=True)
-	StageName = models.CharField(max_length=100, null=True, blank=True, default=None)
-	ClusterJobID = CharNullField(max_length=30, null=True, blank=True, unique=True, default=None)
-	State = models.ForeignKey(Status, db_column='State', related_name='JobsStages', null=True, blank=True)
-	RequiresEditInd = models.BooleanField(default=False)
+	StageName = models.CharField(max_length=100, null=True, blank=True)
+	ClusterJobID = models.CharField(max_length=30, null=True, blank=True, unique=True, default=None)
+	State = models.ForeignKey(Status, db_column='State', related_name='JobStages', null=True, blank=True)
+	RequiresEditInd = models.NullBooleanField(null=True, blank=True, default=False)
 	
 	#Resources
-	Queue = models.CharField(max_length=30)	
-	Nodes = models.IntegerField()
-	MaxCores = models.IntegerField()
-	Memory = models.IntegerField()
-	Walltime = models.CharField(max_length=30)
+	Queue = models.CharField(max_length=30, null=True, blank=True, default=None)	
+	Nodes = models.IntegerField(null=True, blank=True, default=None)
+	MaxCores = models.IntegerField(null=True, blank=True, default=None)
+	Memory = models.IntegerField(null=True, blank=True, default=None)
+	Walltime = models.CharField(max_length=30, null=True, blank=True, default=None)
 	
 	class Meta:
 		db_table = 'JobStages'

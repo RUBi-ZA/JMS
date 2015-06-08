@@ -1,72 +1,66 @@
-var ServerSettings = function(name, keep, stat, iter, check, tcp, other_jobs, mom_sync, moab, sched) {
-    this.ServerName = ko.observable(name);
-    this.KeepCompleted = ko.observable(keep);
-    this.JobStatRate = ko.observable(stat);
-    this.SchedularIteration = ko.observable(iter);
-    this.NodeCheckRate = ko.observable(check);
-    this.TCPTimeout = ko.observable(tcp);
-    this.QueryOtherJobs = ko.observable(other_jobs);
-    this.MOMJobSync = ko.observable(mom_sync);
-    this.MoabArrayCompatible = ko.observable(moab);
-    this.Scheduling = ko.observable(sched);
+var Node = function(name, state, num_cores, busy_cores, num_jobs, other) {
+	this.Name = ko.observable(name);
+	this.State = ko.observable(state);
+	this.NumCores = ko.observable(num_cores);
+	this.BusyCores = ko.observable(busy_cores);
+	this.FreeCores = ko.observable(num_cores - busy_cores);
+	this.Jobs = ko.observable(num_jobs);
+	this.Other = ko.observable(other)
+}
+
+
+var Setting = function(key, label, value, value_type, disabled){
+    this.Key = ko.observable(key);
+	this.Label = ko.observable(label);
+	this.Value = ko.observable(value);
+	this.ValueType = ko.observable(value_type);
+	this.Disabled = ko.observable(disabled);
+}
     
-    this.ServerAdministrators = ko.observableArray();
-    this.Queues = ko.observableArray();
-}
 
-var ServerAdministrator = function(name, host, manager, operator) {
-    this.Username = ko.observable(name);
-    this.Host = ko.observable(host);
-    this.Manager = ko.observable(manager);
-    this.Operator = ko.observable(operator);
+var SettingsSection = function(header, settings){
+    this.SectionHeader = ko.observable(header);
+	this.Settings = ko.observableArray(settings);
 }
-
-var Queue = function(name, type, enabled, started, max_queuable, max_run, max_user_queuable, max_user_run, max_nodes, default_nodes, max_cpu, default_cpu, max_mem, default_mem, max_walltime, default_walltime, default_queue) {
-    this.QueueName = ko.observable(name);
-    this.Type = ko.observable(type);
-    this.Enabled = ko.observable(enabled);
-    this.Started = ko.observable(started);
-    this.MaxQueable = ko.observable(max_queuable);
-    this.MaxRun = ko.observable(max_run);
-    this.MaxUserQueable = ko.observable(max_user_queuable);
-    this.MaxUserRun = ko.observable(max_user_run);
-    this.MaxNodes = ko.observable(max_nodes);
-    this.DefaultNodes = ko.observable(default_nodes);
-    this.MaxCPUs = ko.observable(max_cpu);
-    this.DefaultCPUs = ko.observable(default_cpu);
-    this.MaxMemory = ko.observable(max_mem);
-    this.DefaultMemory = ko.observable(default_mem);
-    this.MaxWalltime = ko.observable(max_walltime);
-    this.DefaultWalltime = ko.observable(default_walltime);
-    this.DefaultQueue = ko.observable(default_queue);
-}
-
-var Node = function(name, state, cpu, prop, ip) {
-    this.NodeName = ko.observable(name);
-    this.State = ko.observable(state);
-    this.NumProcessors = ko.observable(cpu);
-    this.Properties = ko.observable(prop);
     
-    //only used when adding a new node
-    this.IPAddress = ko.observable(ip);
+
+var Administrator = function(admin, sections){
+    this.AdministratorName = ko.observable(admin);
+	this.SettingsSections = ko.observableArray(sections);
 }
+    
+
+var Queue = function(queue, sections){
+    this.QueueName = ko.observable(queue);
+	this.SettingsSections = ko.observableArray(sections);
+}
+
+
 
 function SettingsViewModel() {
 	var self = this;
 	
+	//Setting types
+	self.Text = 1
+	self.Number = 2
+	self.Checkbox = 3
+	self.Label = 4
+	self.Option = 5
+	
+	//Used to switch on/off loading animations
 	self.Loading = ko.observable(true);
 	self.LoadingServer = ko.observable(false);
 	self.LoadingQueue = ko.observable(false);
 	self.LoadingAdmins = ko.observable(false);
 	self.LoadingNodes = ko.observable(true);
 	
-	self.ServerVisible = false;
-	self.AdminVisible = false;
-	self.Queues = false;
-		
-	self.Settings = ko.observable();
+	//Actual data objects
+	self.Settings = ko.observableArray();
+	self.Administrators = ko.observableArray();
+	self.Queues = ko.observableArray();
 	self.Nodes = ko.observableArray();
 	
+	//Selected data objects
 	self.SelectedQueues = ko.observableArray();
 	self.SelectedQueue = ko.observable();
 	self.SelectedQueues.subscribe(function(value){
@@ -105,57 +99,54 @@ function SettingsViewModel() {
 	        url: "/api/jms/settings/",
 	        success: function(settings) {
 	            settings = JSON.parse(settings);
-	            self.LoadData(settings);
+	            self.LoadSettings(settings);
 	            self.Loading(false);
 	        }
 	    });
 	}
 	
-	self.LoadData = function(settings) {
-	    var s = new ServerSettings(settings.ServerName, settings.KeepCompleted, settings.JobStatRate, settings.SchedularIteration, settings.NodeCheckRate, settings.TCPTimeout, settings.QueryOtherJobs, settings.MOMJobSync, settings.MoabArrayCompatible, settings.Scheduling);
-	            
-        $.each(settings.Queues, function(i, q) {
-            var queue = new Queue(q.QueueName, q.Type, q.Enabled, q.Started, q.MaxQueable, q.MaxRun, q.MaxUserQueable, q.MaxUserRun, q.MaxNodes, q.DefaultNodes, q.MaxCPUs, q.DefaultCPUs, q.MaxMemory, q.DefaultMemory, q.MaxWalltime, q.DefaultWalltime, q.DefaultQueue);
-            
-            s.Queues.push(queue);
+	self.LoadSettings = function(settings){
+	    var settings_sections = []
+        $.each(settings.DataSections, function(i, section){
+            var rs = new SettingsSection(section.SectionHeader, []);
+           
+            //add fields to sections
+            $.each(section.DataFields, function(j, field){
+                var s = new Setting(field.Key, field.Label, field.DefaultValue, field.ValueType, field.Disabled);
+                
+                //add setting values to fields
+                $.each(settings.Data, function(k, setting_section){
+                    if(setting_section.SectionHeader == section.SectionHeader) {
+                        $.each(setting_section.Settings, function(l, setting){
+                            if(setting.Name == field.Key){
+                                //setting has been found
+                                s.Value(setting.Value);
+                                return false;
+                            }
+                        });
+                        return false;
+                    }  
+                });
+                rs.Settings.push(s);
+            });
+            settings_sections.push(rs);
         });
-        
-        $.each(settings.ServerAdministrators, function(i, a) {
-            var admin = new ServerAdministrator(a.Username, a.Host, a.Manager, a.Operator);
-            
-            s.ServerAdministrators.push(admin);
-        });
-        
-        self.Settings(s);
+        self.Settings(settings_sections);
 	}
 	
 	self.SaveServerSettings = function() {
 	    self.LoadingServer(true);
-	    
-	    var s = new Object();
-	    s.ServerName = self.Settings().ServerName();
-        s.KeepCompleted = self.Settings().KeepCompleted();
-        s.JobStatRate = self.Settings().JobStatRate();
-        s.SchedularIteration = self.Settings().SchedularIteration();
-        s.NodeCheckRate = self.Settings().NodeCheckRate();
-        s.TCPTimeout = self.Settings().TCPTimeout();
-        s.QueryOtherJobs = self.Settings().QueryOtherJobs();
-        s.MOMJobSync = self.Settings().MOMJobSync();
-        s.MoabArrayCompatible = self.Settings().MoabArrayCompatible();
-        s.Scheduling = self.Settings().Scheduling();
-        
-        var data = JSON.stringify(s);
         
         $.ajax({
             url: "/api/jms/settings",
             type: "POST",
-            data: data,
+            data: ko.toJSON(self.Settings),
             success: function(settings) {
                 settings = JSON.parse(settings);
-                self.LoadData(settings); 
+                self.LoadSettings(settings); 
             },
-            error: function() {
-            
+            error: function(http) {
+                alert(http.responseText)
             },
             complete: function() {
 	            self.LoadingServer(false);
@@ -164,15 +155,60 @@ function SettingsViewModel() {
 	}
 	
 	//administrator functions	
+	self.GetAdministrators = function() {
+	    $.ajax({
+	        url: "/api/jms/settings/administrators",
+	        success: function(admins) {
+	            admins = JSON.parse(admins);
+	            self.LoadAdministrators(admins);
+	            self.Loading(false);
+	        }
+	    });
+	}
+	
+	self.LoadAdministrators = function(admins) {
+	    var administrators = []
+        $.each(admins.Data, function(i, admin){
+            var administrator = new Administrator(admin.AdministratorName, []);
+            
+            $.each(admins.DataSections, function(j, section) {
+                var ss = new SettingsSection(section.SectionHeader, []);
+                
+                $.each(section.DataFields, function(j, field){
+                    var s = new Setting(field.Key, field.Label, field.DefaultValue, field.ValueType, field.Disabled);
+                    
+                    //add setting values to fields
+                    $.each(admin.SettingsSections, function(k, setting_section){
+                        if(setting_section.SectionHeader == section.SectionHeader) {
+                            
+                            $.each(setting_section.Settings, function(l, setting){
+                                if(setting.Name == field.Key){
+                                    //setting has been found
+                                    s.Value(setting.Value);
+                                    return false;
+                                }
+                            })
+                            
+                            return false;
+                        }  
+                    });
+                    ss.Settings.push(s);
+                });
+                administrator.SettingsSections.push(ss)
+            });
+            administrators.push(administrator);
+        })
+       
+        self.Administrators(administrators);
+	}
 	
 	self.ShowAddAdministrator = function() {
         self.LoadingAdmins(false);
         
-	    var s = new ServerAdministrator();
-	    s.Host = self.Settings().ServerName()
+	    var a = new Administrator("", []);
 	
 	    self.SelectedAdministrators([]);	    
-	    self.SelectedAdministrator(s);
+	    self.SelectedAdministrator(a);
 	    $("#admin-dialog").modal({ 'backdrop': 'static'});
 	}	
 	
@@ -182,23 +218,24 @@ function SettingsViewModel() {
 	}
 	
 	self.AddUpdateAdministrator = function() {
-	    if (self.Settings().ServerAdministrators.indexOf(self.SelectedAdministrator()) < 0) {
-            self.Settings().ServerAdministrators.push(self.SelectedAdministrator());
+	    if (self.SelectedAdministrators().length == 0) {
+            self.SaveAdministrators("POST");
         }
-        
-        self.SaveAdministrators();
+        else {
+            self.SaveAdministrators("PUT");
+        }
 	}
 	
-	self.SaveAdministrators = function() {
+	self.SaveAdministrators = function(method) {
 	    self.LoadingAdmins(true);    
 	    
 	    $.ajax({
             url: "/api/jms/settings/administrators",
-            type: "PUT",
-            data: ko.toJSON(self.Settings().ServerAdministrators),
-            success: function(settings) { 
-                settings = JSON.parse(settings);
-                self.LoadData(settings);  
+            type: method,
+            data: ko.toJSON(self.SelectedAdministrator),
+            success: function(admins) { 
+                admins = JSON.parse(admins);
+                self.LoadAdministrators(admins);  
 	            question.Hide();
 	            $("#admin-dialog").modal('hide');
             }, 
@@ -214,15 +251,71 @@ function SettingsViewModel() {
 	    question.Show("Delete Administrators?", "Are you sure you want to delete the selected administrators? This operation is irreversible.", function() {	        
 	        question.ToggleLoading(true);
 	        
-	        $.each(self.SelectedAdministrators(), function(i, admin){
-	            self.Settings().ServerAdministrators.remove(admin);
-	        });
+	        admin = self.SelectedAdministrators()[0];
 	        
-	        self.SaveAdministrators();
+	        $.ajax({
+                url: "/api/jms/settings/administrators/" + admin.AdministratorName(),
+                type: "DELETE",
+                success: function(admins) { 
+                    admins = JSON.parse(admins);
+                    self.LoadAdministrators(admins);  
+    	            question.Hide();
+                }, 
+                error: function() {
+                    self.LoadingAdmins(false); 
+    	            question.ToggleLoading(false); 
+                }
+            });
 	    });
 	}
     
-    //queue functions	
+    //queue functions
+    
+    self.GetQueues = function(){
+        $.ajax({
+	        url: "/api/jms/settings/queues",
+	        success: function(queues) {
+	            queues = JSON.parse(queues);
+	            console.log(queues);
+	            self.LoadQueues(queues);
+	            self.Loading(false);
+	        }
+	    });
+    }
+    
+    self.LoadQueues = function(qjson) {
+	    var queues = []
+        $.each(qjson.Data, function(i, queue){
+            var q = new Queue(queue.QueueName, []);
+            
+            $.each(qjson.DataSections, function(j, section) {
+                var ss = new SettingsSection(section.SectionHeader, []);
+                
+                $.each(section.DataFields, function(j, field){
+                    var s = new Setting(field.Key, field.Label, field.DefaultValue, field.ValueType, field.Disabled);
+                    
+                    //add setting values to fields
+                    $.each(queue.SettingsSections, function(k, setting_section){
+                        if(setting_section.SectionHeader == section.SectionHeader) {
+                            $.each(setting_section.Settings, function(l, setting){
+                                if(setting.Name == field.Key){
+                                    //setting has been found
+                                    s.Value(setting.Value);
+                                    return false;
+                                }
+                            })
+                            return false;
+                        }
+                    });
+                    ss.Settings.push(s);
+                });
+                q.SettingsSections.push(ss)
+            });
+            queues.push(q);
+        })
+       
+        self.Queues(queues);
+	}
 	
 	self.ShowAddQueue = function() {
 	    $("#queue-dialog").modal({
@@ -238,9 +331,9 @@ function SettingsViewModel() {
 	    $.ajax({
             url: "/api/jms/settings/queues/" + $("#queue_name").val(),
             type: "POST",
-            success: function(settings) { 
-                settings = JSON.parse(settings);
-                self.LoadData(settings); 
+            success: function(queues) { 
+                queues = JSON.parse(queues);
+                self.LoadQueues(queues); 
                 
                 $("#queue_name").val("");
                 self.LoadingQueue(false); 
@@ -261,11 +354,11 @@ function SettingsViewModel() {
             url: "/api/jms/settings/queues/" + queue_name,
             type: "PUT",
             data: ko.toJSON(self.SelectedQueue),
-            success: function(settings) { 
-                settings = JSON.parse(settings);
-                self.LoadData(settings);
+            success: function(queues) { 
+                queues = JSON.parse(queues);
+                self.LoadQueues(queues);
                 
-                $.each(self.Settings().Queues(), function(i, queue) {
+                $.each(self.Queues(), function(i, queue) {
                     if(queue_name == queue.QueueName()) {
                         self.SelectedQueues.push(queue);
                         return false;
@@ -287,9 +380,9 @@ function SettingsViewModel() {
 	        $.ajax({
 	            url: "/api/jms/settings/queues/" + self.SelectedQueues()[0].QueueName(),
 	            type: "DELETE",
-	            success: function(settings) { 
-	                settings = JSON.parse(settings);
-	                self.LoadData(settings);   
+	            success: function(queues) { 
+	                queues = JSON.parse(queues);
+	                self.LoadQueues(queues);   
 	                question.Hide();
 	            }, 
 	            error: function() {
@@ -302,8 +395,9 @@ function SettingsViewModel() {
 	//node functions
 	self.LoadNodes = function(nodes) {
 	    self.Nodes([]);
+	    
         $.each(nodes, function(i, node) {
-            self.Nodes.push(new Node(node.NodeName, node.State, node.NumProcessors, node.Properties));
+            self.Nodes.push(new Node(node.name, node.state, node.num_cores, node.busy_cores, node.jobs, node.other));
         });
 	}
 	
@@ -313,7 +407,6 @@ function SettingsViewModel() {
 	        success: function(nodes) {
 	            nodes = JSON.parse(nodes);
 	            self.LoadNodes(nodes);
-	            
 	            self.LoadingNodes(false);
 	        }
 	    });
@@ -321,7 +414,7 @@ function SettingsViewModel() {
 	
 	self.ShowAddNode = function() {
         self.LoadingNodes(false);
-        self.NewNode(new Node("", null, null, null, null));
+        self.NewNode(new Node("", null, null, null, null, null));
 	    $("#node-dialog").modal();
 	}
 	
@@ -346,12 +439,10 @@ function SettingsViewModel() {
 	}
 	
 	self.EditNode = function() {
+	    var node_name = self.SelectedNode().Name();
 	    self.LoadingNodes(true);
-	    
-	    var node_name = self.SelectedNode().NodeName();
-	    
 	    $.ajax({
-            url: "/api/jms/settings/nodes/" + node_name,
+            url: "/api/jms/settings/nodes/",
             type: "PUT",
             data: ko.toJSON(self.SelectedNode),
             success: function(nodes) { 
@@ -359,7 +450,7 @@ function SettingsViewModel() {
                 self.LoadNodes(nodes);
                 
                 $.each(self.Nodes(), function(i, node) {
-                    if(node_name == node.NodeName()) {
+                    if(node_name == node.Name()) {
                         self.SelectedNodes.push(node);
                         return false;
                     }
@@ -378,7 +469,7 @@ function SettingsViewModel() {
 	        question.ToggleLoading(true);
 	        
 	        $.ajax({
-	            url: "/api/jms/settings/nodes/" + self.SelectedNodes()[0].NodeName(),
+	            url: "/api/jms/settings/nodes/" + self.SelectedNodes()[0].Name(),
 	            type: "DELETE",
 	            success: function(nodes) { 
 	                nodes = JSON.parse(nodes);
@@ -408,6 +499,8 @@ $(document).ready(function () {
 	settings = new SettingsViewModel();
 	ko.applyBindings(settings, document.getElementById("page-wrapper"));
 	
-	settings.GetServerSettings();	
+	settings.GetServerSettings();
+	settings.GetAdministrators();
+	settings.GetQueues();
 	settings.GetNodes();
 });

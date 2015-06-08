@@ -10,8 +10,8 @@ import pexpect, base64, requests
 
 class LinuxBackend(ModelBackend):
     
-    key_file = settings.IMPERSONATOR_KEY
-    imp_url = settings.IMPERSONATOR_URL
+    key_file = settings.IMPERSONATOR_SETTINGS["key"]
+    imp_url = settings.IMPERSONATOR_SETTINGS["url"]
     
     def authenticate(self, username=None, password=None):
         
@@ -20,7 +20,7 @@ class LinuxBackend(ModelBackend):
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist, ex:
-            user = User.objects.create(username=username, email="", password=password)
+            user = User.objects.create(username=username, email="", password="")
         
         # encrypt and encode password for transmission and to store in DB
         encoded = ""

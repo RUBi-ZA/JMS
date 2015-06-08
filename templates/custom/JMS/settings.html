@@ -37,24 +37,61 @@
 					    <div class="modal-body">
 					        <div data-bind="visible: $root.LoadingAdmins() == false">
 					        	<div class="form-group">
-								    <label>Username:</label>
-								    <input class="form-control" data-bind="value: Username"  />
+								    <label>Administrator Name:</label>
+								    <input class="form-control" data-bind="value: AdministratorName"  />
 							    </div>
 							
-					        	<div class="form-group">
-								    <label>Host:</label>
-								    <input class="form-control" data-bind="value: Host" />
-							    </div>
-							
-					        	<div class="form-group">
-								    <label>Manager:</label>
-								    <input type="checkbox" data-bind="checked: Manager" style="margin-left:15px;" />
-							    </div>
-							
-					        	<div class="form-group">
-								    <label>Operator:</label>
-								    <input type="checkbox" data-bind="checked: Operator" style="margin-left:15px;" />
-							    </div>
+					        	<!-- ko foreach: SettingsSections -->
+					        	    
+					        	    <div class="col-lg-12" style="padding:0">     
+                                        <label><u data-bind="text: SectionHeader"></u></label>
+                                        <hr style="margin-top:5px;margin-bottom:5px;">
+                                    </div>
+                                    
+                                    <div class="row">
+                                    <!-- ko foreach: Settings() -->
+                                        <!-- ko if: ValueType() == 1 -->
+                                        <div class="col-lg-5">
+                                            <div class="form-group" style="padding:5px;">
+                                                <label data-bind="text: Label"></label>
+                                                <input type="text" class="form-control" data-bind="value: Value" />
+                                            </div>
+                                        </div>
+                                        <!-- /ko -->
+                                        
+                                        <!-- ko if: ValueType() == 2 -->
+                                        <div class="col-lg-5">
+                                            <div class="form-group" style="padding:5px;">
+                                                <label data-bind="text: Label"></label>
+                                                <input type="number" class="form-control" data-bind="value: Value" />
+                                            </div>
+                                        </div>
+                                        <!-- /ko -->
+                                        
+                                        <!-- ko if: ValueType() == 4 -->
+                                        <div class="col-lg-5">
+                                            <div class="form-group" style="padding:5px;">
+                                                <label data-bind="text: Label"></label>
+                                                <input disabled class="form-control" data-bind="value: Value" />
+                                            </div>
+                                        </div>
+                                        <!-- /ko -->
+					                <!-- /ko -->
+                                    </div>
+                                    
+                                    <div class="row">
+                                    <!-- ko foreach: Settings() -->
+                                        <!-- ko if: ValueType() == 3 -->
+                                        <div class="col-lg-12">
+                                            <div class="form-group" style="padding:5px;">
+                                                <input type="checkbox" data-bind="checked: Value" />
+                                                <label data-bind="text: Label"></label>
+                                            </div>
+                                        </div>
+                                        <!-- /ko -->
+					                <!-- /ko -->
+                                    </div>
+					        	<!-- /ko -->
 						    </div>	
 						    
 							<div style="text-align: center;" data-bind="visible: $root.LoadingAdmins">
@@ -115,22 +152,17 @@
 					    	<div data-bind="visible: $root.LoadingNodes() == false, with: $root.NewNode">
 					        	<div class="form-group">
 								    <label>Node name:</label>
-								    <input class="form-control" data-bind="value: NodeName"/>
+								    <input class="form-control" data-bind="value: Name"/>
 							    </div>
                                 
                                 <div class="form-group">
-                                    <label>IP address</label>
-                                    <input class="form-control" data-bind="value: IPAddress"/>
-                                </div>
-                                
-                                <div class="form-group">
                                     <label>No. of processors</label>
-                                    <input type="number" class="form-control" data-bind="value: NumProcessors" />
+                                    <input type="number" class="form-control" data-bind="value: NumCores" />
                                 </div>
                                 
                                 <div class="form-group">
                                     <label>Other properties</label>
-                                    <input type="text" class="form-control" data-bind="value: Properties" />
+                                    <input type="text" class="form-control" data-bind="value: Other" />
                                 </div>							
 							</div>
 							
@@ -156,27 +188,27 @@
 					<div class="modal-content" data-bind="with: $root.SelectedNode">
 						<div class="modal-header" data-bind="visible: $root.LoadingQueue() == false">
 					    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-					     	<h4 class="modal-title" >Set up node: <span data-bind="text: NodeName"></span></h4>
+					     	<h4 class="modal-title" >Set up node: <span data-bind="text: Name"></span></h4>
 					  	</div>
 					    <div class="modal-body">
 					    
 					        Adding a new compute node requires some additional, manual steps to be taken, both on the head node of the cluster and on the node being added. Note that you will need root priviliges on both machines.
 					        <br><br>
 					        
-					        <label>On the compute node (i.e. <span data-bind="text: NodeName"></span>):</label>
+					        <label>On the compute node (i.e. <span data-bind="text: Name"></span>):</label>
 					        <ol>
 					            <li><a target="_blank" href="https://github.com/RUBi-ZA/JMS/wiki/Set-up-NFS">Mount the shared directory</a></li>
 					            <li>The host name of the node should be set to the name you gave when adding it to the JMS:
 <br>
 <pre style="word-break:normal">
-<code>sudo echo "<span data-bind="text: NodeName"></span>" > /etc/hostname</code>
+<code>sudo echo "<span data-bind="text: Name"></span>" > /etc/hostname</code>
 </pre>
                                 
 					            </li>
 					            
 					            <li>Install Torque
 					                <ol>
-					                    <li>Copy the Torque .tar.gz file from the <code>bin</code> directory of the JMS project to the compute node e.g. from <span data-bind="text: NodeName"></span>: <br>
+					                    <li>Copy the Torque .tar.gz file from the <code>bin</code> directory of the JMS project to the compute node e.g. from <span data-bind="text: Name"></span>: <br>
 <pre style="word-break:normal">
 <code>scp username@&lt;Head node IP address&gt;:/srv/JMS/bin/torque-5.0.0-1_JMS.tar.gz .</code>
 </pre>
@@ -216,9 +248,9 @@ sudo cp /NFS/JMS/scripts/epilogue /var/spool/torque/mom_priv</code>
 					            <li>
 					                Add the following line to <code>/etc/hosts</code>:<br>
 <pre style="word-break:normal">
-<code>&lt;Node IP address&gt; <span data-bind="text: NodeName"></span></code>
+<code>&lt;Node IP address&gt; <span data-bind="text: Name"></span></code>
 </pre>
-					                Where <code>&lt;Node IP address&gt;</code> is the IP address of the compute node (i.e. <span data-bind="text: NodeName"></span>) you are adding.		            
+					                Where <code>&lt;Node IP address&gt;</code> is the IP address of the compute node (i.e. <span data-bind="text: Name"></span>) you are adding.		            
 					            </li>
 					            <li>
 					                Restart <code>pbs_server</code> and <code>pbs_sched</code>:<br>
@@ -233,6 +265,25 @@ sudo service pbs_sched restart</code>
 					  	<div class="modal-footer" data-bind="visible: $root.LoadingQueue() == false">
 					       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 						</div>
+					</div>
+			   	</div>
+		 	</div>
+		 	
+		 	<div class="modal fade" id="queue-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+					    <div class="modal-body">
+							
+							<div style="text-align: center;" data-bind="visible: $root.installing_packages_error">
+				                <img src="{{ STATIC_URL }}img/error.png" style="height:100px;" /> <br/>
+				                <span data-bind="text: $root.package_message"></span>
+			                </div>
+							
+							<div style="text-align: center;" data-bind="visible: $root.installing_packages">
+				                <img src="{{ STATIC_URL }}img/big_red_loader.gif"> <br>
+				                <img src="{{ STATIC_URL }}img/text_loader.gif"> <br>
+			                </div>
+					   	</div>
 					</div>
 			   	</div>
 		 	</div>
@@ -263,17 +314,65 @@ sudo service pbs_sched restart</code>
                                 <li class="k-state-active">Server</li>
                                 <li>Queues</li>
                                 <li>Nodes</li>
+                                <li>Package Manager</li>
                             </ul>
                             <div style="overflow:hidden;padding:15px;padding-top:20px;" data-bind="if: $root.Settings() != null">
                                 <div data-bind="with: $root.Settings"> 
-                                    <div class="col-lg-12" style="padding:0">     
-                                        <a class="st-link-header">Server settings</a>
-                                        <hr>
-                                    </div>
                                     
                                     <div id="server_settings">
-                                        <div class="row" style="margin:0">
-                                            
+                                        <div class="row" style="margin:6px;">
+							                
+							                <div data-bind="foreach: $root.Settings()">
+							                    <div class="col-lg-12" style="padding:0">     
+                                                    <a class="st-link-header" data-bind="text: SectionHeader"></a>
+                                                    <hr style="margin-top:5px;margin-bottom:5px;">
+                                                </div>
+                                                
+                                                <div class="row">
+                                                <!-- ko foreach: Settings() -->
+                                                    <!-- ko if: ValueType() == 1 -->
+                                                    <div class="col-lg-5">
+                                                        <div class="form-group" style="padding:5px;">
+                                                            <label data-bind="text: Label"></label>
+                                                            <input type="text" class="form-control" data-bind="value: Value" />
+                                                        </div>
+                                                    </div>
+                                                    <!-- /ko -->
+                                                    
+                                                    <!-- ko if: ValueType() == 2 -->
+                                                    <div class="col-lg-5">
+                                                        <div class="form-group" style="padding:5px;">
+                                                            <label data-bind="text: Label"></label>
+                                                            <input type="number" class="form-control" data-bind="value: Value" />
+                                                        </div>
+                                                    </div>
+                                                    <!-- /ko -->
+                                                    
+                                                    <!-- ko if: ValueType() == 4 -->
+                                                    <div class="col-lg-5">
+                                                        <div class="form-group" style="padding:5px;">
+                                                            <label data-bind="text: Label"></label>
+                                                            <input disabled class="form-control" data-bind="value: Value" />
+                                                        </div>
+                                                    </div>
+                                                    <!-- /ko -->
+								                <!-- /ko -->
+                                                </div>
+                                                
+                                                <div class="row">
+                                                <!-- ko foreach: Settings() -->
+                                                    <!-- ko if: ValueType() == 3 -->
+                                                    <div class="col-lg-5">
+                                                        <div class="form-group" style="padding:5px;">
+                                                            <input type="checkbox" data-bind="checked: Value" />
+                                                            <label data-bind="text: Label"></label>
+                                                        </div>
+                                                    </div>
+                                                    <!-- /ko -->
+								                <!-- /ko -->
+                                                </div>
+                                            </div>
+                                        
                                             <div class="col-lg-12" style="text-align:right;padding:6px 0px;">
 								                <button class="btn btn-info" data-bind="click: $root.SaveServerSettings, disable: $root.LoadingServer"> 
 								                    <!-- ko if: $root.LoadingServer() == false -->
@@ -284,78 +383,18 @@ sudo service pbs_sched restart</code>
 								                    <!-- /ko -->
 								                </button>
 							                </div>
-							                
-                                            <div class="col-lg-6" style="padding:0">
-                                                <div class="form-group" style="padding:5px;">
-                                                    <label>Server name</label>
-                                                    <span class="form-control" style="padding:6px 0px;" data-bind="text: ServerName"></span>
-                                                </div>
-                                                
-                                                <div class="form-group" style="padding:5px;">
-                                                    <label>Keep completed time (s)</label>
-                                                    <input type="number" class="form-control" style="padding:6px 0px;" data-bind="value: KeepCompleted" />
-                                                </div>
-                                                
-                                                <div class="form-group" style="padding:5px;">
-                                                    <label>Job stat rate (ms)</label>
-                                                    <input type="number" class="form-control" style="padding:6px 0px;" data-bind="value: JobStatRate"/>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="col-lg-6" style="padding:0">
-                                                <div class="form-group" style="padding:5px;">
-                                                    <label>Node check rate (ms)</label>
-                                                    <input type="number" class="form-control" style="padding:6px 0px;" data-bind="value: NodeCheckRate"/>
-                                                </div>
-                                                
-                                                <div class="form-group" style="padding:5px;">
-                                                    <label>Scheduler iteration (ms)</label>
-                                                    <input type="number" class="form-control" style="padding:6px 0px;" data-bind="value: SchedularIteration"/>
-                                                </div>
-                                                
-                                                <div class="form-group" style="padding:5px;">
-                                                    <label>TCP timeout (ms)</label>
-                                                    <input type="number" class="form-control" style="padding:6px 0px;" data-bind="value: TCPTimeout"/>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row" style="margin:0">
-                                            <div class="col-lg-6" style="padding:0">                                            
-                                                <div class="form-group" style="padding:5px;">
-                                                    <label>View other users' jobs in queue?</label>
-                                                    <input type="checkbox" style="margin-left:15px;" data-bind="checked: QueryOtherJobs"/>
-                                                </div> 
-                                                                                    
-                                                <div class="form-group" style="padding:5px;">
-                                                    <label>Sync server with MOM jobs?</label>
-                                                    <input type="checkbox" style="margin-left:15px;" data-bind="checked: MOMJobSync"/>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="col-lg-6" style="padding:0">                                        
-                                                <div class="form-group" style="padding:5px;">
-                                                    <label>Moab array compatible?</label>
-                                                    <input type="checkbox" style="margin-left:15px;" data-bind="checked: MoabArrayCompatible"/>
-                                                </div>
-                                                                                 
-                                                <div class="form-group" style="padding:5px;">
-                                                    <label>Scheduling?</label>
-                                                    <input type="checkbox" style="margin-left:15px;" data-bind="checked: Scheduling"/>
-                                                </div>
-                                            </div>
                                         </div>
                                         
                                         <div class="row" style="margin:0">
                                             
                                             <div class="col-lg-12" style="padding:0">    
                                                 <div class="form-group" style="padding:5px;padding-bottom:0px;">
-                                                    <a class="st-link-header">Server administrators</a>  
+                                                    <a class="st-link-header">Administrators</a>  
                                                     <hr>
                                                 </div>   
                                                                                      
                                                 <div class="form-group" style="padding:5px;">
-                                                    <select class="form-control" multiple style="padding:6px 0px;" data-bind="options: $root.Settings().ServerAdministrators, optionsText: function(item) { return item.Username(); }, selectedOptions: $root.SelectedAdministrators">
+                                                    <select class="form-control" multiple style="padding:6px 0px;" data-bind="options: $root.Administrators, optionsText: function(item) { return item.AdministratorName(); }, selectedOptions: $root.SelectedAdministrators">
                                                     </select>
                                                     
                                                     <div class="col-lg-12" style="text-align:right;padding:6px 0px;">
@@ -385,7 +424,7 @@ sudo service pbs_sched restart</code>
                                         </div>   
                                                                              
                                         <div class="form-group" style="padding:5px;">
-                                            <select class="form-control" multiple style="padding:6px 0px;height:200px;" data-bind="options: $root.Settings().Queues, optionsText: function(item) { if(item.DefaultQueue()) { return item.QueueName() + ' (default)'; } else { return item.QueueName(); } }, selectedOptions: $root.SelectedQueues">
+                                            <select class="form-control" multiple style="padding:6px 0px;height:200px;" data-bind="options: $root.Queues, optionsText: function(item) { return item.QueueName(); }, selectedOptions: $root.SelectedQueues">
                                             </select>
                                             
                                             <div class="col-lg-12" style="text-align:right;padding:6px 0px;">
@@ -407,123 +446,56 @@ sudo service pbs_sched restart</code>
                                             <hr>
                                         </div> 
                                         
-                                        <div class="row" style="padding:5px; margin:0">
-                                            <div class="col-lg-6" style="padding:0"> 
-                                                
-                                                <div class="form-group" style="padding:5px;padding-bottom:0px;">
-                                                    <label>Enabled?</label>
-                                                    <input data-bind="checked: Enabled" type="checkbox" style="padding:6px 0px;margin-left:15px;"></input>
-                                                </div>
-                                                                                               
-                                                <div class="form-group" style="padding:5px;padding-bottom:0px;">
-								                    <label>Max jobs queuable at a time:</label>
-								                    <input class="form-control" data-bind="value: MaxQueable" type="number" style="padding:6px 0px;"></input>
-							                    </div>
-							
-					                        	<div class="form-group" style="padding:5px;padding-bottom:0px;">
-								                    <label>Max jobs running at a time:</label>
-								                    <input class="form-control" data-bind="value: MaxRun" type="number" style="padding:6px 0px;"></input>
-							                    </div>
-							                    							                    					                    
-							                    
+                                        <div class="row" style="padding:5px; margin:0" data-bind="foreach: SettingsSections">
+                                            <div class="col-lg-12" style="padding:0">     
+                                                <label><u data-bind="text: SectionHeader"></u></label>
+                                                <hr style="margin-top:5px;margin-bottom:5px;">
                                             </div>
                                             
-                                            <div class="col-lg-6" style="padding:0"> 
-                                                
-                                                <div class="form-group" style="padding:5px;padding-bottom:0px;">
-                                                    <label>Started?</label>
-                                                    <input data-bind="checked: Started" type="checkbox" style="padding:6px 0px;margin-left:15px;"></span>
+                                            <div class="row">
+                                            <!-- ko foreach: Settings() -->
+                                                <!-- ko if: ValueType() == 3 -->
+                                                <div class="col-lg-5">
+                                                    <div class="form-group" style="padding:5px;">
+                                                        <input type="checkbox" data-bind="checked: Value" />
+                                                        <label data-bind="text: Label"></label>
+                                                    </div>
                                                 </div>
-                                                                                               
-                                                <div class="form-group" style="padding:5px;padding-bottom:0px;">
-                                                    <label>Queue Type</label><br>
-                                                    <select data-bind="value: Type" class="form-control" style="padding:6px 0px;">
-                                                        <option value="Execution">Execution</option>
-                                                        <option value="Route">Route</option>
-                                                    </select>
+                                                <!-- /ko -->
+							                <!-- /ko -->
+                                            </div>
+                                            
+                                            <div class="row">
+                                            <!-- ko foreach: Settings() -->
+                                                <!-- ko if: ValueType() == 1 -->
+                                                <div class="col-lg-5">
+                                                    <div class="form-group" style="padding:5px;">
+                                                        <label data-bind="text: Label"></label>
+                                                        <input type="text" class="form-control" data-bind="value: Value" />
+                                                    </div>
                                                 </div>
+                                                <!-- /ko -->
                                                 
+                                                <!-- ko if: ValueType() == 2 -->
+                                                <div class="col-lg-5">
+                                                    <div class="form-group" style="padding:5px;">
+                                                        <label data-bind="text: Label"></label>
+                                                        <input type="number" class="form-control" data-bind="value: Value" />
+                                                    </div>
+                                                </div>
+                                                <!-- /ko -->
+                                                
+                                                <!-- ko if: ValueType() == 4 -->
+                                                <div class="col-lg-5">
+                                                    <div class="form-group" style="padding:5px;">
+                                                        <label data-bind="text: Label"></label>
+                                                        <input disabled class="form-control" data-bind="value: Value" />
+                                                    </div>
+                                                </div>
+                                                <!-- /ko -->
+							                <!-- /ko -->
                                             </div>
                                         </div>
-                                            
-                                        <div class="row" style="padding:5px; margin:0">
-                                            <div class="col-lg-12" style="padding:0">
-                                                <label><u>User settings</u></label>
-                                            </div>
-                                            <div class="col-lg-6" style="padding:0"> 
-							                    <div style="padding-left:10px">
-					                            	<div class="form-group" style="padding:5px;padding-bottom:0px;">
-								                        <label>Max jobs queuable per user:</label>
-								                        <input class="form-control" data-bind="value: MaxUserQueable" type="number" style="padding:6px 0px;"></input>
-							                        </div>
-							                    </div>
-							                </div>
-							                
-							                <div class="col-lg-6" style="padding:0"> 
-							                    <div style="padding-left:10px">							                        
-					                            	<div class="form-group" style="padding:5px;padding-bottom:0px;">
-								                        <label>Max jobs running per user:</label>
-								                        <input class="form-control" data-bind="value: MaxUserRun" type="number" style="padding:6px 0px;"></input>
-							                        </div>
-							                    </div>
-							                </div>
-							                
-							            </div>
-							            
-							            <div class="row" style="padding:5px; margin:0">
-							                <div class="col-lg-12" style="padding:0">
-                                                <label><u>Resources</u></label>
-                                            </div>
-                                            
-							                <div class="col-lg-6" style="padding:0">
-							                    <div style="padding-left:10px">							        		
-							                        				        
-					                            	<div class="form-group" style="padding:5px;padding-bottom:0px;">
-								                        <label>Default nodes:</label>
-								                        <input type="number" class="form-control" data-bind="value: DefaultNodes" style="padding:6px 0px;"/>
-							                        </div>
-							                        
-					                            	<div class="form-group" style="padding:5px;padding-bottom:0px;">
-								                        <label>Default CPUs:</label>
-								                        <input type="number" class="form-control" data-bind="value: DefaultCPUs" style="padding:6px 0px;"/>
-							                        </div>
-							                        
-					                            	<div class="form-group" style="padding:5px;padding-bottom:0px;">
-								                        <label>Default memory:</label>
-								                        <input class="form-control" data-bind="value: DefaultMemory" style="padding:6px 0px;"/>
-							                        </div>
-							                        
-					                            	<div class="form-group" style="padding:5px;padding-bottom:0px;">
-								                        <label>Default walltime:</label>
-								                        <input class="form-control" data-bind="value: DefaultWalltime" style="padding:6px 0px;"/>
-							                        </div>
-							                    </div>
-                                            </div>
-                                            
-                                            <div class="col-lg-6" style="padding:0">
-							                    <div style="padding-left:10px">							        
-					                            	<div class="form-group" style="padding:5px;padding-bottom:0px;">
-								                        <label>Max nodes:</label>
-								                        <input type="number" class="form-control" data-bind="value: MaxNodes" style="padding:6px 0px;"/>
-							                        </div>
-							                        
-					                            	<div class="form-group" style="padding:5px;padding-bottom:0px;">
-								                        <label>Max CPUs:</label>
-								                        <input type="number" class="form-control" data-bind="value: MaxCPUs" style="padding:6px 0px;"/>
-							                        </div>
-							                        
-					                            	<div class="form-group" style="padding:5px;padding-bottom:0px;">
-								                        <label>Max memory:</label>
-								                        <input class="form-control" data-bind="value: MaxMemory" style="padding:6px 0px;"/>
-							                        </div>
-							                        
-					                            	<div class="form-group" style="padding:5px;padding-bottom:0px;">
-								                        <label>Max walltime:</label>
-								                        <input class="form-control" data-bind="value: MaxWalltime" style="padding:6px 0px;"/>
-							                        </div>
-							                    </div>
-                                            </div>
-                                        </div>                                        
                                                                                 
                                         <div class="row" style="padding:5px; margin:0">                                            
                                             <div class="col-lg-12" style="padding:0;text-align:right">
@@ -549,7 +521,7 @@ sudo service pbs_sched restart</code>
                                     </div>
                                     
                                     <div class="form-group" style="padding:7px;padding-right:15px;">
-                                        <select class="form-control" multiple style="padding:6px 0px;height:200px;margin-top:10px;" data-bind="options: $root.Nodes, optionsText: function(item) { return item.NodeName(); }, selectedOptions: $root.SelectedNodes">
+                                        <select class="form-control" multiple style="padding:6px 0px;height:200px;margin-top:10px;" data-bind="options: $root.Nodes, optionsText: function(item) { return item.Name(); }, selectedOptions: $root.SelectedNodes">
                                         </select>
                                         
                                         <div class="col-lg-12" style="text-align:right;padding:6px 0px;">
@@ -565,23 +537,31 @@ sudo service pbs_sched restart</code>
                                 
                                 <div class="col-lg-9" style="padding:0" data-bind="with: $root.SelectedNode"> 
                                     <div class="col-lg-12" style="padding:0">     
-                                        <a class="st-link-header">Node details: <span data-bind="text: NodeName"></span></a>
+                                        <a class="st-link-header">Node details: <span data-bind="text: Name"></span></a>
                                         <hr>
                                     </div>
                                     
-                                    <div class="form-group" style="padding:5px;">
-                                        <label>State</label>
-                                        <span type="text" class="form-control" data-bind="text: State" style="padding:6px 0px;"></span>                                        
-                                    </div>
-                                    
-                                    <div class="form-group" style="padding:5px;">
-                                        <label>No. of processors</label>
-                                        <input type="number" class="form-control" style="padding:6px 0px;" data-bind="value: NumProcessors" />
-                                    </div>
-                                    
-                                    <div class="form-group" style="padding:5px;">
-                                        <label>Other properties</label>
-                                        <input type="text" class="form-control" style="padding:6px 0px;" data-bind="value: Properties" />
+                                    <div class="row">
+                                        <div class="col-lg-11">
+                                            <div class="form-group">
+                                                <label>State</label>
+                                                <span type="text" class="form-control" data-bind="text: State" ></span>                                        
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-lg-11">    
+                                            <div class="form-group">
+                                                <label>No. of processors</label>
+                                                <input type="number" class="form-control" data-bind="value: NumCores" />
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-lg-11">
+                                            <div class="form-group">
+                                                <label>Other properties</label>
+                                                <input type="text" class="form-control" data-bind="value: Other" />
+                                            </div>
+                                        </div>
                                     </div>
                                     
                                     <div class="form-group" style="padding:5px;">
@@ -599,6 +579,36 @@ sudo service pbs_sched restart</code>
 							                    <!-- /ko -->
 							                </button>
 						                </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="overflow:hidden;">
+                                <div class="col-lg-12" style="padding:0">     
+                                    <a class="st-link-header">Package Management</a>
+                                    <hr>
+                                </div>
+                                <div class="col-lg-3" style="padding:0"> 
+                                    <div class="col-lg-12" style="padding:0">     
+                                        <label>Select Nodes</label>
+                                    </div>
+                                    
+                                    <div class="form-group" style="padding:7px;padding-right:15px;">
+                                        <select class="form-control" multiple style="padding:6px 0px;height:200px;margin-top:10px;" data-bind="options: $root.Nodes, optionsText: function(item) { return item.Name(); }, selectedOptions: $root.SelectedNodes">
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-9" style="padding:0">     
+                                    <div class="col-lg-12" style="padding:0">     
+                                        <label>Enter packages</label>
+                                        (One per line)
+                                        
+                                        <textarea class="form-control" style="padding:6px 0px;height:200px;"></textarea>
+                                    </div>
+                                    <div class="col-lg-12" style="text-align:right;padding:6px;">     
+                                        <button class="btn btn-info" data-bind="click: $root.EditNode, disable: $root.LoadingNodes"> 
+						                    <i class="fa fa-save"></i> Install
+						                </button>
                                     </div>
                                 </div>
                             </div>
