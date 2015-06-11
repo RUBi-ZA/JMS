@@ -17,7 +17,7 @@ DATABASES = {
         # The following settings are not used with sqlite3:
         'USER': 'jms',
         'PASSWORD': 'jms82',
-        'HOST': '146.231.130.9',      
+        'HOST': 'node001',      
         'PORT': '',                      # Set to empty string for default.
     }
 }
