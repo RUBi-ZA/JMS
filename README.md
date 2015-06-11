@@ -84,13 +84,13 @@ python manage.py setup
 
 The queue daemon is responsible for updating the JMS job history with details from the resource manager. If you don't start the queue_daemon, your job history will not be updated after the a job has been submitted i.e. no changes in state will be tracked during the job. To start the queue daemon, run the following command:
 ```
-python manage.py queue_daemon start
+sudo python manage.py queue_daemon start
 ```
 
 To restart or stop the queue daemon, run the following commands respectively:
 ```
-python manage.py queue_daemon restart
-python manage.py queue_daemon stop
+sudo python manage.py queue_daemon restart
+sudo python manage.py queue_daemon stop
 ```
 
 ### 2. Start the impersonator server
