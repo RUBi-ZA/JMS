@@ -139,8 +139,21 @@ class WorkflowPermissionSerializer(serializers.ModelSerializer):
         fields = ('WorkflowID', 'WorkflowName', 'PublicInd', 'User', 'UserWorkflowPermissions')
 
 
+class StageParameterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StageParameter
+
+class StageDetailSerializer(serializers.ModelSerializer):
+    ToolVersion = ToolVersionDetailSerializer()
+    StageParameters = StageParameterSerializer(many=True)
+    
+    class Meta:
+        model = Stage
+
+
 class WorkflowVersionDetailSerializer(serializers.ModelSerializer):
     Workflow = WorkflowListSerializer()
+    WorkflowVersionStages = StageDetailSerializer(many=True)
     
     class Meta:
         model = WorkflowVersion
@@ -230,10 +243,6 @@ class JobStageStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobStage
         fields = ('Status', 'ClusterJobID')
-
-
-
-
 
 
 class JobToolSerializer(serializers.ModelSerializer):

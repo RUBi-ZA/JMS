@@ -1,4 +1,5 @@
 from django.core.exceptions import PermissionDenied
+from django.shortcuts import get_object_or_404
 from jobs.models import WorkflowVersion
 
 from copy import deepcopy
@@ -33,4 +34,7 @@ def GetWorkflowVersions(Workflow):
     
 
 def GetWorkflowVersion(Workflow, version_num):
-    return Workflow.WorkflowVersions.get(WorkflowVersionNum=version_num)
+    if version_num == "latest":
+        return GetWorkflowVersions(Workflow)[0]
+    else:
+        return get_object_or_404(WorkflowVersion, Workflow=Workflow, WorkflowVersionNum=version_num)

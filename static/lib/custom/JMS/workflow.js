@@ -55,7 +55,6 @@ var User = function(id, name) {
     }
 }
 
-
 var Category = function(id, name, workflows) {
     this.CategoryID = ko.observable(id);
     this.CategoryName = ko.observable(name);
@@ -85,14 +84,21 @@ var UserWorkflowPermission = function(user, run, edit, publish, exp, admin){
     this.Admin = ko.observable(admin);
 }
 
-var WorkflowVersion = function(id, workflow, version, short_desc, long_desc, date) {
+var WorkflowVersion = function(id, workflow, version, short_desc, long_desc, date, stages) {
     this.WorkflowVersionID = ko.observable(id);
     this.Workflow = ko.observable(workflow);
     this.WorkflowVersionNum = ko.observable(version);
     this.ShortDescription = ko.observable(short_desc);
     this.LongDescription = ko.observable(long_desc);
     this.DatePublished = ko.observable(date);
+    
+    this.Stages = ko.observableArray(stages);
 }    
+
+var Stage = function(id, tool) {
+    this.StageID = ko.observable(id);
+    this.ToolVersion = ko.observable(tool);
+}
 
 
 function WorkflowViewModel() {
@@ -440,16 +446,11 @@ function WorkflowViewModel() {
 	    
 	}
 	
-	self.GetLatestVersion = function(workflow_id) { 
-	    
-	}
-	
-	self.WorkflowVersion = ko.observable();
-	self.GetDevVersion = function(workflow_id) { 
+	self.GetVersion = function(workflow_id, version) { 
 	    $("#loading-dialog").modal({ 'backdrop': 'static'});
 	    
 	    $.ajax({
-	        url: "/api/jms/workflows/" + workflow_id + "/versions/dev",
+	        url: "/api/jms/workflows/" + workflow_id + "/versions/" + version,
 	        type: "GET",
 	        success: function(v){
 	            
@@ -464,11 +465,34 @@ function WorkflowViewModel() {
 	                    )
 	                );
 	            });
-	                
+	           
+	            
+	            
 	            var version = new WorkflowVersion(v.WorkflowVersionID, workflow, 
 	                v.WorkflowVersionNum, v.ShortDescription, v.LongDescription, 
 	                v.DatePublished
 	            );
+	            
+	            $.each(v.WorkflowVersionStages, function(i, stage) {
+	                var tool = new Tool(stage.ToolVersion.Tool.ToolID, 
+	                    stage.ToolVersion.Tool.ToolName, 
+	                    stage.ToolVersion.Tool.Category
+	                );
+	                    
+	                var toolversion = new ToolVersion(
+	                    stage.ToolVersion.ToolVersionID, tool, 
+    	                stage.ToolVersion.ToolVersionNum, 
+    	                stage.ToolVersion.ShortDescription, 
+    	                stage.ToolVersion.LongDescription, 
+    	                stage.ToolVersion.DatePublished, 
+    	                stage.ToolVersion.Command, 
+    	                self.LoadParameters(stage.ToolVersion.ToolParameters, stage.StageParameters), 
+    	                [], []
+    	            );
+    	            
+    	            var s = new Stage(stage.StageID, toolversion);
+    	            version.Stages.push(s);
+	            });
 	            
 	            self.WorkflowVersion(version);
 	        },
@@ -479,6 +503,69 @@ function WorkflowViewModel() {
 	            $("#loading-dialog").modal('hide');
 	        }
 	    });
+	}
+	
+	
+	self.LoadParameters = function(parameters, stage_params) {
+	    params = []
+	    
+	    //load parameters
+	    $.each(parameters, function(i, param){
+	        
+	        //set flag to true if the workflow will automatically populate a field
+	        var flag = false;
+	        $.each(stage_params, function(j, stage_param) {
+	            if(param.ParameterID == stage_param.Parameter){
+	                flag = true;
+	                return false;
+	            }
+	        })
+	        
+    	    if(param.InputBy == "user" && !flag) {
+        	    if(param.ParentParameter == null) {
+        	        //this is a parent parameter
+        	        
+        		    //add parameter
+        		    var parameter = new Parameter(param.ParameterID, param.ParameterName, param.Context, param.InputBy, param.ParameterType, 
+        			    param.Multiple, param.Value, [], param.Delimiter, null, param.Optional);
+        	
+            	    //add parameter options
+            	    $.each(param.ParameterOptions, function(l, option) {
+            		    parameter.ParameterOptions.push(
+            		        new ParameterOption(
+                		        option.ParameterOptionID, option.ParameterOptionText, 
+                		        option.ParameterOptionValue
+                		    )
+                		);
+            	    });
+            	    
+            	    params.push(parameter);
+        	    } else {
+        	        //this is a child parameter
+        	        					
+        		    var p = new Parameter(param.ParameterID, param.ParameterName, param.Context, param.InputBy, param.ParameterType, 
+        			    param.Multiple, param.Value, [], param.Delimiter, param.ParentParameter, param.Optional)
+        			
+        			//if the parameter is a related object, find the related parameter
+        		    if(param.ParameterType == 8) {
+            			var related = self.FindParameter(params, param.Value);
+            			p.related_parameter(related);
+        		    }
+        		    
+        		    //find parent parameter and add this parameter as a child
+        			var parent = self.FindParameter(params, param.ParentParameter);
+        		    parent.parameters.push(p);
+        	    }
+    	    }
+	    });
+	    
+	    return params;
+	}
+	
+	
+	self.WorkflowVersion = ko.observable();
+	self.GetDevVersion = function(workflow_id) { 
+	    self.GetVersion(workflow_id, "dev");
 	}
 	
 	
@@ -573,8 +660,64 @@ function WorkflowViewModel() {
 	    }
 	});
 	
-	self.GetWorkflowVersions = function(workflow_id) { 
+	self.Stages = ko.observableArray();
+	self.loading_stages = ko.observable(false);
+	
+	self.workflow_job_name = ko.observable();
+	self.workflow_job_desc = ko.observable();
+	self.submitting = ko.observable(false);
+	self.RunWorkflow = function() {
+	    var form = $("form#workflow-form");
 	    
+	    try 
+        {
+            $("#submit-dialog").modal({ backdrop: "static"});
+            
+    		self.submitting(true);
+    		
+    		var formData = new FormData(form[0]);
+    		
+    		var Parameters = []
+    		$.each(self.ToolVersion().ToolParameters(), function(i, p) {
+    		    if(p.InputBy() == "user") {
+        		    var param = new Object();
+        		    param.ParameterID = p.ParameterID();
+        		    param.Value = p.Value();
+        		    
+        		    Parameters.push(param);
+    		    }
+    		});
+    		
+    		formData.append('JobName', tool.tool_job_name());
+    		formData.append('Description', tool.tool_job_desc());
+		    formData.append('Parameters', JSON.stringify(Parameters));
+    		
+    		$.ajax({
+    		    url: "/api/jms/jobs/tool/versions/" + tool.ToolVersion().ToolVersionID(),
+    		    type: "POST",
+    		    data: formData,
+    		    success: function(id) {
+    		        //Set the job ID so that the "Go to Job" button works
+    		        self.job_id(id);
+    		        
+    		        tool.submit_success(true);
+    		    }, 
+    		    error: function() {
+    		        tool.submit_success(false);
+    		    },
+    		    complete: function() {
+    		        tool.submitting(false);
+    		    },
+                cache: false,
+                contentType: false,
+                processData: false
+    		});
+    		
+        } catch(err) {
+            tool.submit_success(false);
+    		tool.submitting(false);
+            console.log(err);   
+        }
 	}
 }
 
@@ -603,7 +746,7 @@ $(document).ready(function () {
 		        $("#workflow-runner").fadeIn();	
 		    }, 300);
 		    
-		    workflow.GetLatestVersion(this.params.workflow);
+		    workflow.GetVersion(this.params.workflow, "latest");
 		});
 		
 		this.get('#edit/:workflow', function() {

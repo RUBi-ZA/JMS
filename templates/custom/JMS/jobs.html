@@ -12,6 +12,9 @@
 	<!-- JQUERY-UI STYLE-->
 	<link href="{{ STATIC_URL }}lib/jquery-ui-1.11.2.jms/jquery-ui.min.css" rel="stylesheet" />
 	
+    <!-- Knockout Context Menu -->
+    <link href="{{ STATIC_URL }}lib/knockout.contextmenu/css/knockout.contextmenu.css" rel="stylesheet" type="text/css" />
+
 	<!-- CUSTOM STYLES-->
 	<link href="{{ STATIC_URL }}lib/bootstrap/binary/css/custom.css" rel="stylesheet" />
 	<link href="{{ STATIC_URL }}lib/bootstrap/binary/css/stavatech.css" rel="stylesheet" />
@@ -45,10 +48,10 @@
 			
 				<hr />			
 				
-				<div class="col-lg-2" style="border-right: 1px solid lightgray;" >
-					<div data-bind="foreach: Jobs">
+				<div class="col-lg-2">
+					<div id="job_list" data-bind="foreach: Jobs">
 						<div data-bind="if: $root.Job() != null && JobID() == $root.Job().JobID()">
-							<a class="st-scroll-item st-scroll-item-active" data-bind="attr: { href: '/jobs/#' + JobID(), id: 'job_list_' + JobID() }">						
+							<a class="st-scroll-item st-scroll-item-active" data-bind="attr: { href: '/jobs/#' + JobID(), id: 'job_list_' + JobID() }, contextMenu: $root.job_menu">						
 								<span data-bind="if: JobName().length > 0">
 								    <strong data-bind="text: JobName"></strong>
 								</span>
@@ -78,7 +81,7 @@
 							</a>
 						</div>
 						<div data-bind="if: $root.Job() == null || JobID() != $root.Job().JobID()">
-							<a class="st-scroll-item" data-bind="attr: { href: '/jobs/#' + JobID(), id: 'job_list_' + JobID() }">						
+							<a class="st-scroll-item" data-bind="attr: { href: '/jobs/#' + JobID(), id: 'job_list_' + JobID() }, contextMenu: $root.job_menu">						
 								<span data-bind="if: JobName().length > 0">
 								    <strong data-bind="text: JobName"></strong>
 								</span>
@@ -111,12 +114,27 @@
 					</div>
 				</div>
 				
-				<div class="col-lg-10" data-bind="with: $root.Job">
+				<div class="col-lg-10" data-bind="with: $root.Job" style="border-left: 1px solid lightgray">
 				    <!-- ko if: JobTypeID() != 3 -->
 				    
 				        <h3 data-bind="text: JobName"></h3>
 				        <h4 style="margin-left:2px;" data-bind="text: ToolVersion"></h4>
-				        <hr/>
+				        
+				        <div class="col-lg-12" style="text-align:right;padding:6px;">  
+                            <button class="btn btn-info" title="Repeat job"> 
+			                    <i class="fa fa-play"></i>
+			                </button>  
+                            <button class="btn btn-success" title="Share job"> 
+			                    <i class="fa fa-share"></i>
+			                </button>  
+                            <button class="btn btn-warning" title="Stop job"> 
+			                    <i class="fa fa-stop"></i>
+			                </button>  
+                            <button class="btn btn-danger" title="Delete job"> 
+			                    <i class="fa fa-trash-o"></i>
+			                </button>
+				            <hr/>
+                        </div>
 				        
 				        <div class="col-lg-6">
 				            <div class="form-group">
@@ -171,23 +189,101 @@
 				                <span data-bind="text: JobStages()[0].OutputLog()"></span>
 				            </div>
 				        </div>
+                        <div class="col-lg-12" style="text-align:right;padding:6px;">     
+                            <!-- ko if: JobStages()[0].Status() == 4 -->
+                            <button class="btn btn-info" title="Download working directory"> 
+			                    <i class="fa fa-download"></i> Download
+			                </button>
+			                <!-- /ko -->
+                            <hr/>
+                        </div>
 				        
 				        <!-- ko if: ToolVersion() != null -->
 				        <div class="col-lg-12" data-bind="with: JobStages()[0]">
-				            <h4>Parameters</h4>
-				            
+				            <a class="st-link-header" data-bind="click: function() { $root.ToggleVisible('section_1') }">Parameters</a>
+				            <hr>
+				            <div id="section_1" style="display:none;">
 				            <!-- ko foreach: JobStageParameters -->
 				            
-				            <div class="col-lg-6">
-    				            <div class="form-group">
-    				                <label data-bind="text: ParameterName"></label><br>
-				                    <span data-bind="text: Value"></span>
-    				            </div>
+				            <div class="form-group">
+				                <label data-bind="text: ParameterName"></label><br>
+			                    <span data-bind="text: Value"></span>
 				            </div>
 				            
 				            <!-- /ko -->
+				            </div>
 				        </div>
 				        <!-- /ko -->
+				        
+				        <!-- ko if: ToolVersion() != null -->
+				        <div class="col-lg-12" data-bind="with: JobStages()[0]">
+				            <a class="st-link-header" data-bind="click: function() { $root.ToggleVisible('section_2') }">Output Files</a>
+				            <hr>
+				            <div id="section_2" style="display:none;">
+				                
+				            </div>
+				            
+				        </div>
+				        <!-- /ko -->
+				        
+				        <div class="col-lg-12" data-bind="with: JobStages()[0]">
+				            <a class="st-link-header" data-bind="click: function() { $root.ToggleVisible('section_4') }">Output Streams</a>
+				            <hr>
+				            <div id="section_4" style="display:none;">
+				                <div class="col-lg-6">
+				                    <label>Standard Output</label>
+				                    <div class="col-lg-12" style="text-align:right;padding:6px;">  
+                                        <button class="btn btn-success" title="Refresh output"> 
+            			                    <i class="fa fa-refresh"></i>
+            			                </button>  
+                                        <button class="btn btn-info" title="Download output"> 
+            			                    <i class="fa fa-download"></i>
+            			                </button>  
+                                    </div>
+				                    <div class="col-lg-12">
+				                        <textarea id="output" style="width:100%;height:400px;"></textarea>
+				                    </div>
+				                </div>
+				                <div class="col-lg-6">
+				                    <label>Standard Error</label>
+				                    <div class="col-lg-12" style="text-align:right;padding:6px;">  
+                                        <button class="btn btn-success" title="Refresh error"> 
+            			                    <i class="fa fa-refresh"></i>
+            			                </button>  
+                                        <button class="btn btn-info" title="Download error"> 
+            			                    <i class="fa fa-download"></i>
+            			                </button>  
+                                    </div>
+				                    <div class="col-lg-12">
+				                        <textarea id="error" style="width:100%;height:400px;"></textarea>
+				                    </div>
+				                </div>
+				            </div>
+				        </div>
+				        
+				        <div class="col-lg-12" data-bind="with: JobStages()[0]">
+				            <a class="st-link-header" data-bind="click: function() { $root.ToggleVisible('section_5') }">File Manager</a>
+				            <hr>
+				            <div id="section_5" style="display:none;">
+				                
+				            </div>
+				        </div>
+				        
+				        <div class="col-lg-12" data-bind="with: JobStages()[0]">
+				            <a class="st-link-header" data-bind="click: function() { $root.ToggleVisible('section_3') }">Advanced Job Details</a>
+				            <hr>
+				            <div id="section_3" style="display:none;">
+				            <!-- ko foreach: DataSections -->
+				                <h4 data-bind="text: SectionHeader"></h4>
+				                <div class="col-lg-12" data-bind="foreach: DataFields" style="padding-bottom: 20px;">
+				                    <div class="col-lg-6">
+				                        <label data-bind="text: Label"></label>
+				                        <span class="form-control" data-bind="text: Value" style="word-wrap:break-word"></span>
+				                    </div>
+				                </div>
+				            <!-- /ko -->
+				            </div>
+				        </div>
 				        
 				    <!-- /ko -->
 				</div>

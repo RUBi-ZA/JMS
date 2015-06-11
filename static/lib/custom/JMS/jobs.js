@@ -1,3 +1,16 @@
+function timeConverter(UNIX_timestamp){
+    var a = new Date(UNIX_timestamp*1000);
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var year = a.getFullYear();
+    var month = months[a.getMonth()];
+    var date = a.getDate();
+    var hour = a.getHours();
+    var min = a.getMinutes();
+    var sec = a.getSeconds();
+    var time = date + ' ' + month + ' ' + year + ' - ' + hour + ':' + min + ':' + sec ;
+    return time;
+}
+
 var Job = function(job_id, job_name, description, workflow, tool, type, time, stages) {
 	this.JobID = ko.observable(job_id);
 	this.JobName = ko.observable(job_name);
@@ -22,6 +35,7 @@ var JobStage = function(id, stage, name, status, requires_edit, exit, cluster_id
     this.ClusterJobID = ko.observable(cluster_id);
     this.JobData = ko.observable(data);
     this.JobStageParameters = ko.observableArray();
+    this.DataSections = ko.observableArray();
     
     this.ErrorLog = ko.observable(error);
     this.OutputLog = ko.observable(out);
@@ -29,14 +43,16 @@ var JobStage = function(id, stage, name, status, requires_edit, exit, cluster_id
 }
 
 
-var JobStageDataSection = function(id, section) {
-    this.DataSectionID = ko.observable(id);
-    this.DataSectionName = ko.observable(section);
+var JobStageDataSection = function(id, section, fields) {
+    this.id = ko.observable(id);
+    this.SectionHeader = ko.observable(section);
+    this.DataFields = ko.observableArray(fields);
+    
+    this.Visible = ko.observable(false);
 }
     
 
-var JobStageDataField = function(id, key, value, label, type) {  
-    this.DataFieldID = ko.observable(id);
+var JobStageDataField = function(key, value, label, type) {  
     this.Key = ko.observable(key);
     this.Value = ko.observable(value);
     this.Label = ko.observable(label);
@@ -64,6 +80,26 @@ function JobsViewModel() {
     
     self.Jobs = ko.observableArray();
     self.Job = ko.observable();
+    
+    self.job_menu = ko.observableArray([{
+            text: "<i class='fa fa-share'></i> Share",
+            action: function(data) { self.Share(data); }
+        }, {
+            text: "<i class='fa fa-download'></i> Download",
+            action: function(data) { self.Download(data); }
+        }, { 
+            text: "<i class='fa fa-play'></i> Repeat", 
+            action: function(data) { self.ShowRepeatJob(data); }
+        }, {
+            separator: true
+        }, {
+            text: "<i class='fa fa-copy'></i> Stop",
+            action: function(data) { self.StopJob(data); }
+        }, {
+            text: "<i class='fa fa-trash-o'></i> Delete",
+            action: function(data) { self.DeleteJob(data); }
+        }  
+    ]);
     
     self.LoadHistory = function() {
 		$.ajax({
@@ -165,12 +201,33 @@ function JobsViewModel() {
 	                    jobstage.JobStageParameters.push(jsparam);
 	                })
 	                
+	                var details = JSON.parse(js.JobData);
+	                $.each(details, function(j, section){
+	                    var s = new JobStageDataSection(j, section.SectionHeader, []);
+	                    
+	                    $.each(section.DataFields, function(k, field){
+	                        if(section.SectionHeader == "Time"){
+	                            var f = new JobStageDataField(field.Key, timeConverter(field.DefaultValue), field.Label, field.ValueType);
+	                        } else {
+	                            var f = new JobStageDataField(field.Key, field.DefaultValue, field.Label, field.ValueType);
+	                        }
+	                        
+	                        s.DataFields.push(f);
+	                    });
+	                    
+	                    jobstage.DataSections.push(s);
+	                })
+	                
 	                job.JobStages.push(jobstage);
 	            });
 	            
 	            self.Job(job);
 	        }
 	    })
+	}
+	
+	self.ToggleVisible = function(id) {
+	    $("#" + id).slideToggle();
 	}
 }
 

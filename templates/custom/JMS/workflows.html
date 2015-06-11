@@ -701,10 +701,12 @@
 					</div>
     			</div>
     			
-    			<div id="workflow-runner" style="display:none">
-    			    <div class="row">
+    			<div id="workflow-runner" style="display:none; overflow:hidden;" data-bind="with: $root.WorkflowVersion">
+					
+					<div class="row">
 						<div class="col-md-12">
-							<h2><i class="fa fa-sitemap"></i> Run Workflow</h2>
+							<h2><i class="fa fa-wrench"></i> <span data-bind="text: Workflow().WorkflowName"></span> (<span data-bind="text: WorkflowVersionNum"></span>)</h2>
+							
 						</div>
 					</div>
 					<!-- /. ROW  -->
@@ -713,10 +715,158 @@
 				
 					<div class="row">
 						<div class="col-lg-12" style="text-align:right;padding:10px;padding-top:0;">
-							<a href="#" class="btn btn-warning" data-bind="attr: { href: '/workflows/#' }"><i class="fa fa-arrow-left"></i> Back</a>
+							<a href="#" class="btn btn-warning" data-bind="click: $root.ShowToolList"><i class="fa fa-arrow-left"></i> Back</a>
 						</div>
 					</div>
 					<!-- /. ROW  -->
+				
+					<div class="col-lg-12">
+						<div class="col-lg-3" style="padding:10px;padding-top:0;float:right;">
+						    <label>Select version:</label>
+							<select class="form-control" data-bind="value: $root.selected_version, options: Workflow().WorkflowVersions,
+						        optionsText: function(item) { return item.WorkflowVersionNum() }, 
+						        optionsValue: function(item) { return item.WorkflowVersionNum() }">
+						    </select>
+						</div>
+						<div class="col-lg-12" style="padding:10px;padding-top:0;">
+						    <label>Workflow Description:</label><br/>
+							<span data-bind="text: ShortDescription">
+						    </span>
+    				        <hr>
+						</div>
+					</div>
+					<!-- /. ROW  -->
+                    <hr/>
+                    
+                    <form id="workflow-form">
+    					<div class="col-lg-12"> 
+    					    <div class="col-lg-12" style="padding:10px;padding-top:0;">  
+        					    <div class="form-group">
+        						    <label>Job Name</label>
+        						    <input class="form-control" data-bind="value: $root.workflow_job_name"/>
+        					    </div>
+        					    <div class="form-group">
+        						    <label>Job Description</label>
+        						    <textarea class="form-control" data-bind="value: $root.workflow_job_desc"></textarea>
+    				    
+    				                <hr>
+        					    </div>
+        					</div>
+    				    </div>   
+    				    
+    				    <!-- ko foreach: Stages -->
+    					<div class="col-lg-12" data-bind="with: ToolVersion">
+    					    <!-- ko if: ToolParameters().length > 0 -->
+    					        <h4 data-bind="text: Tool().ToolName"></h4>
+    					    <!-- /ko -->
+        					<div class="col-lg-12" data-bind="foreach: ToolParameters">
+        					    <div class="col-lg-12" style="padding:10px;padding-top:0;">
+        						    
+        						    
+        						    <div class="form-group" data-bind="if: InputBy() == 'user'">
+        								<label>
+        								    <span data-bind="text: ParameterName"></span>
+        								</label>
+        								<!-- ko if: OptionalInd -->
+        								    <span style="font-size:8pt">(Optional)</span>
+        								<!-- /ko -->
+        								
+        								<div data-bind="if: Type() == 1">
+        									<div data-bind="if: Multiple() == false">												
+        										<input class="form-control" data-bind="value: Value"/>
+        									</div>
+        									<div data-bind="if: Multiple() == true">
+        										<table class="table table-responsive">
+        											<tbody data-bind="foreach: value_items">
+        												<tr>
+        													<td>
+        														<input class="form-control" data-bind="value: value"></input>
+        													</td>
+        													<td style="text-align:right;">
+        														<a href="#" class="btn btn-danger btn-sm" data-bind="click: function() { $root.RemoveValue($parent, $data); }"><i class="fa fa-trash-o"></i></a>
+        													</td>
+        												</tr>
+        											</tbody>
+        											<tfoot>
+        												<tr>
+        													<td colspan='2' style="text-align:right">
+        														<a href="#" class="btn btn-success btn-sm" data-bind="click: $root.AddValue"><i class="fa fa-plus"></i></a>
+        													</td>
+        												</tr>
+        											</tfoot>
+        										</table>
+        									</div>
+        								</div>
+        								<div data-bind="if: Type() == 2">
+        									<div data-bind="if: Multiple() == false">												
+        										<input class="form-control" type="number" data-bind="value: Value"></input>
+        									</div>
+        									<div data-bind="if: Multiple() == true">
+        										<table class="table table-responsive">
+        											<tbody data-bind="foreach: value_items">
+        												<tr>
+        													<td>
+        														<input class="form-control" type="number" data-bind="value: value"></input>
+        													</td>
+        													<td style="text-align:right;">
+        														<a href="#" class="btn btn-danger btn-sm" data-bind="click: function() { $root.RemoveValue($parent, $data); }"><i class="fa fa-trash-o"></i></a>
+        													</td>
+        												</tr>
+        											</tbody>
+        											<tfoot>
+        												<tr>
+        													<td colspan='2' style="text-align:right">
+        														<a href="#" class="btn btn-success btn-sm" data-bind="click: $root.AddValue"><i class="fa fa-plus"></i></a>
+        													</td>
+        												</tr>
+        											</tfoot>
+        										</table>
+        									</div>
+        								</div>
+        								<div data-bind="if: Type() == 3">
+        									<input type="checkbox" data-bind="checked: Value"></input>
+        								</div>
+        								<div data-bind="if: Type() == 4">
+        									<select class="form-control" data-bind="options: ParameterOptions, optionsText: function(item) { return item.ParameterOptionText; }, 
+        										optionsValue: function(item) { return item.ParameterOptionValue; }, value: Value, attr: { multiple: Multiple }, selectedOptions: selected_values"></select>
+        								</div>
+        								<div data-bind="if: Type() == 5">
+        									<input class="form-control" type="file" data-bind="attr: { multiple: Multiple, id: 'param_' + ParameterID(), name: 'param_' + ParameterID() }"></input>
+        								</div>
+        								<div data-bind="if: Type() == 7">
+        									<div data-bind="if: Multiple() == true">
+        										<select class="form-control" multiple data-bind="options: complex_objects, optionsText: function(item) { return item.Parameter().parameters()[0].Value(); }, selectedOptions: selected_parameters">
+        										</select>
+        										<div class='col-lg-12' style='text-align:right;'>
+        											<a href="#" class="btn btn-danger btn-sm" data-bind="click: $root.DeleteComplexObject" style='margin-top:5px;'><i class="fa fa-trash-o"></i></a>
+        											<a href="#" class="btn btn-warning btn-sm" data-bind="click: $root.EditComplexObject" style='margin-top:5px;'><i class="fa fa-edit"></i></a>
+        											<a href="#" class="btn btn-success btn-sm" data-bind="click: $root.AddComplexObject" style='margin-top:5px;'><i class="fa fa-plus"></i></a>
+        										</div>
+        									</div>
+        									<div data-bind="if: Multiple() == false">
+        										<!-- ko template: { name: 'complex-object-input' } -->
+        										<!-- /ko --> 
+        									</div>
+        								</div>										
+        							</div>
+        						</div>
+        				    </div>
+        				</div>
+        				<!-- /ko -->
+				    </form>
+				    
+				    <hr/>
+				    
+				    <div class="col-lg-12" style="text-align:right;padding-right:10px;padding-bottom:10px;">
+						<div class="btn-group" style="margin-right:25px;">
+							<a href="#" class="btn btn-success" data-bind="click: $root.RunTool"><i class="fa fa-play"></i> Run Job</a>
+							<button data-toggle="dropdown" class="btn btn-success dropdown-toggle"><span class="caret"></span></button>
+							<ul class="dropdown-menu" style="text-align:left;">
+								<li><a href="#" data-bind="click: $root.ScheduleJob"><i class="fa fa-clock-o"></i> Schedule Job</a></li>
+								<li><a href="#" data-bind="click: $root.SaveInputProfile"><i class="fa fa-save"></i> Save Input Profile</a></li>
+							</ul>
+						</div>
+					</div>
     			</div>
     			
     		</div>

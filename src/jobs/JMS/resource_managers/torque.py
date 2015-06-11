@@ -115,7 +115,7 @@ class torque(BaseResourceManager):
                 DataField(Key='vmem', Label="Virtual Memory Used", ValueType=4, 
                     DefaultValue=str(GetAttr(job, 'resources_used.vmem', 'n/a'))
                 ),
-                DataField(Key='walltime_used', Label="Allocated Memory", ValueType=4, 
+                DataField(Key='walltime_used', Label="Walltime Used", ValueType=4, 
                     DefaultValue=str(GetAttr(job, 'resources_used.walltime', 'n/a'))
                 ),
                 DataField(Key='exec_host', Label="Execution Node", ValueType=4, 
@@ -628,6 +628,8 @@ class torque(BaseResourceManager):
                 elif setting.Name == "variables":
                     if setting.Value.strip() != "":
                         print >> job_script, "#PBS -v %s" % setting.Value
+                    else:
+                        print >> job_script, "#PBS -V"
             print >> job_script, nodes 
             
             #TODO: set dependencies
@@ -646,7 +648,7 @@ class torque(BaseResourceManager):
         return self.RunUserProcess("qdel %s" % id)
     
     
-    def AlterJob(self):
+    def AlterJob(self, Key, Value):
         raise NotImplementedError
     
     

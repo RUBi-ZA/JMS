@@ -8,7 +8,7 @@ from CRUD import Tools, ToolVersions, Categories, Parameters
 from CRUD import ParameterOptions, FileTypes, ExpectedOutputs, Resources
 from CRUD import Workflows, WorkflowVersions, Stages, StageParameters
 from CRUD import StageDependencies, Jobs, JobStages, JobStageDataSections
-from CRUD import JobStageDataFields
+from CRUD import JobStageDataFields, JobPermissions
 
 from helpers import *
 from resource_managers import objects
@@ -29,7 +29,7 @@ class JobManager:
     
     def __init__(self, user=None):
         self.base_dir = settings.JMS_SETTINGS["JMS_shared_directory"]
-        self.users_dir = "%s/%s" % (self.base_dir, "users/")
+        self.users_dir = os.path.join(self.base_dir, "users/")
         self.user = user
     
     
@@ -741,11 +741,48 @@ class JobManager:
     
     
     def GetJobs(self):
-        return Jobs.GetJobs(self.user)
+        return Jobs.GetJobs(self.user)[0:100]
     
     
     def GetJob(self, job_id):
         return Jobs.GetJob(self.user, job_id)
+    
+    
+    def StopJob(self, job):
+        if JobPermissions.CanAdministrate(self.user, job):
+            for s in job.JobStages.all():
+                self.StopClusterJob(s.ClusterJobID, job.User)
+        else:
+            raise PermissionDenied
+    
+    
+    def StopClusterJob(self, cluster_job_id, user=None):
+        if not user:
+            user = self.user
+        
+        r = ResourceManager(user)
+        r.KillJob(cluster_job_id)
+    
+    
+    def DeleteJob(self, job):
+        if JobPermissions.CanAdministrate(self.user, job):
+            self.StopJob(job)
+            Jobs.DeleteJob(job)
+        else:
+            raise PermissionDenied
+    
+    
+    def RepeatJob(self, job):
+        pass
+    
+    
+    def Share(self, job, user_name):
+        user = User.objects.get(username=user_name)
+        
+        Jobs.Share(self.user, job, user, 
+            Repeat=permissions["Repeat"], 
+            Admin=permissions["Admin"]
+        )
     
     
     def UpdateJobHistory(self):
@@ -760,24 +797,37 @@ class JobManager:
                 
                 #update or create JobStage
                 jobstage = JobStages.GetJobStage(job.JobID)
+                
                 if jobstage:
-                    JobStages.UpdateJobStage(jobstage, job.Status, job.ExitCode, 
+                    old_status = jobstage.Status.StatusID
+                    jobstage = JobStages.UpdateJobStage(jobstage, job.Status, job.ExitCode, 
                         job.OutputLog, job.ErrorLog, job.WorkingDir, JobData)
+                    
+                    #if status has changed, handle change
+                    if old_status != job.Status:
+                        with transaction.atomic():
+                            pass
                 else:
-                    user, created = User.objects.get_or_create(
-                        username=job.User
-                    )
+                    with transaction.atomic():
+                        user, created = User.objects.get_or_create(
+                            username=job.User
+                        )
+                        
+                        j = Jobs.AddJob(User=user, JobName=job.JobName, 
+                            Description="External submission - job was not submitted via JMS", 
+                            ToolVersion=None, JobTypeID=4)
+                        
+                        jobstage = JobStages.AddJobStage(user, j, StatusID=job.Status, 
+                            ClusterJobID=job.JobID, ExitCode=job.ExitCode, 
+                            ErrorLog=job.ErrorLog, OutputLog=job.OutputLog, 
+                            PWD=job.WorkingDir, JobData=JobData)
                     
-                    j = Jobs.AddJob(User=user, JobName=job.JobName, 
-                        Description="External submission - job was not submitted via JMS", 
-                        ToolVersion=None, JobTypeID=4)
-                    
-                    jobstage = JobStages.AddJobStage(user, j, StatusID=job.Status, 
-                        ClusterJobID=job.JobID, ExitCode=job.ExitCode, 
-                        ErrorLog=job.ErrorLog, OutputLog=job.OutputLog, 
-                        WorkingDir=job.WorkingDir, JobData=JobData)
-            
+                    #if the job is already complete
+                    if job.Status > 3:
+                        with transaction.atomic():
+                            pass
+                
             except Exception, ex:
-                File.print_to_file("/tmp/history.log", str(ex), 'a') 
+                print >> f, (str(ex)) 
         
         f.close()    
