@@ -1,14 +1,14 @@
 JMS
 ===
-The JMS is  workflow management system and web-based cluster front-end for the Torque resource manager. It provides an interface to Torque that allows users to submit and manage jobs as well as manage, configure and monitor the status of their cluster.
+JMS is a workflow management system and web-based cluster front-end for High Performance Computing (HPC) environments. It provides an interface to Torque (or similar resource managers) that allows users to submit and manage jobs as well as manage, configure and monitor the status of their cluster.
 
-In addition to interfacing with Torque, the JMS provides a fully-functional workflow management system that allows users to create complex computational pipelines via an easy-to-use, web interface. Users can upload their scripts, interface with installed programs on their cluster, or both, to build their workflows.
+In addition to interfacing with a resource manager, JMS provides a fully-functional workflow management system that allows users to create complex computational pipelines via an easy-to-use, web interface. Users can upload their scripts, interface with installed programs on their cluster, or both, to build their workflows.
 
-The JMS was originally developed for use in the field of bioinformatics. It is, however, applicable to any scientific field that requires computationally intensive analysis to be performed over a cluster. It can also be used to integrate workflows into 3rd party websites via it's RESTful web API. The JMS is is also a useful tool for system administrators who simply want to monitor and manage their cluster.
+JMS was originally developed for use in the field of bioinformatics. It is, however, applicable to any scientific field that requires computationally intensive analysis to be performed over a cluster. It can also be used to integrate workflows into 3rd party websites via it's RESTful web API. JMS is is also a useful tool for system administrators who simply want to monitor and manage their cluster.
 
-The JMS is a Django project. We will welcome any and all help in developing it further.
+JMS is a Django project. We will welcome any and all help in developing it further.
 
-We have a [publication](http://arxiv.org/abs/1501.06907) in preparation. If you find the JMS useful in your research, please cite us as follows:
+We have a [publication](http://arxiv.org/abs/1501.06907) in preparation. If you find JMS useful in your research, please cite us as follows:
 
 Brown, DK., Penkler, DL., Musyoka, TM. JMS: A workflow management system and web-based cluster front-end for the Torque resource manager. [1501.06907](http://arxiv.org/abs/1501.06907) [cs.SE]
 
