@@ -93,7 +93,7 @@ sudo python manage.py queue_daemon restart
 sudo python manage.py queue_daemon stop
 ```
 
-### 2. Start the impersonator server
+### 3. Start the impersonator server
 
 The impersonator allows JMS to submit jobs as you. It is also used for a number of other reasons. If you are unable to login, chances are the impersonator is not running. To start it, run the following commands:
 ```
@@ -111,14 +111,7 @@ IMPERSONATOR_SETTINGS = {
 }
 ```
 
-
-### 3. Adding nodes
-
-You can add compute nodes from the JMS web interface. When you add a node via the interface, you will also be given additional instructions that you need to carry out manually before the node will be operational.
-
-See '[set up Torque nodes](https://github.com/RUBi-ZA/JMS/wiki/Set-up-Torque#2-set-up-the-compute-nodes)' for more details.
-
-### 4. Test the JMS
+### 5. Test the JMS
 
 To test that your installation is working, run the Django development web server:
 ```
