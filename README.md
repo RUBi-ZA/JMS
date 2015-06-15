@@ -111,7 +111,7 @@ IMPERSONATOR_SETTINGS = {
 }
 ```
 
-### 5. Test the JMS
+### 4. Test the JMS
 
 To test that your installation is working, run the Django development web server:
 ```
