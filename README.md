@@ -1,16 +1,16 @@
 JMS
 ===
-The JMS is  workflow management system and web-based cluster front-end for the Torque resource manager. It provides an interface to Torque that allows users to submit and manage jobs as well as manage, configure and monitor the status of their cluster.
+JMS is a workflow management system and web-based cluster front-end for High Performance Computing (HPC) environments. It provides an interface to Torque (or similar resource managers) that allows users to submit and manage jobs as well as manage, configure and monitor the status of their cluster.
 
-In addition to interfacing with Torque, the JMS provides a fully-functional workflow management system that allows users to create complex computational pipelines via an easy-to-use, web interface. Users can upload their scripts, interface with installed programs on their cluster, or both, to build their workflows.
+In addition to interfacing with a resource manager, JMS provides a fully-functional workflow management system that allows users to create complex computational pipelines via an easy-to-use, web interface. Users can upload their scripts, interface with installed programs on their cluster, or both, to build their workflows.
 
-The JMS was originally developed for use in the field of bioinformatics. It is, however, applicable to any scientific field that requires computationally intensive analysis to be performed over a cluster. It can also be used to integrate workflows into 3rd party websites via it's RESTful web API. The JMS is is also a useful tool for system administrators who simply want to monitor and manage their cluster.
+JMS was originally developed for use in the field of bioinformatics. It is, however, applicable to any scientific field that requires computationally intensive analysis to be performed over a cluster. It can also be used to integrate workflows into 3rd party websites via it's RESTful web API. JMS is is also a useful tool for system administrators who simply want to monitor and manage their cluster.
 
-The JMS is a Django project. We will welcome any and all help in developing it further.
+JMS is a Django project. We will welcome any and all help in developing it further.
 
-We have a [publication](http://arxiv.org/abs/1501.06907) in preparation. If you find the JMS useful in your research, please cite us as follows:
+We have a [publication](http://arxiv.org/abs/1501.06907) in preparation. If you find JMS useful in your research, please cite us as follows:
 
-Brown, DK., Penkler, DL., Musyoka, TM. JMS: A workflow management system and web-based cluster front-end for the Torque resource manager. [1501.06907](http://arxiv.org/abs/1501.06907) [cs.SE]
+Brown, DK., Penkler, DL., Musyoka, TM. JMS: A workflow management system and web-based cluster front-end for the Torque resource manager. [arXiv:1501.06907](http://arxiv.org/abs/1501.06907) [cs.SE]
 
 Installation
 ---
@@ -58,8 +58,18 @@ DATABASES = {
 
 
 JMS_SETTINGS = {
-    "JMS_shared_directory": "/NFS/JMS/"
+    "JMS_shared_directory": "/NFS/JMS/",
+    "resource_manager": {
+        "name": "torque",
+        "log_file": os.path.join(BASE, "logs/torque.log")
+    }
 }
+
+IMPERSONATOR_SETTINGS = {
+    "key": os.path.join(BASE_DIR, "impersonator/pub.key"),
+    "url": "127.0.0.1:8124"
+}
+
 ```
 
 With the settings.py file set up with your database details and the path to your shared directory, run the following commands:
@@ -67,30 +77,39 @@ With the settings.py file set up with your database details and the path to your
 cd /srv/JMS/src
 source venv/bin/activate
 python manage.py syncdb
-python manage.py setup <base_url>
+python manage.py setup
 ```
-Where \<base_url> is the URL that you are hosting the JMS at. If running on a port other than 80, the port should also be specified e.g. `python manage.py setup http://jms.rubi.com` or `python manage.py setup 123.456.12.34:8000`. If you are [hosting with Apache](https://github.com/RUBi-ZA/JMS/wiki/Hosting-with-Apache), this URL should match the URL in the Apache hosts file. You can run set up again if you need to change the URL.
-
-**NB: The setup command generates prologue and epilogue scripts which get stored in `/NFS/JMS/scripts` (the exact path will depend on where you created your shared directory). These scripts need to be copied to `/var/spool/torque/mom_priv/` on each and every node. This is no longer a requirement, but may imporve perfomance in some cases **
 
 ### 2. Start the queue daemon
 
-The queue daemon is responsible for updating the JMS job history with details from Torque. If you don't start the queue_daemon, your job history will only be updated when a job starts or finishes i.e. no changes in state will be tracked during the job. To start the queue daemon, run the following command:
+The queue daemon is responsible for updating the JMS job history with details from the resource manager. If you don't start the queue_daemon, your job history will not be updated after the a job has been submitted i.e. no changes in state will be tracked during the job. To start the queue daemon, run the following command:
 ```
-python manage.py queue_daemon --start
+sudo python manage.py queue_daemon start
 ```
 
 To restart or stop the queue daemon, run the following commands respectively:
 ```
-python manage.py queue_daemon --restart
-python manage.py queue_daemon --stop
+sudo python manage.py queue_daemon restart
+sudo python manage.py queue_daemon stop
 ```
 
-### 3. Adding nodes
+### 3. Start the impersonator server
 
-You can add compute nodes from the JMS web interface. When you add a node via the interface, you will also be given additional instructions that you need to carry out manually before the node will be operational.
+The impersonator allows JMS to submit jobs as you. It is also used for a number of other reasons. If you are unable to login, chances are the impersonator is not running. To start it, run the following commands:
+```
+cd impersonator
+sudo su
+nohup python server.py 8124 &
+```
 
-See '[set up Torque nodes](https://github.com/RUBi-ZA/JMS/wiki/Set-up-Torque#2-set-up-the-compute-nodes)' for more details.
+You can set which port JMS communicates with the impersonator on in the settings.py file:
+
+```
+IMPERSONATOR_SETTINGS = {
+    "key": os.path.join(BASE_DIR, "impersonator/pub.key"),
+    "url": "127.0.0.1:8124"
+}
+```
 
 ### 4. Test the JMS
 
