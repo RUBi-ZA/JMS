@@ -3,6 +3,9 @@ from django.shortcuts import get_object_or_404
 
 from jobs.models import JobStage
 
+import JobPermissions
+
+
 def AddJobStage(user, job, Stage=None, RequiresEditInd=False, StatusID=1,
     ClusterJobID=None, ExitCode=None, OutputLog=None, ErrorLog=None, PWD=None, 
     JobData=None):
@@ -29,3 +32,13 @@ def GetJobStage(cluster_id):
         return stage[0]
     else:
         return None
+
+
+def GetJobStageByID(user, id):
+    stage = JobStage.objects.get(pk=id)
+    if JobPermissions.CanView(user, stage.Job):
+        return stage
+    else:
+        raise PermissionDenied
+
+    

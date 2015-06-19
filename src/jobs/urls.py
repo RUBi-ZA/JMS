@@ -1,17 +1,22 @@
 from django.conf.urls import patterns, url, include
 from jobs import views
 
-internal_urls = patterns('jobs.views',
-    #url(r'prologue/(?P<username>[^/]+)/(?P<cluster_job_id>[^/]+)/?', views.Prologue.as_view()), 
-    #url(r'epilogue/(?P<username>[^/]+)/(?P<cluster_job_id>[^/]+)/(?P<exit_code>[^/]+)/?', views.Epilogue.as_view()), 
-)
-
 public_urls = patterns('jobs.views',
     url(r'jobs/tool/versions/(?P<version_id>[^/]+)/?', views.ToolJob.as_view()),
     url(r'files/types', views.FileTypeList.as_view()),
     
     url(r'dashboard/?', views.Dashboard.as_view()), 
+    
+    #ANSIBLE
     url(r'packages/?', views.PackageManagement.as_view()),
+    
+    
+    #JOB FILES
+    
+    url(r'jobstages/(?P<job_stage_id>[^/]+)/files/?', views.FileDetail.as_view()), 
+    url(r'jobstages/(?P<job_stage_id>[^/]+)/directories/?', views.DirectoryDetail.as_view()), 
+    
+    
     
     #url(r'jobs/cluster/(?P<cluster_id>[^/]+)/?', views.ClusterJob.as_view()),
     
@@ -107,6 +112,5 @@ public_urls = patterns('jobs.views',
 )
  
 urlpatterns = patterns('',
-	url(r'^', include(internal_urls, namespace="internal_urls")),
 	url(r'^', include(public_urls, namespace="public_urls")),       
 )

@@ -386,7 +386,7 @@ class torque(BaseResourceManager):
                         output += self.RunUserProcess('qmgr -c "set queue %s %s = temp"' % (queue.QueueName, setting.Name))
                         output += self.RunUserProcess('qmgr -c "set queue %s %s -= temp"' % (queue.QueueName, setting.Name))
                     else:
-                        for index, value in enumerate():
+                        for index, value in enumerate(values):
                             value = value.strip()
                             if index == 0:
                                 output += self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (queue.QueueName, setting.Name, value))

@@ -17,11 +17,11 @@ def GetToolPermissions(tool):
     
 
 def CanView(user, tool):
-    return tool.User.id == user.id or GetToolPermission(user, tool)
+    return tool.User.id == user.id or tool.PublicInd or GetToolPermission(user, tool)
 
 
 def CanRun(user, tool):
-    return tool.User.id == user.id or GetToolPermission(user, tool).Run
+    return tool.User.id == user.id or tool.PublicInd or GetToolPermission(user, tool).Run
 
 
 def CanEdit(user, tool):

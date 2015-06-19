@@ -11,6 +11,12 @@ function timeConverter(UNIX_timestamp){
     return time;
 }
 
+function DirectoryObject(name, path, type) {
+    this.Name = ko.observable(name);
+    this.FullPath = ko.observable(path);
+    this.Type = ko.observable(type);
+}
+
 var Job = function(job_id, job_name, description, workflow, tool, type, time, stages) {
 	this.JobID = ko.observable(job_id);
 	this.JobName = ko.observable(job_name);
@@ -38,8 +44,13 @@ var JobStage = function(id, stage, name, status, requires_edit, exit, cluster_id
     this.DataSections = ko.observableArray();
     
     this.ErrorLog = ko.observable(error);
+    this.ErrorContent = ko.observable('');
     this.OutputLog = ko.observable(out);
+    this.OutputContent = ko.observable('');
     this.WorkingDirectory = ko.observable(dir);
+    
+    this.FMDirectory = ko.observableArray();
+    this.FMDirectoryListing = ko.observableArray();
 }
 
 
@@ -218,6 +229,10 @@ function JobsViewModel() {
 	                    jobstage.DataSections.push(s);
 	                })
 	                
+	                self.GetErrorLog(jobstage);
+	                self.GetOutputLog(jobstage);
+	                self.GetDirectoryListing(jobstage, "/");
+	                
 	                job.JobStages.push(jobstage);
 	            });
 	            
@@ -226,10 +241,142 @@ function JobsViewModel() {
 	    })
 	}
 	
+	self.GetErrorLog = function(data) {
+	    $.ajax({
+	        url: "/api/jms/jobstages/" + data.JobStageID() + "/files?log=error",
+	        success: function(content) {
+	            data.ErrorContent(content);
+	        }
+	    });
+	}
+	
+	self.GetOutputLog = function(data) {
+	    $.ajax({
+	        url: "/api/jms/jobstages/" + data.JobStageID() + "/files?log=output",
+	        success: function(content) {
+	            data.OutputContent(content);
+	        }
+	    });
+	}
+	
+	self.GetDirectoryListing = function(data, path) {
+	    $.ajax({
+	        url: "/api/jms/jobstages/" + data.JobStageID() + "/directories?path=" + path,
+	        success: function(dir) {
+	            dir = JSON.parse(dir)
+                
+                data.FMDirectory([]);
+                $.each(dir.cwd, function(i, d) {
+                    data.FMDirectory.push(new DirectoryObject(d.name, d.fullpath, d.type));
+                });
+                
+                data.FMDirectoryListing([]);
+                $.each(dir.dir_contents, function(i, d) {
+                    data.FMDirectoryListing.push(new DirectoryObject(d.name, d.fullpath, d.type));
+                });
+	        }
+	    });
+	}
+	
+	self.GetFile = function(data, path) {
+        var url = "/api/jms/jobstages/" + data.JobStageID() + "/files?path=" + path; 
+        
+        content = $("#content");
+        content.html("");
+        
+        //send a HEAD request to check the content type of the file
+        $.ajax({
+            url: url,
+            type: "HEAD",
+            success: function(result, status, xhr){       
+                
+                //do something based on the content type
+                var ct = xhr.getResponseHeader("content-type");
+                if(ct.startsWith("image")) {
+                    var img = new Image();
+                    img.src = url;
+                    img.className = "tab-image";
+                    content.append(img);
+                } else if (ct == "application/pdf") {
+                    var pdf = document.createElement("object");
+                    pdf.type = "application/pdf";
+                    pdf.value = "Adobe Reader is required for Internet Explorer."
+                    pdf.data = url;
+                    pdf.className = "tab-pdf";
+                    content.append(pdf);
+                } else if(ct.startsWith("video")) {
+                    var video = "<video class='tab-video' controls>";
+                    video += "<source src='" + url + "' />";
+                    video += "</video>"
+                    content.append(video);
+                } else if(ct.startsWith("audio")) {
+                    var audio = "<audio class='tab-audio' controls>";
+                    audio += "<source src='" + url + "' />";
+                    audio += "</audio>"
+                    content.append(audio);
+                } else { 
+                    $.ajax({
+                        url: url,
+                        success: function(result) {
+                            var txt = document.createElement("textarea");
+                            txt.value = result;
+                            txt.className = "tab-text";
+                            content.append(txt);
+                            
+                            make_editor($(txt), path);
+                        }
+                    });
+                }
+            },
+            error: function(http) {
+                console.log(http.responseText);
+            }
+        });        
+    }
+    
+    
+    self.downloadFile = function(data) {
+        var url = "/files/transfer?path=" + data.fullpath();
+        window.location = url;
+    }
+	
 	self.ToggleVisible = function(id) {
 	    $("#" + id).slideToggle();
 	}
 }
+
+var make_editor = function(textarea, filename) {      
+    var modelist = ace.require('ace/ext/modelist');
+    mode = modelist.getModeForPath(filename).mode;
+    
+    var langauge_tools = ace.require("ace/ext/language_tools");
+    
+    var editDiv = $('<div>', {
+        position: 'absolute',
+        width: $("#page").width(),
+        height: "500px",
+        'class': textarea.attr('class')
+    }).insertBefore(textarea);
+    textarea.css('display', 'none');
+    
+    var editor = ace.edit(editDiv[0]);
+    editor.getSession().setValue(textarea.val());
+    editor.getSession().setMode(mode);
+    editor.setAutoScrollEditorIntoView(true);
+    editor.setTheme("ace/theme/merbivore_soft"); 
+    editor.setOptions({
+        fontSize: "13pt",
+        enableBasicAutocompletion: true,
+        enableSnippets: true,
+        enableLiveAutocompletion: true
+    });                 
+    
+    editor.getSession().on('change', function(){
+        content = editor.getSession().getValue();
+        textarea.val(content);
+        //tool.SelectedFile().Content(content);
+    });
+} 
 
 var question = new QuestionModal("question-dialog");
 var jobs;

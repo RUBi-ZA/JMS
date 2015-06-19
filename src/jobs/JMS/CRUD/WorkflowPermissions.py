@@ -16,11 +16,11 @@ def GetToolPermissions(workflow):
     
 
 def CanView(user, workflow):
-    return workflow.User.id == user.id or GetWorkflowPermission(user, workflow)
+    return workflow.User.id == user.id or workflow.PublicInd or GetWorkflowPermission(user, workflow)
 
 
 def CanRun(user, workflow):
-    return workflow.User.id == user.id or GetWorkflowPermission(user, workflow).Run
+    return workflow.User.id == user.id or workflow.PublicInd or GetWorkflowPermission(user, workflow).Run
 
 
 def CanEdit(user, workflow):

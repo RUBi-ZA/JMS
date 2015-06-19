@@ -131,9 +131,9 @@ INSTALLED_APPS = (
     #'rest_framework_swagger',
     #my apps
     'users',
-    'interface',
     'jobs',
-    'filemanager'
+    'filemanager',
+    'interface',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
@@ -191,8 +191,12 @@ AUTH_PROFILE_MODULE = 'users.UserProfile'
 JMS_SETTINGS = {
     "JMS_shared_directory": "/jabba/JMS/",
     "resource_manager": {
-        "name": "torque",
-        "log_file": os.path.join(BASE, "logs/torque.log")
+        "name": "torque"
+    },
+    "ansible": True,
+    "impersonator": {
+        "key": os.path.join(BASE_DIR, "impersonator/pub.key"),
+        "port": "8124"
     }
 }
 

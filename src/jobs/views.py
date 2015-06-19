@@ -1,4 +1,8 @@
 from django.shortcuts import render
+from django.http import HttpResponse
+from django.core.servers.basehttp import FileWrapper
+from django.db import transaction
+
 from JMS import JobManager
 from JMS.CRUD import ToolPermissions
 
@@ -9,7 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-import json
+import json, mimetypes, os
 
 #Resource manager views
 
@@ -961,7 +965,10 @@ class CustomJob(APIView):
         files = request.FILES.getlist("files")
         
         jms = JobManager(user=request.user)
-        job = jms.RunCustomJob(job_name, description, commands, settings, files)
+        
+        with transaction.atomic():
+            job = jms.CreateJob(job_name, description, None, 1)
+            job = jms.RunCustomJob(job, commands, settings, files)
         
         return Response(job.JobID)
 
@@ -985,7 +992,12 @@ class ToolJob(APIView):
                 files.append(f)
         
         jms = JobManager(user=request.user)
-        job = jms.RunToolJob(version_id, job_name, description, parameters, files)
+        version = jms.GetToolVersionByID(version_id)
+        
+        
+        with transaction.atomic():
+            job = jms.CreateJob(job_name, description, version, 2)
+            job = jms.RunToolJob(job, parameters, files)
         
         return Response(job.JobID)
 
@@ -1040,6 +1052,15 @@ class JobDetail(APIView):
         
         serializer = JobDetailSerializer(job)
         return Response(serializer.data)
+    
+    def delete(self, request, job_id):
+        """
+        Delete job
+        """
+        jms = JobManager(user=request.user)
+        job = jms.DeleteJob(job_id)
+        
+        return Response()
 
 
 
@@ -1053,4 +1074,68 @@ class PackageManagement(APIView):
         jms = JobManager(user=request.user)
         
         return Response("Ansible support is not enabled", status=400)
+
+
+
+class FileDetail(APIView):
+    permission_classes = (IsAuthenticated,)
+    
+    def get(self, request, job_stage_id):
+        """
+        Get job file contents
+        """
+        log = request.GET.get("log", None)
+        
+        if not log:
+            #We are fetching a job file
+            try: 
+                jms = JobManager(user=request.user)
+                
+                #create a temp copy
+                filepath = request.GET.get("path", '')
+                tmp_path = jms.get_tmp_job_file(job_stage_id, filepath)
+                
+                #Get file type
+                mimetypes.init()
+                name, file_ext = os.path.splitext(os.path.basename(filepath))        
+                type = mimetypes.types_map.get(file_ext.lower(), "text/plain")
+                if type == "application/javascript":
+                    type = "text/plain"
+                
+                if request.method == "HEAD":
+                    response = HttpResponse("", content_type=type)
+                    return response
+                else:  
+                    wrapper = FileWrapper(open(tmp_path, "rb"))
+                    response = HttpResponse(wrapper, content_type=type)
+                    response['Content-Length'] = os.path.getsize(tmp_path)
+                    return response
+            except Exception, err:
+                return Response(str(err), status=400) 
+        
+        else:
+            #We are fetching a log file
+            jms = JobManager(user=request.user)
+            
+            if log.lower() == "error":
+                data = jms.get_job_error(job_stage_id)
+            elif log.lower() == "output":
+                data = jms.get_job_output(job_stage_id)
+                
+            return Response(data)
+
+
+
+class DirectoryDetail(APIView):
+    permission_classes = (IsAuthenticated,)
+    
+    def get(self, request, job_stage_id):
+        """
+        List job directory contents
+        """
+        path = request.GET.get("path", "/")
+        jms = JobManager(user=request.user)
+        data = jms.get_job_directory_listing(job_stage_id, path)
+        
+        return Response(data)
     

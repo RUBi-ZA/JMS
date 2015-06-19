@@ -7,25 +7,28 @@ from filemanager.objects import *
 from filemanager.models import *
 
 class Command(BaseCommand):
-    args = '<Operation [param_1 param_2 ...]>'
+    args = '<operation [param_1 param_2 ...]>'
     help = 'Parameters are specific to the operation being performed'
     
     def handle(self, *args, **options):
         
         op = args[0]
         output = ""
-        root = os.path.join(settings.FILEMANAGER_ROOT_URL, getpass.getuser())
+        root = os.path.join(settings.FILEMANAGER_SETTINGS["root_url"], getpass.getuser())
         root = os.path.join(root, "jobs/")
         
         try:
             if op == "GET_DIR":
-                path = args[1]
+                root = args[1]
+                path = args[2]
                 if path.endswith(":"):
-                    path += "\\"                            
+                    path += "\\"    
+                
                 directory = Directory(path, root)
+                
                 output = directory.to_JSON()
             elif op == "CREATE_TEMP_FILE":                    
-                path = os.path.join(root, args[1].lstrip("/"))
+                path = args[1]
                 output = args[2]
                 
                 if os.path.exists(output):
