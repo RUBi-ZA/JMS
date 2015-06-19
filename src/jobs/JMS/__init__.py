@@ -123,21 +123,12 @@ class JobManager:
         stage = JobStages.GetJobStageByID(self.user, job_stage_id)
         filepath = path.lstrip("/")
         
-        f = open('/tmp/file.txt', 'w')
-        f.write(path + "\n")
-        
         if not filepath.startswith("/"):
-            f.write(stage.WorkingDirectory + "\n")
-            f.write(filepath + "\n")
             
             abspath = os.path.join(stage.WorkingDirectory, filepath)
             
-            f.write(abspath + "\n")
-            
             cmd = "python %s/manage.py acl CREATE_TEMP_FILE %s %s" % (
                 self.project_dir, abspath, tmp_path) 
-            
-            f.write(cmd + "\n") 
             
             out = self.RunUserProcess(cmd, user=stage.Job.User)
             
@@ -909,8 +900,6 @@ class JobManager:
         r = ResourceManager(self.user)
         jobs = r.GetDetailedQueue()
         
-        f = open("/tmp/history.log", 'w')
-        
         for job in jobs:
             try:
                 JobData = json.dumps(job.DataSections, default=lambda o: o.__dict__, sort_keys=True)
@@ -948,6 +937,6 @@ class JobManager:
                             pass
                 
             except Exception, ex:
-                print >> f, (str(ex)) 
+                File.print_to_file("/tmp/history.log", str(ex), permissions=0777)
         
         f.close()    
