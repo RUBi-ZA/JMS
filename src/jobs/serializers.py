@@ -170,7 +170,7 @@ class StageWorkflowVersionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = WorkflowVersion
-        fields = ('WorkflowVersionID', 'Workflow', 'WorkflowVerionNum')
+        fields = ('WorkflowVersionID', 'Workflow', 'WorkflowVersionNum')
 
 
 class StageToolSerializer(serializers.ModelSerializer):
