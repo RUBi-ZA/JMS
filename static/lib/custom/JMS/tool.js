@@ -123,7 +123,7 @@ var Parameter = function(param_id, name, context, input_by, type, multiple, valu
 	
 	this.clone = function() {
 		var copy = new Parameter(this.ParameterID(), this.ParameterName(), this.Context(), this.InputBy(), this.Type(), 
-			this.Multiple(), this.Value(), [], this.Delimiter(), this.ParentParameterID(), this.Optional());
+			this.Multiple(), this.Value(), [], this.Delimiter(), this.ParentParameterID(), this.OptionalInd());
 		
 		
 		$.each(this.ParameterOptions(), function(i, option) {
@@ -154,7 +154,7 @@ var Parameter = function(param_id, name, context, input_by, type, multiple, valu
 	
 	this.get_complex_objects_JSON = function() {
 		var json = "";
-		if(this.Type() == 7) {
+		if(this.Type() == 6) {
 			if(this.Multiple()) {
 				$.each(this.complex_objects(), function(i, obj) {
 					var obj_json = obj.get_complex_object_JSON();
@@ -177,7 +177,7 @@ var Parameter = function(param_id, name, context, input_by, type, multiple, valu
 
 				json += '"' + this.ParameterName() + '": { ' + param_json + ' }';
 			}
-		} else if(this.Type() == 8) {
+		} else if(this.Type() == 7) {
 			if(this.Multiple()) {
 				$.each(this.related_objects(), function(i, obj) {
 					var obj_json = obj.get_complex_object_JSON();
@@ -1136,7 +1136,7 @@ function ToolViewModel() {
     			    param.Multiple, param.Value, [], param.Delimiter, param.ParentParameter, param.Optional)
     			
     			//if the parameter is a related object, find the related parameter
-    		    if(param.ParameterType == 8) {
+    		    if(param.ParameterType == 7) {
         			var related = self.FindParameter(params, param.Value);
         			p.related_parameter(related);
     		    }
@@ -1355,6 +1355,77 @@ function ToolViewModel() {
 	    self.DefaultResources(r);
 	}
 	
+	self.ObjectMode = ko.observable();
+	self.ClonedParameter = ko.observable();
+	self.NewObjects = ko.observableArray();
+	self.AddComplexObject = function(data) {
+	    self.Parameter(data);
+		self.ClonedParameter(data.clone());
+		
+		console.log(data.related_parameter())
+		
+		self.NewObjects.push(data);
+		var len = self.NewObjects().length;		
+		
+		self.ObjectMode("add");
+		
+		$("#object-dialog-" + String(len - 1)).modal();
+		$('#object-dialog-' + String(len - 1)).on('hidden.bs.modal', function () {
+			self.NewObjects.pop();
+			var len = self.NewObjects().length;
+			
+			if(len > 0) {
+				self.Parameter(self.NewObjects()[len-1]);
+				self.ClonedParameter(self.NewObjects()[len-1].clone());
+			} else {
+				self.Parameter(new Parameter());
+			}
+		}) 
+	}
+	
+	self.SaveComplexObject = function(param) {
+		var complex_object = new ComplexObject(param.clone());
+		self.Parameter().complex_objects.push(complex_object);
+		
+		var len = self.NewObjects().length;
+		$("#object-dialog-" + String(len - 1)).modal('hide');
+	}
+	
+	self.EditComplexObject = function(param) {
+		self.NewObjects.push(param.selected_parameters()[0].Parameter());
+		var len = self.NewObjects().length;
+		
+		self.ClonedParameter(param.selected_parameters()[0].Parameter());
+		
+		self.ObjectMode("edit");
+		
+		$("#object-dialog-" + String(len - 1)).modal();
+		$('#object-dialog-' + String(len - 1)).on('hidden.bs.modal', function () {
+			self.NewObjects.pop();
+			var len = self.NewObjects().length;
+			
+			if(len > 0) {
+				self.Parameter(self.NewObjects()[len-1]);
+				self.ClonedParameter(self.NewObjects()[len-1].clone());
+			} else {
+				self.Parameter(new Parameter());
+			}
+		}) 
+	}
+	
+	self.DeleteComplexObject = function(param) {
+		$.each(param.selected_parameters(), function(i, p) {
+			param.complex_objects.remove(p);
+		});
+	}
+	
+	self.AddValue = function(data) {
+		data.value_items.push(new ValueItem("", data));
+	}
+	
+	self.RemoveValue = function(parent, data) {
+		parent.value_items.remove(data);
+	}
 	
     self.job_id = ko.observable();
     self.submitting = ko.observable(false);
@@ -1414,10 +1485,29 @@ function ToolViewModel() {
     		
     		var Parameters = []
     		$.each(self.ToolVersion().ToolParameters(), function(i, p) {
-    		    if(p.InputBy() == "user") {
-        		    var param = new Object();
-        		    param.ParameterID = p.ParameterID();
-        		    param.Value = p.Value();
+    		    if(p.InputBy() == "user" && p.ParentParameterID() == null) {
+				    var param = new Object();
+				    param.ParameterID = p.ParameterID();
+					    
+    		        if(p.Type() == 5) {				
+					    /*var temp_files = $('input[name="param_' + p.ParameterID() + '"]').prop('files');
+					    $.each(temp_files, function(k, f) {
+						    var param = new Object();
+						    param.ParameterID = p.ParameterID();
+						    param.Value = f.name;
+			
+						    stage.Parameters.push(param);
+					    });*/
+    		        }
+    		        
+				    if(p.Type() == 6) {
+					    param.Value = p.get_JSON();
+					    console.log(param.Value);
+				    } else if(p.Type() == 7) {
+					    param.Value = p.related_parameter().get_JSON();					
+				    } else {
+					    param.Value = p.Value();
+				    }
         		    
         		    Parameters.push(param);
     		    }

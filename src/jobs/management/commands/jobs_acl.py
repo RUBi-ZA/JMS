@@ -32,6 +32,7 @@ class Command(BaseCommand):
             
             temp_job_dir = os.path.join(temp_dir, ".%s/%d" % (user, job_id))
             
+            #get job details
             details = open(os.path.join(temp_job_dir, "details_%d.txt" % stage_index), 'rU').readlines()
             
             job_name = details[0]
@@ -46,11 +47,14 @@ class Command(BaseCommand):
                     s = Setting(kv[0], kv[1])
                     parsed_settings.append(s)
             
+            #create job directory and copy tool files from temp directory
             job_dir = os.path.join(settings.JMS_SETTINGS["JMS_shared_directory"],
                 "users/%s/jobs/%d" % (user, job_id)
             )
-            Directory.create_directory(job_dir)
             
+            Directory.copy_directory(temp_job_dir, job_dir)
+            
+            #create job script
             r = ResourceManager(user)
             script = r.CreateJobScript(job_name.replace(' ', '_'), job_dir, 
                 script_name, parsed_settings, dependencies, command)

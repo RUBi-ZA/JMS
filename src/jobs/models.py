@@ -122,7 +122,7 @@ class Parameter(models.Model):
     DeletedInd = models.BooleanField(default=False)
     
     class Meta:
-        unique_together = ('ToolVersion', 'ParameterIndex',)
+        #unique_together = (('ToolVersion', 'ParameterIndex', 'ParentParameter',),)
         db_table = 'Parameters'
 
 
