@@ -17,7 +17,7 @@ ResourceManager = getattr(module, module_name)
 
 class Command(BaseCommand):
     args = '<action [param_1 param_2 ...]>'
-    help = 'Parameters are specific to the operation being performed'
+    help = 'Parameters are specific to the action being performed'
     
     def handle(self, *args, **options):
         temp_dir = os.path.join(settings.JMS_SETTINGS["JMS_shared_directory"], 
@@ -47,7 +47,7 @@ class Command(BaseCommand):
                     s = Setting(kv[0], kv[1])
                     parsed_settings.append(s)
             
-            #create job directory and copy tool files from temp directory
+            #create job directory and copy files from temp directory
             job_dir = os.path.join(settings.JMS_SETTINGS["JMS_shared_directory"],
                 "users/%s/jobs/%d" % (user, job_id)
             )

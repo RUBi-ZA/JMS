@@ -44,10 +44,10 @@ class JobManager:
             user = self.user
         
         payload = "%s\n%s\n%s\n%s" % (user.filemanagersettings.ServerPass, cmd, expect, str(sudo))
-        File.print_to_file("/tmp/files.txt", payload, permissions=0777)
+        #File.print_to_file("/tmp/files.txt", payload, permissions=0777)
         
         r = requests.post("http://%s/impersonate" % settings.IMPERSONATOR_SETTINGS["url"], data=payload)
-        File.print_to_file("/tmp/files.txt", payload, mode="a", permissions=0777)
+        #File.print_to_file("/tmp/files.txt", payload, mode="a", permissions=0777)
         
         return r.text
     
@@ -728,6 +728,13 @@ class JobManager:
                     destination.write(chunk)
             os.chmod(os.path.join(tmp_dir, f.name), 0775)
         
+        if job.JobTypeID == 2:
+            #copy tool files to temp directory
+            tool_directory = os.path.join(self.base_dir, "tools/%s/%s" % (
+                job.ToolVersion.Tool.ToolID, job.ToolVersion.ToolVersionNum ))
+            
+            Directory.copy_directory(tool_directory, tmp_dir)
+        
         #set name of job script to be generated
         script_name = "stage_%d.sh" % stage_index
         
@@ -789,7 +796,7 @@ class JobManager:
         #generate command for tool script
         command = version.Command
         
-        #loop through command parameters and add to command
+        #append parameters to command
         #TODO: move database call to bottom tier
         parameters = version.ToolParameters.all()
         
@@ -828,7 +835,6 @@ class JobManager:
             params += ' %s' % p
             
         command += params
-        File.print_to_file("/tmp/parameters.txt", command + "\n")
         
         #Get resources for tool version
         #TODO: user customized resources

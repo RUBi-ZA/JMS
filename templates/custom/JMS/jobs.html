@@ -218,14 +218,16 @@
 				            <a class="st-link-header" data-bind="click: function() { $root.ToggleVisible('section_1') }">Parameters</a>
 				            <hr>
 				            <div id="section_1" style="display:none;">
-				            <!-- ko foreach: JobStageParameters -->
-				            
-				            <div class="form-group">
-				                <label data-bind="text: ParameterName"></label><br>
-			                    <span data-bind="text: Value"></span>
-				            </div>
-				            
-				            <!-- /ko -->
+        			            <table>
+        			                <thead>
+        			                    <th>Parameter</th>
+        			                    <th>Value</th>
+        			                </thead>
+        			                <tbody data-bind="foreach: JobStageParameters">
+        			                    <td data-bind="text: ParameterName"></td>
+        			                    <td data-bind="text: Value"></td>
+        			                </tbody>
+        			            </table>
 				            </div>
 				        </div>
 				        <!-- /ko -->

@@ -957,8 +957,8 @@ class CustomJob(APIView):
         """
         Submit a custom script to be run on the cluster
         """
-        job_name = request.POST["JobName"]
-        description = request.POST["Description"]
+        job_name = request.POST.get("JobName", "")
+        description = request.POST.get("Description", "")
         commands = request.POST["Commands"]
         settings = json.loads(request.POST["Settings"])
         
@@ -981,8 +981,8 @@ class ToolJob(APIView):
         """
         Run a tool on the cluster
         """
-        job_name = request.POST["JobName"]
-        description = request.POST["Description"]
+        job_name = request.POST.get("JobName", "")
+        description = request.POST.get("Description", "")
         parameters = json.loads(request.POST["Parameters"])
         #settings = json.loads(request.POST["Settings"])
         
