@@ -42,15 +42,13 @@ class JobManager:
     def RunUserProcess(self, cmd, expect="prompt", sudo=False, user=None):
         if not user:
             user = self.user
-            
-        f = open("/tmp/files.txt", "a")
         
         payload = "%s\n%s\n%s\n%s" % (user.filemanagersettings.ServerPass, cmd, expect, str(sudo))
-        print >> f, payload
-        print >> f, "http://%s/impersonate" % settings.IMPERSONATOR_SETTINGS["url"]
+        #File.print_to_file("/tmp/files.txt", payload, permissions=0777)
+        
         r = requests.post("http://%s/impersonate" % settings.IMPERSONATOR_SETTINGS["url"], data=payload)
-        print >> f, "\n\nstatus: %s\noutput:%s" % (r.status_code, r.text)
-        f.close()
+        #File.print_to_file("/tmp/files.txt", payload, mode="a", permissions=0777)
+        
         return r.text
     
     
@@ -851,12 +849,16 @@ class JobManager:
         return job
     
     
-    def GetJobs(self):
-        return Jobs.GetJobs(self.user)[0:100]
+    def GetJobs(self, start=0, end=300):
+        return Jobs.GetJobs(self.user)[start:end]
     
     
     def GetJob(self, job_id):
         return Jobs.GetJob(self.user, job_id)
+    
+    
+    def FilterJobsByParameter(self, filters):
+        return Jobs.FilterJobsByParameter(self.user, filters)
     
     
     def StopJob(self, job):

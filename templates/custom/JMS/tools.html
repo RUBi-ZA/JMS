@@ -201,7 +201,9 @@
     
 	<div id="tools" class="page-wrapper" >
 	    <!-- MODALS -->
-	    
+	    <!-- ko template: { name: 'complex-dialog', foreach: $root.NewObjects } -->
+		<!-- /ko --> 
+				
 	    <!-- submit-dialog -->
 	    <div class="modal fade" id="submit-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 			<div class="modal-dialog">
@@ -1388,7 +1390,7 @@
 				    </div>
 				</div>
 				
-				<div id="tool-runner" style="display:none" data-bind="with: $root.ToolVersion"> 
+				<div id="tool-runner" style="display:none; overflow:hidden;" data-bind="with: $root.ToolVersion"> 
 					<div class="row">
 						<div class="col-md-12">
 							<h2><i class="fa fa-wrench"></i> <span data-bind="text: Tool().ToolName"></span> (<span data-bind="text: ToolVersionNum"></span>)</h2>
@@ -1399,10 +1401,8 @@
 						    
 					<hr />
 				
-					<div class="row">
-						<div class="col-lg-12" style="text-align:right;padding:10px;padding-top:0;">
-							<a href="#" class="btn btn-warning" data-bind="click: $root.ShowToolList"><i class="fa fa-arrow-left"></i> Back</a>
-						</div>
+					<div class="col-lg-12" style="text-align:right;padding:10px;padding-top:0;">
+						<a href="#" class="btn btn-warning" data-bind="click: $root.ShowToolList"><i class="fa fa-arrow-left"></i> Back</a>
 					</div>
 					<!-- /. ROW  -->
 				
@@ -1514,7 +1514,7 @@
     								<div data-bind="if: Type() == 5">
     									<input class="form-control" type="file" data-bind="attr: { multiple: Multiple, id: 'param_' + ParameterID(), name: 'param_' + ParameterID() }"></input>
     								</div>
-    								<div data-bind="if: Type() == 7">
+    								<div data-bind="if: Type() == 6" style="overflow:hidden;">
     									<div data-bind="if: Multiple() == true">
     										<select class="form-control" multiple data-bind="options: complex_objects, optionsText: function(item) { return item.Parameter().parameters()[0].Value(); }, selectedOptions: selected_parameters">
     										</select>

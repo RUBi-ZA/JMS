@@ -1,7 +1,7 @@
 # Django settings for JMS project.
 import os
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -170,9 +170,6 @@ LOGGING = {
 }
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-    'rest_framework.authentication.SessionAuthentication',
-    ),
     'DEFAULT_RENDERER_CLASSES': (
 	'rest_framework.renderers.JSONRenderer',
 	)

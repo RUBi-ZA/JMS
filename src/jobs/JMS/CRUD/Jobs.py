@@ -29,3 +29,15 @@ def GetJob(user, job_id):
         raise PermissionDenied
 
 
+def FilterJobsByParameter(user, filters):
+    #get all user jobs
+    jobs = GetJobs(user)
+    
+    #build filter
+    kwargs = {}
+    for f in filters:
+        kwargs[f["Field"]] = f["Value"]
+    
+    return jobs.filter(**kwargs)
+    
+    

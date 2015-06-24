@@ -206,10 +206,12 @@ function JobsViewModel() {
 	                    js.WorkingDirectory)
 	                
 	                $.each(js.JobStageParameters, function(j, jsp){
-	                    var jsparam = new JobStageParameter(jsp.JobStageParameterID,
-	                        jsp.ParameterName, jsp.Value);  
-	                    
-	                    jobstage.JobStageParameters.push(jsparam);
+	                    if(jsp.Parameter.ParentParameter == null){
+    	                    var jsparam = new JobStageParameter(jsp.JobStageParameterID,
+    	                        jsp.ParameterName, jsp.Value);  
+    	                    
+    	                    jobstage.JobStageParameters.push(jsparam);
+	                    }
 	                })
 	                
 	                var details = JSON.parse(js.JobData);

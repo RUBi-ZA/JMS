@@ -1037,6 +1037,25 @@ class JobList(APIView):
         
         serializer = JobListSerializer(jobs, many=True)
         return Response(serializer.data)
+
+
+class JobFilter(APIView):
+    
+    def post(self, request, detail):
+        """
+        Filter accessible jobs by parameters
+        """
+        fl = json.loads(request.body)
+        
+        jms = JobManager(user=request.user)
+        jobs = jms.FilterJobsByParameter(fl)
+        
+        if detail == "list":
+            serializer = JobListSerializer(jobs, many=True)
+        elif detail == "detail":
+            serializer = JobDetailSerializer(jobs, many=True)
+        
+        return Response(serializer.data)
     
 
 
