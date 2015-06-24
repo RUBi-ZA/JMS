@@ -957,8 +957,8 @@ class CustomJob(APIView):
         """
         Submit a custom script to be run on the cluster
         """
-        job_name = request.POST["JobName"]
-        description = request.POST["Description"]
+        job_name = request.POST.get("JobName", "")
+        description = request.POST.get("Description", "")
         commands = request.POST["Commands"]
         settings = json.loads(request.POST["Settings"])
         
@@ -981,8 +981,8 @@ class ToolJob(APIView):
         """
         Run a tool on the cluster
         """
-        job_name = request.POST["JobName"]
-        description = request.POST["Description"]
+        job_name = request.POST.get("JobName", "")
+        description = request.POST.get("Description", "")
         parameters = json.loads(request.POST["Parameters"])
         #settings = json.loads(request.POST["Settings"])
         
@@ -994,32 +994,36 @@ class ToolJob(APIView):
         jms = JobManager(user=request.user)
         version = jms.GetToolVersionByID(version_id)
         
-        
         with transaction.atomic():
-            job = jms.CreateJob(job_name, description, version, 2)
-            job = jms.RunToolJob(job, parameters, files)
+            job = jms.CreateJob(job_name, description, ToolVersion=version, JobTypeID=2)
+            jobstage = jms.RunToolJob(job, parameters, files)
         
-        return Response(job.JobID)
+        return Response(jobstage.Job.JobID)
 
 
 
 class WorkflowJob(APIView):
     permission_classes = (IsAuthenticated,)
     
-    def post(self, request):
+    def post(self, request, version_id):
         """
         Run a workflow on the cluster
         """
         job_name = request.POST["JobName"]
         description = request.POST["Description"]
-        commands = request.POST["Commands"]
-        stages = json.loads(request.POST["Stages"])
-        #settings = json.loads(request.POST["Settings"])
+        stages = json.loads(request.POST["JobStages"])
         
-        files = request.FILES.getlist("files")
+        files = []
+        for k, v in request.FILES.iteritems():
+            for f in request.FILES.getlist(k):
+                files.append(f)
         
         jms = JobManager(user=request.user)
-        job = jms.RunCustomJob(job_name, description, commands, settings, files)
+        version = jms.GetWorkflowVersionByID(version_id)
+        
+        with transaction.atomic():
+            job = jms.CreateJob(job_name, description, WorkflowVersion=version, JobTypeID=3)
+            job = jms.RunWorkflowJob(job, stages)
         
         return Response(job.JobID)
     
@@ -1130,6 +1134,10 @@ class FileDetail(APIView):
                     response['Content-Length'] = os.path.getsize(tmp_path)
                     return response
             except Exception, err:
+                f = open("/tmp/file.txt", "w")
+                f.write(str(err))
+                f.close()
+                
                 return Response(str(err), status=400) 
         
         else:

@@ -38,3 +38,11 @@ def GetWorkflowVersion(Workflow, version_num):
         return GetWorkflowVersions(Workflow)[0]
     else:
         return get_object_or_404(WorkflowVersion, Workflow=Workflow, WorkflowVersionNum=version_num)
+    
+
+def GetWorkflowVersionByID(user, version_id):
+    version = get_object_or_404(WorkflowVersion, pk=version_id)
+    if WorkflowPermissions.CanView(user, version.Workflow):
+        return version
+    else:
+        raise PermissionDenied

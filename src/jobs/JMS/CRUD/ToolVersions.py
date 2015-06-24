@@ -49,7 +49,11 @@ def GetToolVersion(Tool, version_num):
     
 
 def GetToolVersionByID(user, version_id):
-    return get_object_or_404(ToolVersion, pk=version_id)
+    version = get_object_or_404(ToolVersion, pk=version_id)
+    if ToolPermissions.CanView(user, version.Tool):
+        return version
+    else:
+        raise PermissionDenied
     
 
 def GetLatestVersion(Tool):

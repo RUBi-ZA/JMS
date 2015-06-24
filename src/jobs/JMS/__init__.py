@@ -618,6 +618,10 @@ class JobManager:
         return WorkflowVersions.GetWorkflowVersion(workflow, version_num)
     
     
+    def GetWorkflowVersionByID(self, version_id):
+        return WorkflowVersions.GetWorkflowVersionByID(self.user, version_id)
+    
+    
     def ShareWorkflow(self, workflow_id, user_name, permissions):
         workflow = self.GetWorkflow(workflow_id)
         user = User.objects.get(username=user_name)
@@ -728,6 +732,13 @@ class JobManager:
                     destination.write(chunk)
             os.chmod(os.path.join(tmp_dir, f.name), 0775)
         
+        if job.JobTypeID == 2:
+            #copy tool files to temp directory
+            tool_directory = os.path.join(self.base_dir, "tools/%s/%s" % (
+                job.ToolVersion.Tool.ToolID, job.ToolVersion.ToolVersionNum ))
+            
+            Directory.copy_directory(tool_directory, tmp_dir)
+        
         #set name of job script to be generated
         script_name = "stage_%d.sh" % stage_index
         
@@ -746,13 +757,12 @@ class JobManager:
             )
         )
         
-        
         #return path to job script
         return os.path.join(job_dir, script_name)
 
     
     
-    def CreateJob(self, job_name, description, ToolVersion, JobTypeID):
+    def CreateJob(self, job_name, description, JobTypeID, ToolVersion=None, WorkflowVersion=None):
         return Jobs.AddJob(User=self.user, JobName=job_name, 
                 Description=description, ToolVersion=ToolVersion, 
                 JobTypeID=JobTypeID)
@@ -779,56 +789,64 @@ class JobManager:
         return jobstage.Job
     
     
-    def RunToolJob(self, job, user_parameters, files=[], dependencies=[], 
-        stage_index=0):
-            
-        version = job.ToolVersion
+    def RunToolJob(self, job, user_parameters, files=[], stage=None, 
+        dependencies=[], stage_index=0):
+        
+        if job.JobTypeID == 2:
+            version = job.ToolVersion
+        elif job.JobTypeID == 3:
+            version = stage.ToolVersion
+        
         #create db entries
         jobstage = JobStages.AddJobStage(self.user, job)
         
         #generate command for tool script
         command = version.Command
         
-        #loop through command parameters and add to command
+        #append parameters to command
         #TODO: move database call to bottom tier
         parameters = version.ToolParameters.all()
         
         params = ""
         for param in parameters:
-            p = param.Context
-            
-            if param.InputBy == "user":
-                for up in user_parameters:
-                    if up["ParameterID"] == param.ParameterID:
-                        val = up["Value"]
-            else:
-                val = param.Value
-            
-            #If parameter value comes from a previous stage, fetch the value
-            if jobstage.Stage != None:
-                stage_parameter = jobstage.Stage.StageParameters.get(
-                    Parameter__ParameterID=int(val)
-                )
+            #only add root parameters
+            if param.ParentParameter == None:
+                p = param.Context
                 
-                val = prev_param.Value
-              
-            
-            JobStageParameter.objects.create(JobStage=jobstage, Parameter=param,
-                ParameterName=param.ParameterName, Value=val)
-            
-            if param.ParameterType.ParameterTypeID != 3:
-                try:
-                    #check if the ${VALUE} variable is located in the string
-                    num = p.index("${VALUE}")
-                    p = p.replace("${VALUE}", val)
-                except Exception, e:
-                    #if the ${VALUE} variable is not located in the string, append the value to the end
-                    p += " %s" % val                
+                if param.InputBy == "user":
+                    for up in user_parameters:
+                        if up["ParameterID"] == param.ParameterID:
+                            val = up["Value"]
+                else:
+                    val = param.Value
                 
-            params += ' %s' % p
+                #If parameter value comes from a previous stage, fetch the value
+                if jobstage.Stage != None:
+                    stage_parameter = jobstage.Stage.StageParameters.get(
+                        Parameter__ParameterID=int(val)
+                    )
+                    
+                    val = prev_param.Value
+                
+                JobStageParameter.objects.create(JobStage=jobstage, Parameter=param,
+                    ParameterName=param.ParameterName, Value=val)
+                
+                if param.ParameterType.ParameterTypeID != 3 and len(str(val)) > 0:
+                    try:
+                        #check if the ${VALUE} variable is located in the string
+                        num = p.index("${VALUE}")
+                        p = p.replace("${VALUE}", str(val))
+                    except Exception, e:
+                        #if the ${VALUE} variable is not located in the string, append the value to the end
+                        #File.print_to_file("/tmp/file.txt", str(e) + ": " + p)
+                        p += " %s" % val                
+                    
+                    params += ' %s' % p
+                
+                elif param.ParameterType.ParameterTypeID == 3:
+                    params += ' %s' % p
             
         command += params
-        File.print_to_file("/tmp/parameters.txt", command + "\n")
         
         #Get resources for tool version
         #TODO: user customized resources
@@ -846,7 +864,29 @@ class JobManager:
         jobstage.ClusterJobID = cluster_id.strip()
         jobstage.save()
         
-        return job
+        return jobstage
+    
+    
+    def RunWorkflowJob(self, job, stages, files):
+        executed_stages = {}
+        
+        for i, s in enumerate(stages):
+            stage = Stages.GetStage(self.user, s["StageID"])
+            parameters = s["Parameters"]
+            
+            #get dependencies
+            deps = []
+            for dep in stage.StageDependencies:
+                deps.append({ 
+                    "ClusterJobID": executed_stage[dep.DependantOn.StageID], 
+                    "Condition": dep.Condition.ConditionID,
+                    "ExitCodeValue": dep.ExitCodeValue
+                })
+            
+            jobstage = RunToolJob(job, parameters, files, stage, deps, i)
+            
+            executed_stages[stage.StageID] = jobstage.ClusterJobID
+        
     
     
     def GetJobs(self, start=0, end=300):
