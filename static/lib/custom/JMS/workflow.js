@@ -33,7 +33,151 @@ var Parameter = function(param_id, name, context, input_by, type, multiple, valu
 	this.ParameterOptions = ko.observableArray(options);
 	this.Delimiter = ko.observable(delimiter);	
 	this.ParameterIndex = ko.observable();
+	this.ParentParameterID = ko.observable();
+	if(parent_id != null) {
+		this.ParentParameterID(parent_id);
+	}
 	this.OptionalInd = ko.observable(optional);
+	
+	this.DeleteInd = ko.observable(false);
+	
+	//if parameter type is "Text" or "Number"
+	this.value_items = ko.observableArray([new ValueItem("", self)]);
+	
+	//if parameter type is "Options"
+	this.selected_values = ko.observableArray([]);
+	this.selected_values.subscribe(function(values) {	
+		var value = "";		
+		$.each(values, function(i, val) {
+			if(i > 0) {
+				value += self.Delimiter();
+			}
+			value += val;
+		});
+		self.Value($.trim(value));
+	});
+	
+	//if parameter type is "Complex object"
+	this.parameters = ko.observableArray(null);
+	this.complex_objects = ko.observableArray(null);
+	this.selected_parameters = ko.observableArray();
+	
+	//if parameter type is "Related object"
+	this.related_parameter = ko.observable();
+	this.related_objects = ko.observableArray();
+	
+	this.clone = function() {
+		var copy = new Parameter(this.ParameterID(), this.ParameterName(), this.Context(), this.InputBy(), this.Type(), 
+			this.Multiple(), this.Value(), [], this.Delimiter(), this.ParentParameterID(), this.OptionalInd());
+		
+		
+		$.each(this.ParameterOptions(), function(i, option) {
+			copy.ParameterOptions.push(option.clone());
+		});
+		
+		$.each(this.parameters(), function(i, param) {
+			copy.parameters.push(param.clone());
+		});
+		
+		$.each(this.complex_objects(), function(i, obj) {
+			copy.complex_objects.push(obj.clone());
+		});
+		
+		copy.related_parameter(this.related_parameter());
+		
+		$.each(this.related_objects(), function(i, obj) {
+			copy.related_objects.push(obj);
+		});
+		
+		return copy;
+	}
+	
+	this.get_JSON = function() {
+		json = "{ " + this.get_complex_objects_JSON() + " }";
+		return json;
+	}
+	
+	this.get_complex_objects_JSON = function() {
+		var json = "";
+		if(this.Type() == 6) {
+			if(this.Multiple()) {
+				$.each(this.complex_objects(), function(i, obj) {
+					var obj_json = obj.get_complex_object_JSON();
+				
+					if(i > 0) {
+						json += ", ";
+					}
+					json += "{ " + obj_json + " }";
+				});		
+			
+				json = '"' + this.ParameterName() + '": [ ' + json + ' ]';	
+			} else {
+				var param_json = '';
+				$.each(this.parameters(), function(i, param) {
+					if(i > 0) {
+						param_json += ", ";
+					}
+					param_json += param.get_complex_objects_JSON();
+				});
+
+				json += '"' + this.ParameterName() + '": { ' + param_json + ' }';
+			}
+		} else if(this.Type() == 7) {
+			if(this.Multiple()) {
+				$.each(this.related_objects(), function(i, obj) {
+					var obj_json = obj.get_complex_object_JSON();
+
+					if(i > 0) {
+						json += ", ";
+					}
+					json += "{ " + obj_json + " }";
+				});	
+				json = '"' + this.ParameterName() + '": [ ' + json + ' ]';	
+			} else {
+				json = '"' + this.ParameterName() + '": { ' + this.related_objects().get_complex_object_JSON() + ' }';
+			}			
+		} else {	
+				
+			json += '"' + this.ParameterName() + '": "' + this.Value() + '"';			
+		}
+		
+		return json;
+	}
+}
+
+var ComplexObject = function(parameter) {
+	this.Parameter = ko.observable(parameter);
+	
+	this.clone = function() {
+		var copy = new ComplexObject(this.Parameter());
+		return copy;
+	}
+	
+	this.get_complex_object_JSON = function() {
+		var json = "";
+		$.each(this.Parameter().parameters(), function(i, param) {
+			if(i>0) {
+				json += ", "
+			}
+			json += param.get_complex_objects_JSON();
+		});
+		return json;
+	}
+}
+
+var ValueItem = function(value, parent) {
+	this.value = ko.observable(value);
+	this.value.subscribe(function() {	
+		var value = "";		
+		$.each(parent.value_items(), function(i, val) {
+			if(i > 0) {
+				value += parent.Delimiter();
+			}
+			console.log(val);
+			value += val.value();
+		});
+		parent.Value($.trim(value));
+	});
 }
 
 var ExpectedOutput = function(id, label, file, type) {
@@ -505,6 +649,21 @@ function WorkflowViewModel() {
 	    });
 	}
 	
+	self.FindParameter = function(params, parent_id) {
+		p = false;
+		$.each(params, function(i, param) {
+			if(param.ParameterID() == parent_id) {	
+				p = param;		
+				return false;
+			} else {
+				p = self.FindParameter(param.parameters(), parent_id);
+				if(p != false) {
+					return false;
+				}
+			}
+		});
+		return p;
+	}
 	
 	self.LoadParameters = function(parameters, stage_params) {
 	    params = []
