@@ -127,8 +127,15 @@ function JobsViewModel() {
     				        job.ToolVersion.ToolVersionNum + ")")
     	            } else if(job.JobTypeID == 3) {
     	                //workflow
-    	                j.WorkflowVersion(job.WorkflowVersion.Workflow.WorkflowName + " (" + 
+    	                try {
+    	                    j.WorkflowVersion(job.WorkflowVersion.Workflow.WorkflowName + " (" + 
     				       job.WorkflowVersion.WorkflowVersionNum + ")")
+    	                } catch(err) {
+    	                    console.log(job)
+    	                    console.log(err)
+    	                    j.WorkflowVersion("Unknown")
+    	                }
+    	                
     	            }
 					
 					//variables to determine job state
@@ -190,8 +197,14 @@ function JobsViewModel() {
 				        j.ToolVersion.ToolVersionNum + ")")
 	            } else if(j.JobTypeID == 3) {
 	                //workflow
-	                job.WorkflowVersion(j.WorkflowVersion.Workflow.WorkflowName + " (" + 
+	                try {
+	                    job.WorkflowVersion(j.WorkflowVersion.Workflow.WorkflowName + " (" + 
 				        j.WorkflowVersion.WorkflowVersionNum + ")")
+	                } catch(err) {
+	                    console.log(j)
+	                    console.log(err)
+	                    job.WorkflowVersion("Unknown")
+	                }
 	            }
 	            
 	            $.each(j.JobStages, function(i, js) {
@@ -215,21 +228,25 @@ function JobsViewModel() {
 	                })
 	                
 	                var details = JSON.parse(js.JobData);
-	                $.each(details, function(j, section){
-	                    var s = new JobStageDataSection(j, section.SectionHeader, []);
-	                    
-	                    $.each(section.DataFields, function(k, field){
-	                        if(section.SectionHeader == "Time"){
-	                            var f = new JobStageDataField(field.Key, timeConverter(field.DefaultValue), field.Label, field.ValueType);
-	                        } else {
-	                            var f = new JobStageDataField(field.Key, field.DefaultValue, field.Label, field.ValueType);
-	                        }
-	                        
-	                        s.DataFields.push(f);
-	                    });
-	                    
-	                    jobstage.DataSections.push(s);
-	                })
+	                try {
+    	                $.each(details, function(j, section){
+    	                    var s = new JobStageDataSection(j, section.SectionHeader, []);
+    	                    
+    	                    $.each(section.DataFields, function(k, field){
+    	                        if(section.SectionHeader == "Time"){
+    	                            var f = new JobStageDataField(field.Key, timeConverter(field.DefaultValue), field.Label, field.ValueType);
+    	                        } else {
+    	                            var f = new JobStageDataField(field.Key, field.DefaultValue, field.Label, field.ValueType);
+    	                        }
+    	                        
+    	                        s.DataFields.push(f);
+    	                    });
+    	                    
+    	                    jobstage.DataSections.push(s);
+    	                });
+	                } catch(err) {
+	                    console.log(err);
+	                }
 	                
 	                self.GetErrorLog(jobstage);
 	                self.GetOutputLog(jobstage);

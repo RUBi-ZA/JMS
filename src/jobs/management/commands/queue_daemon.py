@@ -11,21 +11,27 @@ from utilities.io.filesystem import File
 
 class QueueDaemon(Daemon):
     def run(self):
-        count = 1
-        jms = JobManager() 
-        
-        while True:
+        with open("/tmp/queue-daemon.txt", 'w') as f:
             try:
-                File.print_to_file("/tmp/queue-daemon.txt", count, "w")
-                count += 1
-                jms.UpdateJobHistory()
-                
-                # Reset database connection to avoid "MySQL has gone away" error after daemon has been running for a long time    
-                db.close_connection() 
+                count = 1
+                jms = JobManager()
+            
+                while True:
+                    try:
+                        f.write("\r" + str(count))
+                        f.flush()
+                        
+                        count += 1
+                        jms.UpdateJobHistory()
+                        
+                    except Exception, err:
+                        # Reset database connection to avoid "MySQL has gone away" error after daemon has been running for a long time    
+                        db.close_connection() 
+                        f.write("Inner Error: " + str(err))
+                    
+                    time.sleep(5)
             except Exception, err:
-                File.print_to_file("/tmp/queue-daemon.txt", "Error: " + str(err), "a")
-                
-            time.sleep(5)
+                f.write("Outer Error: " + str(err))
 
                        
 class Command(BaseCommand):

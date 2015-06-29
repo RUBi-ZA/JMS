@@ -33,10 +33,12 @@ class JobManager:
         self.project_dir = settings.BASE_DIR
         
         self.base_dir = settings.JMS_SETTINGS["JMS_shared_directory"]
-        self.users_dir = os.path.join(self.base_dir, "users/")
-        self.user_dir = os.path.join(self.users_dir, self.user.username)
-        self.jobs_dir = os.path.join(self.user_dir, "jobs/")
         self.temp_dir = os.path.join(self.base_dir, "tmp/")
+        
+        if self.user:
+            self.users_dir = os.path.join(self.base_dir, "users/")
+            self.user_dir = os.path.join(self.users_dir, self.user.username)
+            self.jobs_dir = os.path.join(self.user_dir, "jobs/")
     
     
     def RunUserProcess(self, cmd, expect="prompt", sudo=False, user=None):
@@ -93,7 +95,6 @@ class JobManager:
     
     def get_job_output(self, job_stage_id):
         stage = JobStages.GetJobStageByID(self.user, job_stage_id)
-        f = open("/tmp/files.txt", "w")
         if stage.OutputLog != '':
             data = self.RunUserProcess('cat %s' % stage.OutputLog, 
                 user=stage.Job.User)
@@ -718,12 +719,16 @@ class JobManager:
             
             Stages.UpdateStageLevel(dep.StageOI)
         
-        return self.GetStages(dep.StageOI.WorkflowVersion.Workflow.WorkflowID, "dev")
+        return self.GetStages(dep.StageOI.WorkflowVersion.Workflow.WorkflowID, 
+            "dev")
     
     
-    def SetupJobDirectory(self, job, files, stage_index, settings, command):
-        #create temp job directory
-        tmp_dir = self.make_tmp_directory(job.JobID)
+    def SetupJobDirectory(self, jobstage, files, stage_index):
+        
+        job = jobstage.Job
+        
+        #create temp job stage directory
+        tmp_dir = self.make_tmp_directory(jobstage.JobStageID)
         
         #upload files to temp directory
         for f in files:
@@ -732,53 +737,61 @@ class JobManager:
                     destination.write(chunk)
             os.chmod(os.path.join(tmp_dir, f.name), 0775)
         
+        #copy tool files to temp directory
         if job.JobTypeID == 2:
-            #copy tool files to temp directory
             tool_directory = os.path.join(self.base_dir, "tools/%s/%s" % (
                 job.ToolVersion.Tool.ToolID, job.ToolVersion.ToolVersionNum ))
-            
             Directory.copy_directory(tool_directory, tmp_dir)
-        
-        #set name of job script to be generated
-        script_name = "stage_%d.sh" % stage_index
-        
-        #get job details to be used to spawn job
-        job_details = "%s\n%s\n%s\n%s\n%s" % (job.JobName, script_name, 
-            settings, "", command)
-        
-        #store job details in temp directory
-        details_path = os.path.join(tmp_dir, "details_%d.txt" % stage_index)
-        File.print_to_file(details_path, job_details, permissions=0777)
+        elif job.JobTypeID == 3:
+            tool_directory = os.path.join(self.base_dir, "tools/%s/%s" % (
+                jobstage.Stage.ToolVersion.Tool.ToolID, 
+                jobstage.Stage.ToolVersion.ToolVersionNum 
+            ))
+            Directory.copy_directory(tool_directory, tmp_dir)
         
         #spawn process as user to create job directory with correct permissions
         job_dir = self.RunUserProcess("%s/manage.py jobs_acl setup_job %d %d" % 
             (
-                self.project_dir, job.JobID, stage_index
+                self.project_dir, jobstage.JobStageID, stage_index
             )
         )
         
         #return path to job script
-        return os.path.join(job_dir, script_name)
+        return os.path.join(job_dir, 'job.sh')
 
     
     
     def CreateJob(self, job_name, description, JobTypeID, ToolVersion=None, WorkflowVersion=None):
         return Jobs.AddJob(User=self.user, JobName=job_name, 
                 Description=description, ToolVersion=ToolVersion, 
-                JobTypeID=JobTypeID)
+                WorkflowVersion=WorkflowVersion, JobTypeID=JobTypeID)
     
     
-    def RunCustomJob(self, job, commands, settings, files):
-        jobstage = JobStages.AddJobStage(self.user, job)
-        
-        #parse settings
-        settings_list = ""
-        for s in settings:
-            settings_list += "%s=%s," % (s["Key"], s["Value"])
-        settings = settings_list.rstrip(",")
-        
+    def RunCustomJob(self, job, commands, parsed_settings, files):
+        with transaction.atomic():
+            jobstage = JobStages.AddJobStage(self.user, job, Commands=commands)
+            
+            #determine job directory
+            job_dir = os.path.join(settings.JMS_SETTINGS["JMS_shared_directory"],
+                "users/%s/jobs/%d" % (self.user, jobstage.Job.JobID)
+            )
+            
+            jobstage.WorkingDirectory = job_dir
+            jobstage.OutputLog = os.path.join(job_dir, "logs/output.log")
+            jobstage.ErrorLog = os.path.join(job_dir, "logs/error.log")
+                
+            #parse settings
+            for s in parsed_settings:
+                #move to data layer
+                jsr = JobStageResource.objects.create(
+                    ResourceManager=module_name, JobStage=jobstage, Key=s["Key"], 
+                    Value=s["Value"], Label=s["Label"]
+                )
+            
+            jobstage.save()
+            
         #create job directory
-        job_script = self.SetupJobDirectory(job, files, 0, settings, commands)
+        job_script = self.SetupJobDirectory(jobstage, files, 0)
         
         r = ResourceManager(self.user)
         cluster_id = r.ExecuteJobScript(job_script)
@@ -786,77 +799,98 @@ class JobManager:
         jobstage.ClusterJobID = cluster_id.strip()
         jobstage.save()
             
-        return jobstage.Job
+        return jobstage
     
     
     def RunToolJob(self, job, user_parameters, files=[], stage=None, 
-        dependencies=[], stage_index=0):
+        stage_index=0):
         
-        if job.JobTypeID == 2:
-            version = job.ToolVersion
-        elif job.JobTypeID == 3:
-            version = stage.ToolVersion
-        
-        #create db entries
-        jobstage = JobStages.AddJobStage(self.user, job)
-        
-        #generate command for tool script
-        command = version.Command
-        
-        #append parameters to command
-        #TODO: move database call to bottom tier
-        parameters = version.ToolParameters.all()
-        
-        params = ""
-        for param in parameters:
-            #only add root parameters
-            if param.ParentParameter == None:
-                p = param.Context
-                
-                if param.InputBy == "user":
-                    for up in user_parameters:
-                        if up["ParameterID"] == param.ParameterID:
-                            val = up["Value"]
-                else:
-                    val = param.Value
-                
-                #If parameter value comes from a previous stage, fetch the value
-                if jobstage.Stage != None:
-                    stage_parameter = jobstage.Stage.StageParameters.get(
-                        Parameter__ParameterID=int(val)
-                    )
-                    
-                    val = prev_param.Value
-                
-                JobStageParameter.objects.create(JobStage=jobstage, Parameter=param,
-                    ParameterName=param.ParameterName, Value=val)
-                
-                if param.ParameterType.ParameterTypeID != 3 and len(str(val)) > 0:
-                    try:
-                        #check if the ${VALUE} variable is located in the string
-                        num = p.index("${VALUE}")
-                        p = p.replace("${VALUE}", str(val))
-                    except Exception, e:
-                        #if the ${VALUE} variable is not located in the string, append the value to the end
-                        #File.print_to_file("/tmp/file.txt", str(e) + ": " + p)
-                        p += " %s" % val                
-                    
-                    params += ' %s' % p
-                
-                elif param.ParameterType.ParameterTypeID == 3:
-                    params += ' %s' % p
+        with transaction.atomic():
+            #create db entries
+            jobstage = JobStages.AddJobStage(self.user, job, Stage=stage)
             
-        command += params
-        
-        #Get resources for tool version
-        #TODO: user customized resources
-        resources = Resources.GetResources(self.user, version, module_name)
-        settings = ""
-        for resource in resources:
-            settings += "%s=%s," % (resource.Key, resource.Value)
-        settings.rstrip(",")
-    
-        job_script = self.SetupJobDirectory(job, files, stage_index, settings, command)
+            stage_dir = ""
+            
+            if job.JobTypeID == 2:
+                version = job.ToolVersion
+            elif job.JobTypeID == 3:
+                version = stage.ToolVersion
+                stage_dir = str(stage.StageID)
+                stage_parameters = stage.StageParameters.all()
+            
+            #determine job directory
+            job_dir = os.path.join(settings.JMS_SETTINGS["JMS_shared_directory"],
+                "users/%s/jobs/%d/%s" % (self.user, jobstage.Job.JobID, stage_dir)
+            )
+            
+            jobstage.WorkingDirectory = job_dir
+            jobstage.OutputLog = os.path.join(job_dir, "logs/output.log")
+            jobstage.ErrorLog = os.path.join(job_dir, "logs/error.log")
+            
+            #generate command for tool script
+            command = version.Command
+            
+            #append parameters to command
+            #TODO: move database call to bottom tier
+            parameters = version.ToolParameters.all()
+            
+            params = ""
+            for param in parameters:
+                #only add root parameters
+                if param.ParentParameter == None:
+                    p = param.Context
+                    val = param.Value
+                    
+                    if param.InputBy == "user":
+                        for up in user_parameters:
+                            if up["ParameterID"] == param.ParameterID:
+                                val = up["Value"]
+                    
+                    #If parameter value comes from a previous stage, fetch the value
+                    if jobstage.Stage != None:
+                        try:
+                            stage_parameter = stage_parameters.get(
+                                Parameter__ParameterID=param.ParameterID
+                            )
+                            
+                            val = stage_parameter.Value
+                        except Exception, ex:
+                            pass
+                    
+                    JobStageParameter.objects.create(JobStage=jobstage, Parameter=param,
+                        ParameterName=param.ParameterName, Value=val)
+                    
+                    if param.ParameterType.ParameterTypeID != 3 and len(str(val)) > 0:
+                        try:
+                            #check if the ${VALUE} variable is located in the string
+                            num = p.index("${VALUE}")
+                            p = p.replace("${VALUE}", str(val))
+                        except Exception, e:
+                            #if the ${VALUE} variable is not located in the string, append the value to the end
+                            #File.print_to_file("/tmp/file.txt", str(e) + ": " + p)
+                            p += " %s" % val                
+                        
+                        params += ' %s' % p
+                    
+                    elif param.ParameterType.ParameterTypeID == 3:
+                        params += ' %s' % p
+                
+            command += params
+            
+            jobstage.Commands = command
+            
+            #Get resources for tool version
+            #TODO: user customized resources
+            resources = Resources.GetResources(self.user, version, module_name)
+            for resource in resources:
+                #move to data layer
+                jsr = JobStageResource.objects.create(ResourceManager=module_name, 
+                    JobStage=jobstage, Key=resource.Key, Value=resource.Value,
+                    Label=resource.Label)
+            
+            jobstage.save()
+            
+        job_script = self.SetupJobDirectory(jobstage, files, stage_index)
         
         r = ResourceManager(self.user)
         cluster_id = r.ExecuteJobScript(job_script)
@@ -874,19 +908,18 @@ class JobManager:
             stage = Stages.GetStage(self.user, s["StageID"])
             parameters = s["Parameters"]
             
-            #get dependencies
-            deps = []
-            for dep in stage.StageDependencies:
-                deps.append({ 
-                    "ClusterJobID": executed_stage[dep.DependantOn.StageID], 
-                    "Condition": dep.Condition.ConditionID,
-                    "ExitCodeValue": dep.ExitCodeValue
-                })
+            jobstage = self.RunToolJob(job, parameters, files, stage, i)
             
-            jobstage = RunToolJob(job, parameters, files, stage, deps, i)
+            executed_stages[stage.StageID] = jobstage.JobStageID
             
-            executed_stages[stage.StageID] = jobstage.ClusterJobID
-        
+            #create dependencies
+            for dep in stage.StageDependencies.all():
+                JobStageDependency.objects.create(
+                    JobStageOI=jobstage,
+                    DependantOn_id=executed_stages[dep.DependantOn.StageID],
+                    Condition_id=dep.Condition.ConditionID,
+                    ExitCodeValue=dep.ExitCodeValue
+                )
     
     
     def GetJobs(self, start=0, end=300):
@@ -944,20 +977,30 @@ class JobManager:
         
         for job in jobs:
             try:
-                JobData = json.dumps(job.DataSections, default=lambda o: o.__dict__, sort_keys=True)
+                JobData = json.dumps(job.DataSections, 
+                    default=lambda o: o.__dict__, sort_keys=True)
                 
                 #update or create JobStage
                 jobstage = JobStages.GetJobStage(job.JobID)
                 
+                new_status = job.Status
+                if new_status == 4 and job.ExitCode == None:
+                    new_status = 6
+                
                 if jobstage:
                     old_status = jobstage.Status.StatusID
-                    jobstage = JobStages.UpdateJobStage(jobstage, job.Status, job.ExitCode, 
-                        job.OutputLog, job.ErrorLog, job.WorkingDir, JobData)
-                    
-                    #if status has changed, handle change
-                    if old_status != job.Status:
-                        with transaction.atomic():
-                            pass
+                    if old_status < 5:
+                        if new_status == 4 and jobstage.RequiresEditInd:
+                            new_status = 5
+                        
+                        jobstage = JobStages.UpdateJobStage(jobstage, new_status, 
+                            job.ExitCode, job.OutputLog, job.ErrorLog, 
+                            job.WorkingDir, JobData)
+                        
+                        #if the status is held and the job is a workflow
+                        #release job if dependencies have been satisfied
+                        if new_status == 1 and jobstage.Job.JobTypeID < 4:
+                            self.ReleaseJob(jobstage)
                 else:
                     with transaction.atomic():
                         user, created = User.objects.get_or_create(
@@ -972,13 +1015,50 @@ class JobManager:
                             ClusterJobID=job.JobID, ExitCode=job.ExitCode, 
                             ErrorLog=job.ErrorLog, OutputLog=job.OutputLog, 
                             PWD=job.WorkingDir, JobData=JobData)
-                    
-                    #if the job is already complete
-                    if job.Status > 3:
-                        with transaction.atomic():
-                            pass
                 
             except Exception, ex:
-                File.print_to_file("/tmp/history.log", str(ex), permissions=0777)
+                File.print_to_file("/tmp/continue.txt", str(ex))
+                pass
+    
+    
+    def ContinueJob(self, jobstage):
+        #set status to complete
+        jobstage.Status.StatusID = 4
+        jobstage.RequiresEditInd = False
+        jobstage.save()
         
-        f.close()    
+        #loop through reliant jobs and release them if conditions are met
+        for dep in jobstage.ReliantJobStages.all():
+            js = dep.JobStageOI
+            self.ReleaseJob(js)
+    
+    
+    def ReleaseJob(self, jobstage):
+        if self.JobStageDependenciesSatisfied(jobstage):
+            r = ResourceManager(jobstage.Job.User)
+            out = r.ReleaseJob(jobstage.ClusterJobID)
+    
+    
+    def JobStageDependenciesSatisfied(self, js):
+        #check stage dependencies
+        for dep in js.JobStageDependencies.all():
+            dep_js = dep.DependantOn
+            
+            File.print_to_file("/tmp/continue.txt", "%s %s %s\n" % (str(dep_js.Stage.ToolVersion.Tool.ToolName), str(dep.Condition.ConditionID), str(dep_js.Status.StatusID)))
+            if int(dep_js.Status.StatusID) in [4, 6, 7]:
+                if dep.Condition.ConditionID == 1 and dep_js.Status.StatusID != 4:
+                    return False
+                elif dep.Condition.ConditionID == 2 and dep_js.Status.StatusID != 7:
+                    return False
+                elif dep.Condition.ConditionID == 3 and dep_js.Status.StatusID != 6:
+                    return False
+                elif dep.Condition.ConditionID == 4 and dep_js.ExitCode != dep.ExitCodeValue:
+                    return False
+            else:
+                return False
+            
+            #if we are here, this dependency is satisfied. Copy files from working directory.
+            Directory.copy_directory(dep_js.WorkingDirectory, 
+                js.WorkingDirectory, permissions=0777, replace=False)
+        
+        return True

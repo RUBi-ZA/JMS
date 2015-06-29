@@ -162,14 +162,13 @@ class BaseResourceManager:
         Failure: raise NotStartedException 
         '''
         raise NotImplementedError
-    
+
     def Restart(self):
         '''
         Success: return nothing
         Failure: raise NotRestartedException 
         '''
         raise NotImplementedError
-    
     
     def GetDefaultResources(self):
         '''
@@ -178,14 +177,13 @@ class BaseResourceManager:
         '''
         raise NotImplementedError
     
-    
     def CreateJobScript(self):
         '''
         Success: return path to job script
         Failure: raise NotCreatedException 
         '''
         raise NotImplementedError
-        
+    
     def ExecuteJobScript(self, cmd):
         '''
         Success: return job id
@@ -193,4 +191,30 @@ class BaseResourceManager:
         '''
         raise NotImplementedError
 
-
+    def HoldJob(self, id):
+        '''
+        Success: return empty string
+        Error: return error message
+        '''
+        raise NotImplementedError
+    
+    def ReleaseJob(self, id):
+        '''
+        Success: return empty string
+        Error: return error message
+        '''
+        raise NotImplementedError
+    
+    def KillJob(self, id):
+        '''
+        Success: return empty string
+        Error: return error message
+        '''
+        raise NotImplementedError
+    
+    def AlterJob(self, Key, Value):
+        '''
+        Success: return empty string
+        Error: return error message
+        '''
+        raise NotImplementedError  

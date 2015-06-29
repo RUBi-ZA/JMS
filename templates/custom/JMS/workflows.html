@@ -34,6 +34,38 @@
     
 	<div id="workflows" class="page-wrapper" >
 	    
+	    <!-- submit-dialog -->
+	    <div class="modal fade" id="submit-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+				    <div class="modal-body">
+				    	<div style="text-align:center">
+				    		<div style="height:130px;" data-bind="visible: $root.submitting()">
+								<img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px;" /> <br/>
+								<img src="{{ STATIC_URL }}img/text_loader.gif" style="height: 30px;"/> <br/>
+							</div>
+							
+				    		<div style="height:130px;" data-bind="visible: $root.submitting() == false && $root.submit_success() == true">
+								<img src="{{ STATIC_URL }}img/success.png" style="height:100px;" /> <br/>
+								<img src="{{ STATIC_URL }}img/job_started.gif" style="height: 30px;"/> <br/>
+							</div>
+							
+				    		<div style="height:130px;" data-bind="visible: $root.submitting() == false && $root.submit_success() == false">
+								<img src="{{ STATIC_URL }}img/error.png" style="height:100px;" /> <br/>
+								<img src="{{ STATIC_URL }}img/job_failed.gif" style="height: 30px;"/> <br/>
+							</div>
+						</div>
+				   	</div>
+				  	<div class="modal-footer" data-bind="visible: $root.submitting() == false">
+				  		<span data-bind="if: $root.submit_success()">
+				       		<a class="btn btn-default" data-bind="attr: { href: '/jobs/#' + $root.job_id() }">Go to job</a>
+				       	</span>
+				       	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+		   	</div>
+	 	</div>
+	    
 	    <!-- loading modal -->
 	    <div class="modal fade" id="loading-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 			<div class="modal-dialog">
@@ -833,7 +865,7 @@
         								<div data-bind="if: Type() == 5">
         									<input class="form-control" type="file" data-bind="attr: { multiple: Multiple, id: 'param_' + ParameterID(), name: 'param_' + ParameterID() }"></input>
         								</div>
-        								<div data-bind="if: Type() == 7">
+        								<div data-bind="if: Type() == 6">
         									<div data-bind="if: Multiple() == true">
         										<select class="form-control" multiple data-bind="options: complex_objects, optionsText: function(item) { return item.Parameter().parameters()[0].Value(); }, selectedOptions: selected_parameters">
         										</select>
@@ -859,7 +891,7 @@
 				    
 				    <div class="col-lg-12" style="text-align:right;padding-right:10px;padding-bottom:10px;">
 						<div class="btn-group" style="margin-right:25px;">
-							<a href="#" class="btn btn-success" data-bind="click: $root.RunTool"><i class="fa fa-play"></i> Run Job</a>
+							<a href="#" class="btn btn-success" data-bind="click: $root.RunWorkflow"><i class="fa fa-play"></i> Run Job</a>
 							<button data-toggle="dropdown" class="btn btn-success dropdown-toggle"><span class="caret"></span></button>
 							<ul class="dropdown-menu" style="text-align:left;">
 								<li><a href="#" data-bind="click: $root.ScheduleJob"><i class="fa fa-clock-o"></i> Schedule Job</a></li>

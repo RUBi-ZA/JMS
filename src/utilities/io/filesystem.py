@@ -53,7 +53,7 @@ class Directory:
             os.chmod(path, permissions)
     
     @staticmethod
-    def copy_directory(source, destination, permissions = 0775):
+    def copy_directory(source, destination, permissions = 0775, replace = True):
         Directory.create_directory(destination, permissions)
         
         src_files = os.listdir(source)
@@ -61,8 +61,8 @@ class Directory:
             full_file_name = os.path.join(source, file_name)
             full_dest_name = os.path.join(destination, file_name)
             
-            if os.path.isfile(full_file_name):
-                File.copy_file(full_file_name, full_dest_name, permissions)
-            else:
+            if os.path.isfile(full_file_name) and (replace or not os.path.isfile(full_dest_name)):
+                    File.copy_file(full_file_name, full_dest_name, permissions)
+            elif os.path.isdir(full_file_name):
                 Directory.copy_directory(full_file_name, full_dest_name)
     

@@ -6,9 +6,10 @@ import JobPermissions
 
 from jobs.models import Job
 
-def AddJob(User, JobName, Description, ToolVersion, JobTypeID):
+def AddJob(User, JobName, Description, ToolVersion, WorkflowVersion, JobTypeID):
     return Job.objects.create(User=User, JobName=JobName, 
-        JobDescription=Description, ToolVersion=ToolVersion, JobTypeID=JobTypeID)
+        JobDescription=Description, ToolVersion=ToolVersion, 
+        WorkflowVersion=WorkflowVersion, JobTypeID=JobTypeID)
     
 
 def GetJobs(user):

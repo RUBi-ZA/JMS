@@ -104,7 +104,7 @@ def UploadFiles(user, ToolID, path, file_dict):
 def SaveFile(user, ToolID, path, content):
     tool = GetTool(user, ToolID)
     if ToolPermissions.CanEdit(user, tool):
-        File.print_to_file(path, content, permissions=0755)
+        File.print_to_file(path, content, permissions=0777)
     else:
         raise PermissionDenied
 

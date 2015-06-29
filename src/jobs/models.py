@@ -336,6 +336,7 @@ class JobStage(models.Model):
     Job = models.ForeignKey(Job, db_column="JobID", related_name="JobStages")
     Stage = models.ForeignKey(Stage, db_column="StageID", related_name="StageJobs", null=True, blank=True)
     ToolName = models.CharField(max_length=100, null=True, blank=True)
+    Commands = models.TextField(null=True, blank=True)
     Status = models.ForeignKey(Status, db_column='StatusID', related_name='StatusJobStages', null=True, blank=True)
     RequiresEditInd = models.NullBooleanField(null=True, blank=True, default=False)
     ExitCode = models.IntegerField(null=True, blank=True)
@@ -348,6 +349,30 @@ class JobStage(models.Model):
     
     class Meta:
         db_table = 'JobStages'
+
+
+class JobStageResource(models.Model):
+    JobStageResourceID = models.AutoField(primary_key=True)
+    ResourceManager = models.CharField(max_length=30)
+    JobStage = models.ForeignKey(JobStage, db_column='JobStageID', related_name='JobStageResources')  
+    Key = models.CharField(max_length=15)
+    Value = models.CharField(max_length=255)
+    Label = models.CharField(max_length=100)
+    
+    class Meta:
+        unique_together = ('ResourceManager', 'JobStage', 'Key')
+        db_table = 'JobStageResources'
+
+
+class JobStageDependency(models.Model):
+    JobStageDependencyID = models.AutoField(primary_key=True)
+    JobStageOI = models.ForeignKey(JobStage, db_column="JobStageID", related_name="JobStageDependencies")
+    DependantOn = models.ForeignKey(JobStage, db_column="DependantOnID", related_name="ReliantJobStages")
+    Condition = models.ForeignKey(Condition, db_column='ConditionID', related_name='ConditionsJobStageDependencies')
+    ExitCodeValue = models.IntegerField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'JobStageDependencies'
 
 
 class JobStageDataSection(models.Model):

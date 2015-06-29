@@ -966,11 +966,10 @@ class CustomJob(APIView):
         
         jms = JobManager(user=request.user)
         
-        with transaction.atomic():
-            job = jms.CreateJob(job_name, description, None, 1)
-            job = jms.RunCustomJob(job, commands, settings, files)
+        job = jms.CreateJob(job_name, description, 1)
+        jobstage = jms.RunCustomJob(job, commands, settings, files)
         
-        return Response(job.JobID)
+        return Response(jobstage.Job.JobID)
 
 
 
@@ -994,9 +993,9 @@ class ToolJob(APIView):
         jms = JobManager(user=request.user)
         version = jms.GetToolVersionByID(version_id)
         
-        with transaction.atomic():
-            job = jms.CreateJob(job_name, description, ToolVersion=version, JobTypeID=2)
-            jobstage = jms.RunToolJob(job, parameters, files)
+        job = jms.CreateJob(job_name, description, ToolVersion=version, 
+            JobTypeID=2)
+        jobstage = jms.RunToolJob(job, parameters, files)
         
         return Response(jobstage.Job.JobID)
 
@@ -1011,7 +1010,7 @@ class WorkflowJob(APIView):
         """
         job_name = request.POST["JobName"]
         description = request.POST["Description"]
-        stages = json.loads(request.POST["JobStages"])
+        stages = json.loads(request.POST["Stages"])
         
         files = []
         for k, v in request.FILES.iteritems():
@@ -1021,9 +1020,9 @@ class WorkflowJob(APIView):
         jms = JobManager(user=request.user)
         version = jms.GetWorkflowVersionByID(version_id)
         
-        with transaction.atomic():
-            job = jms.CreateJob(job_name, description, WorkflowVersion=version, JobTypeID=3)
-            job = jms.RunWorkflowJob(job, stages)
+        job = jms.CreateJob(job_name, description, WorkflowVersion=version, 
+            JobTypeID=3)
+        jms.RunWorkflowJob(job, stages, files)
         
         return Response(job.JobID)
     

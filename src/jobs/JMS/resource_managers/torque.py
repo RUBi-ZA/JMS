@@ -50,11 +50,15 @@ class torque(BaseResourceManager):
     
     
     def GetDetailedQueue(self):
-        process = subprocess.Popen("qstat -x", shell=True, stdout=subprocess.PIPE)
+        process = subprocess.Popen("qstat -x", shell=True, stdout=subprocess.PIPE, close_fds=True)
         out, err = process.communicate()
         data = objectify.fromstring(out)
         
-        f = open("/tmp/torque.log", "w")
+        try:
+            process.kill()
+        except OSError, ex:
+            pass
+        
         jobs = []
         for job in data.Job:
             #get core details to update JobStage
@@ -70,8 +74,11 @@ class torque(BaseResourceManager):
                 state = Status.Complete
             elif state == 'C':
                 state = Status.Complete
-                exit_code = job.exit_status
-            
+                try:
+                    exit_code = job.exit_status
+                except Exception, ex:
+                    pass
+                    
             output_path = str(GetAttr(job, 'Output_Path', 'n/a')).split(":")[1]
             error_path = str(GetAttr(job, 'Error_Path', 'n/a')).split(":")[1]
             
@@ -175,8 +182,6 @@ class torque(BaseResourceManager):
             
             jobs.append(c)
         
-        
-        f.close()
         
         return jobs
     
@@ -476,53 +481,57 @@ class torque(BaseResourceManager):
     def GetNodes(self):
         nodes = []
         
-        out = self.RunUserProcess("qnodes -x")
+        try:
+            out = self.RunUserProcess("qnodes -x")
         
-        root = ET.fromstring(out)
-        
-        for node in root.iter('Node'):
-            name = node.find('name').text
-            state = node.find('state').text
-            num_cores = int(node.find('np').text)
-            properties = node.find('properties').text
-            busy_cores = 0;            
+            root = ET.fromstring(out)
             
-            job_dict = dict()
-            
-            jobs = node.find('jobs')
-            if jobs is not None:            
-                jobs = jobs.text
-                job_cores = jobs.split(',')            
-            
-                for core in job_cores:
-                    job_core = core.split('/')
+            for node in root.iter('Node'):
+                name = node.find('name').text
+                state = node.find('state').text
+                num_cores = int(node.find('np').text)
+                properties = node.find('properties').text
+                busy_cores = 0;            
                 
-                    key = job_core[1]
+                job_dict = dict()
+                
+                jobs = node.find('jobs')
+                if jobs is not None:            
+                    jobs = jobs.text
+                    job_cores = jobs.split(',')            
+                
+                    for core in job_cores:
+                        job_core = core.split('/')
                     
-                    core_range = job_core[0].split("-")
-                    if len(core_range) > 1:
-                        for i in range(int(core_range[0]), int(core_range[1])+1):                            
+                        key = job_core[1]
+                        
+                        core_range = job_core[0].split("-")
+                        if len(core_range) > 1:
+                            for i in range(int(core_range[0]), int(core_range[1])+1):                            
+                                busy_cores += 1
+                                if key in job_dict:
+                                    job_dict[key].append(i)
+                                else:
+                                    job_dict[key] = [i]
+                        else:
                             busy_cores += 1
                             if key in job_dict:
-                                job_dict[key].append(i)
+                                job_dict[key].append(job_core[0])
                             else:
-                                job_dict[key] = [i]
-                    else:
-                        busy_cores += 1
-                        if key in job_dict:
-                            job_dict[key].append(job_core[0])
-                        else:
-                            job_dict[key] = [job_core[0]]
-            
-            free_cores = num_cores - busy_cores
-            
-            n = Node(name, state, num_cores, busy_cores, free_cores, properties)
-            
-            for k in job_dict:
-                j = Job(k, job_dict[k])                
-                n.jobs.append(j)
-            
-            nodes.append(n)
+                                job_dict[key] = [job_core[0]]
+                
+                free_cores = num_cores - busy_cores
+                
+                n = Node(name, state, num_cores, busy_cores, free_cores, properties)
+                
+                for k in job_dict:
+                    j = Job(k, job_dict[k])                
+                    n.jobs.append(j)
+                
+                nodes.append(n)
+        
+        except Exception:
+            pass
         
         return nodes
     
@@ -597,19 +606,15 @@ class torque(BaseResourceManager):
         ])
 
     
-    def CreateJobScript(self, job_name, job_dir, script_name, settings, 
-        dependencies, commands):
-        #assert len(section.DataFields) == 6, "Not enough data fields"
-        
-        log_dir = os.path.join(job_dir, "logs")
-        Directory.create_directory(log_dir)
+    def CreateJobScript(self, job_name, job_dir, script_name, output_log, 
+        error_log, settings, has_dependencies, commands):
         
         script = os.path.join(job_dir, script_name)
         
         with open(script, 'w') as job_script:
             print >> job_script, "#!/bin/sh"
-            print >> job_script, "#PBS -o localhost:%s" % os.path.join(log_dir, "output.log")
-            print >> job_script, "#PBS -e localhost:%s" % os.path.join(log_dir, "error.log")
+            print >> job_script, "#PBS -o localhost:%s" % output_log
+            print >> job_script, "#PBS -e localhost:%s" % error_log
             print >> job_script, "#PBS -d %s" % job_dir
             print >> job_script, "#PBS -N %s" % job_name
             
@@ -632,7 +637,9 @@ class torque(BaseResourceManager):
                         print >> job_script, "#PBS -V"
             print >> job_script, nodes 
             
-            #TODO: set dependencies
+            #has_dependencies?
+            if has_dependencies:
+                print >> job_script, "#PBS -h"
             
             print >> job_script, ""
             print >> job_script, commands   
@@ -644,14 +651,17 @@ class torque(BaseResourceManager):
         return self.RunUserProcess("qsub %s" % script)
     
     
+    def HoldJob(self, id):
+        return self.RunUserProcess("qhold %s" % id)
+    
+    
+    def ReleaseJob(self, id):
+        return self.RunUserProcess("qrls %s" % id)
+    
+    
     def KillJob(self, id):
         return self.RunUserProcess("qdel %s" % id)
     
     
     def AlterJob(self, Key, Value):
-        raise NotImplementedError
-    
-    
-    
-    
-    
+        raise NotImplementedError  

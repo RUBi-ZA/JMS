@@ -8,10 +8,11 @@ import JobPermissions
 
 def AddJobStage(user, job, Stage=None, RequiresEditInd=False, StatusID=1,
     ClusterJobID=None, ExitCode=None, OutputLog=None, ErrorLog=None, PWD=None, 
-    JobData=None):
+    JobData=None, Commands=None):
     return JobStage.objects.create(Job=job, Stage=Stage, 
         RequiresEditInd=RequiresEditInd, Status_id=StatusID,
-        ClusterJobID=ClusterJobID, ExitCode=None, JobData=JobData)
+        ClusterJobID=ClusterJobID, ExitCode=None, JobData=JobData, 
+        Commands=Commands)
 
 
 def UpdateJobStage(jobstage, Status, ExitCode, OutputLog, ErrorLog, PWD, JobData):

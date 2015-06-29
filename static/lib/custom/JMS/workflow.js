@@ -819,12 +819,12 @@ function WorkflowViewModel() {
 	    }
 	});
 	
-	self.Stages = ko.observableArray();
+	self.job_id = ko.observable();
 	self.loading_stages = ko.observable(false);
-	
 	self.workflow_job_name = ko.observable();
 	self.workflow_job_desc = ko.observable();
 	self.submitting = ko.observable(false);
+	self.submit_success = ko.observable(false);
 	self.RunWorkflow = function() {
 	    var form = $("form#workflow-form");
 	    
@@ -836,36 +836,45 @@ function WorkflowViewModel() {
     		
     		var formData = new FormData(form[0]);
     		
-    		var Parameters = []
-    		$.each(self.ToolVersion().ToolParameters(), function(i, p) {
-    		    if(p.InputBy() == "user") {
-        		    var param = new Object();
-        		    param.ParameterID = p.ParameterID();
-        		    param.Value = p.Value();
-        		    
-        		    Parameters.push(param);
-    		    }
+    		var Stages = [];
+    		
+    		$.each(self.WorkflowVersion().Stages(), function(i, stage){
+    		    var s = new Object();
+    		    s.StageID = stage.StageID();
+        		s.Parameters = []
+        		
+        		$.each(stage.ToolVersion().ToolParameters(), function(i, p) {
+        		    if(p.InputBy() == "user") {
+            		    var param = new Object();
+            		    param.ParameterID = p.ParameterID();
+            		    param.Value = p.Value();
+            		    
+            		    s.Parameters.push(param);
+        		    }
+        		});
+        		
+        		Stages.push(s);
     		});
     		
-    		formData.append('JobName', tool.tool_job_name());
-    		formData.append('Description', tool.tool_job_desc());
-		    formData.append('Parameters', JSON.stringify(Parameters));
+    		formData.append('JobName', self.workflow_job_name());
+    		formData.append('Description', self.workflow_job_desc());
+		    formData.append('Stages', JSON.stringify(Stages));
     		
     		$.ajax({
-    		    url: "/api/jms/jobs/tool/versions/" + tool.ToolVersion().ToolVersionID(),
+    		    url: "/api/jms/jobs/workflow/versions/" + self.WorkflowVersion().WorkflowVersionID(),
     		    type: "POST",
     		    data: formData,
     		    success: function(id) {
     		        //Set the job ID so that the "Go to Job" button works
     		        self.job_id(id);
     		        
-    		        tool.submit_success(true);
+    		        self.submit_success(true);
     		    }, 
     		    error: function() {
-    		        tool.submit_success(false);
+    		        self.submit_success(false);
     		    },
     		    complete: function() {
-    		        tool.submitting(false);
+    		        self.submitting(false);
     		    },
                 cache: false,
                 contentType: false,
@@ -873,8 +882,8 @@ function WorkflowViewModel() {
     		});
     		
         } catch(err) {
-            tool.submit_success(false);
-    		tool.submitting(false);
+            self.submit_success(false);
+    		self.submitting(false);
             console.log(err);   
         }
 	}
