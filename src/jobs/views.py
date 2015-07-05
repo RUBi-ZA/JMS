@@ -1012,10 +1012,13 @@ class WorkflowJob(APIView):
         description = request.POST["Description"]
         stages = json.loads(request.POST["Stages"])
         
-        files = []
+        files = {}
         for k, v in request.FILES.iteritems():
+            if not files[k]:
+                files[k] = []
+            
             for f in request.FILES.getlist(k):
-                files.append(f)
+                files[k].append(f)
         
         jms = JobManager(user=request.user)
         version = jms.GetWorkflowVersionByID(version_id)
@@ -1084,6 +1087,28 @@ class JobDetail(APIView):
         
         return Response()
 
+
+class ClusterJob(APIView):
+    permission_classes = (IsAuthenticated,)
+    
+    def get(self, request, cluster_id):
+        """
+        Fetch job details by cluster job ID
+        """
+        jms = JobManager(user=request.user)
+        job = jms.GetClusterJob(cluster_id)
+        JobData = json.dumps(job, default=lambda o: o.__dict__, sort_keys=True)
+        
+        return Response(JobData)
+    
+    def delete(self, request, cluster_id):
+        """
+        Stop job
+        """
+        jms = JobManager(user=request.user)
+        jms.StopClusterJob(cluster_id)
+        
+        return Response()
 
 
 class PackageManagement(APIView):

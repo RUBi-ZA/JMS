@@ -10,15 +10,14 @@ public_urls = patterns('jobs.views',
     #ANSIBLE
     url(r'packages/?', views.PackageManagement.as_view()),
     
-    
     #JOB FILES
     
     url(r'jobstages/(?P<job_stage_id>[^/]+)/files/?', views.FileDetail.as_view()), 
     url(r'jobstages/(?P<job_stage_id>[^/]+)/directories/?', views.DirectoryDetail.as_view()), 
     
+    #JOBS
     
-    
-    #url(r'jobs/cluster/(?P<cluster_id>[^/]+)/?', views.ClusterJob.as_view()),
+    url(r'jobs/cluster/(?P<cluster_id>[^/]+)/?', views.ClusterJob.as_view()),
     
     #url(r'jobs/batch/(?P<batch_job_id>[^/]+)/files/(?P<file_type>[^/]+)/?', views.BatchFile.as_view()),
     #url(r'jobs/batch/(?P<batch_job_id>[^/]+)/(?P<action>[^/]+)/?', views.BatchJobUpdate.as_view()),

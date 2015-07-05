@@ -863,7 +863,8 @@
         										optionsValue: function(item) { return item.ParameterOptionValue; }, value: Value, attr: { multiple: Multiple }, selectedOptions: selected_values"></select>
         								</div>
         								<div data-bind="if: Type() == 5">
-        									<input class="form-control" type="file" data-bind="attr: { multiple: Multiple, id: 'param_' + ParameterID(), name: 'param_' + ParameterID() }"></input>
+        									<input class="form-control" type="file" data-bind="attr: { multiple: Multiple, id: 'param_' + ParameterID(), name: 'stage_' + $parents[1].StageID() }"></input>
+        								    <input type="hidden" data-bind="value: Value"/>
         								</div>
         								<div data-bind="if: Type() == 6">
         									<div data-bind="if: Multiple() == true">

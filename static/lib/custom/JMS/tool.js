@@ -1490,17 +1490,13 @@ function ToolViewModel() {
 				    param.ParameterID = p.ParameterID();
 					    
     		        if(p.Type() == 5) {				
-					    /*var temp_files = $('input[name="param_' + p.ParameterID() + '"]').prop('files');
+					    var temp_files = $('input[name="param_' + p.ParameterID() + '"]').prop('files');
+						param.Value = "";
 					    $.each(temp_files, function(k, f) {
-						    var param = new Object();
-						    param.ParameterID = p.ParameterID();
-						    param.Value = f.name;
-			
-						    stage.Parameters.push(param);
-					    });*/
-    		        }
-    		        
-				    if(p.Type() == 6) {
+						    param.Value += f.name + ",";
+					    });
+					    param.Value = param.Value.substring(0, param.Value.length - 1);
+    		        } else if(p.Type() == 6) {
 					    param.Value = p.get_JSON();
 					    console.log(param.Value);
 				    } else if(p.Type() == 7) {

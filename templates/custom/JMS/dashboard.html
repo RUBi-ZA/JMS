@@ -24,6 +24,8 @@
 {% endblock %}
 
 {% block content %}
+    <div class="modal fade" id="question-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    </div>
 	
 	<div class="modal fade" id="modal-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     	<div class="modal-dialog">
@@ -46,277 +48,382 @@
 	<div id="page-wrapper" class="page-wrapper" >
 		<div class="page-inner">
 			
-			<div style="text-align:center;display:none;" data-bind="visible: $root.Loading">
-				<img src="{{ STATIC_URL }}img/big_red_loader.gif" /> <br/>
-				<img src="{{ STATIC_URL }}img/text_loader.gif" /> <br/>
-			</div>
-			<!-- /. LOADER -->
 			
-			<div id="dashboard" style="display:none;" data-bind="visible: $root.Loading() == false">        
-				<div class="row">
-					<div class="col-md-12">
-						<h2><i class="fa fa-dashboard"></i> Dashboard</h2>   	
-					</div>
-				</div>
-				<!-- /. ROW  -->
-						    
-				<hr />
-				
-				<div class="row">
-					<div class="col-lg-12"> 
+			
+			<div id="job-details" style="display:none;">
+			    <div style="text-align:center;display:none;" data-bind="visible: $root.loading_job">
+    				<img src="{{ STATIC_URL }}img/big_red_loader.gif" /> <br/>
+    				<img src="{{ STATIC_URL }}img/text_loader.gif" /> <br/>
+    			</div>
+    			<!-- /. LOADER -->
+    			
+    			<div data-bind="visible: $root.loading_job() == false, with: Job">
+    			    <h2>
+    			        <i class="fa fa-wrench"></i>
+    			        <span data-bind="text: JobID"></span>
+    			    </h2>
 				        
-				        <div class="panel panel-primary text-center no-boder bg-color-blue col-lg-3">
-				            <div class="panel-body" style="height:125px;">
-				                <i class="fa fa-sitemap fa-3x"></i>
-				                <h4 style="padding-top:0px"><span data-bind="text: $root.NodesOnline"></span> / <span data-bind="text: $root.Nodes().length"></span> (<span data-bind="text: Math.round(($root.NodesOnline()/$root.Nodes().length) * 100)"></span>%)</h4>
-				            </div>
-				            <div class="panel-footer back-footer-navy">
-				                Nodes Online                           
-				            </div>
-				        </div> 
-				            
-				        <div class="panel panel-primary text-center no-boder bg-color-red col-lg-3">
-				            <div class="panel-body" style="height:125px;">
-				                <i class="fa fa-dashboard fa-3x"></i>
-				                <h4 style="padding-top:0px"><span data-bind="text: $root.BusyCores"></span> / <span data-bind="text: $root.NumCores"></span> (<span data-bind="text: Math.round(($root.BusyCores()/$root.NumCores())*100)"></span>%)</h4>
-				            </div>
-				            <div class="panel-footer back-footer-red">
-				                CPU Usage                            
-				            </div>
-				        </div>     
-				            
-				        <div class="panel panel-primary text-center no-boder bg-color-green col-lg-3">
-				            <div class="panel-body" style="height:125px;">
-				                <i class="fa fa-tasks fa-3x"></i>
-				                <h4 style="padding-top:0px"><span data-bind="text: $root.JobsRunning"></span> Jobs Running</h4>
-				                (<span data-bind="text: $root.JobsWaiting"></span> Jobs Waiting)
-				            </div>
-				            <div class="panel-footer back-footer-green">
-				                Jobs Running                            
-				            </div>
-				        </div>     
-							                 
-				        <div class="panel panel-primary text-center no-boder bg-color-purple col-lg-3">
-				            <div class="panel-body" style="height:125px;">
-				                <i class="fa fa-download fa-3x"></i>
-				                <h4 style="padding-top:0px"><span data-bind="text: $root.DiskUsage().AvailableSpace"></span> </h4>
-				            </div>
-				            <div class="panel-footer back-footer-purple">
-				            	Disk Space Available                            
-				            </div>
-				        </div>                 
+			        <div class="col-lg-12" style="text-align:right;padding:6px;"> 
+		                <!-- ko if: Status() < 4 -->
+                        <button class="btn btn-danger" title="Stop job"> 
+		                    <i class="fa fa-stop"></i> Stop Job
+		                </button>  
+		                <!-- /ko -->
+		                
+		                
+		                <a href="/#" class="btn btn-warning">
+		                    <i class="fa fa-arrow-left"></i> 
+		                    Back
+		                </a>
+		                
+			            <hr/>
+                    </div>
+				    
+				    <div class="row">
+    			        <div class="col-lg-12">
+    			            <h4>Job Details</h4>
+    			            
+        			        <div class="col-lg-3">
+        			            <div class="form-group">
+        			                <label>Job Name:</label><br>
+        			                <span data-bind="text: JobName"></span>
+        			            </div>
+        			            <div class="form-group">
+        			                <label>Job Owner:</label><br>
+        			                <span data-bind="text: User"></span>
+        			            </div>
+        			        </div>
+        			        
+        			        <div class="col-lg-3">
+        			            <div class="form-group">
+        			                <label>Status:</label><br>
+        			                <!-- ko if: Status() == 1 -->
+        			                    <span>Created/Held</span>
+        			                <!-- /ko -->
+        			                <!-- ko if: Status() == 2 -->
+        			                    <span>Queued</span>
+        			                <!-- /ko -->
+        			                <!-- ko if: Status() == 3 -->
+        			                    <span>Running</span>
+        			                <!-- /ko -->
+        			                <!-- ko if: Status() == 4 -->
+        			                    <span>Complete</span>
+        			                <!-- /ko -->
+        			            </div>
+        			            <div class="form-group">
+        			                <label>Exit Code:</label><br>
+        			                <span data-bind="text: ExitCode"></span>
+        			            </div>
+        			        </div>
+        				        
+        			        <div class="col-lg-6">
+        			            <div class="form-group">
+        			                <label>Working Directory:</label><br>
+        			                <span data-bind="text: WorkingDir"></span>
+        			            </div>
+        			            <div class="form-group">
+        			                <label>Error Log:</label><br>
+        			                <span data-bind="text: ErrorLog">n/a</span>
+        			            </div>
+        			            <div class="form-group">
+        			                <label>Output Log:</label><br>
+        			                <span data-bind="text: OutputLog"></span>
+        			            </div>
+        			        </div>
+    			        </div>
+    			    </div>  
+    			    
+    			    <hr>
+    			    
+				    <div class="row">
+				        <div class="col-lg-12">
+				        <!-- ko foreach: DataSections -->
+			                <h4 data-bind="text: SectionHeader"></h4>
+			                <div class="col-lg-12" data-bind="foreach: DataFields" style="padding-bottom: 20px;">
+			                    <div class="col-lg-6">
+			                        <label data-bind="text: Label"></label>
+			                        <span class="form-control" data-bind="text: Value" style="word-wrap:break-word"></span>
+			                    </div>
+			                </div>
+			            <!-- /ko -->
+			            </div>
 				    </div>
-				</div>
-				<!-- /. ROW  -->
-						    
-				<hr />
+    			</div>
+			</div>
 			
-				<div class="row" style="min-height:1605px;">
-					<div class="col-lg-12">    
-					
-						<!-- NODE USAGE -->   
-						<div class="col-lg-6">  
-							<div class="panel panel-back noti-box col-lg-12">
-								<span class="icon-box bg-color-blue">
-								    <i class="fa fa-sitemap"></i>
-								</span>
-								<div class="text-box">
-								    <p class="main-text">Node Usage </p>
-								    
-								    <br><hr>
-								    
-								    <div>
-								    	
-								    	<!-- donut chart -->
-								        <div class="col-lg-12">
-										    <div class="panel panel-info">
-												<div class="panel-heading">
-													<label>Cores In Use:</label>
-												</div>
-												<div class="panel-body" style="min-height:347px;">
-													<div data-bind="if: $root.BusyCores() > 0" id="node-usage-chart"></div>
-												
-													<div data-bind="if: $root.BusyCores() == 0">
-														<h4>No nodes are currently in use:</h4>
-														<select class="form-control" data-bind="options: $root.Nodes, optionsText: function(item) { return item.Name; }, 
-															optionsValue: function(item) { return item }, value: $root.Node">
-														</select>
-													</div>
-												
-													<!-- usage stats -->
-													<div class="col-lg-12" data-bind="with: $root.Node">
-														<div class="col-lg-12">
-															<span class="color-bottom-txt">
-																<h3 data-bind="text: Name"></h3>
-																<form class="form-horizontal">     				
-																	<div class="form-group">
-																		<label class="control-label-2 col-lg-5">State:</label>
-																		<div class="col-lg-7">
-																			<span data-bind="text: State"></span>		
-																		</div>
-																	</div>     
-				
-																	<div class="form-group">
-																		<label class="control-label-2 col-lg-5">Total cores:</label>
-																		<div class="col-lg-7">
-																			<span data-bind="text: NumCores"></span>
-																		</div>
-																	</div>    
-				
-																	<div class="form-group">
-																		<label class="control-label-2 col-lg-5">Cores busy:</label>
-																		<div class="col-lg-7">
-																			<span data-bind="text: BusyCores"></span>
-																		</div>
-																	</div>   
-				
-																	<div class="form-group">
-																		<label class="control-label-2 col-lg-5">Cores free:</label>
-																		<div class="col-lg-7">
-																			<span data-bind="text: NumCores() - BusyCores()"></span>
-																		</div>
-																	</div>
-							
-																</form>
-															</span>
-														</div>
-													
-														<div class="col-lg-12" data-bind="if: BusyCores() > 0">
-															<div class="panel panel-info">
-																<div class="panel-heading" style="overflow:hidden;">
-																	Jobs on node:
-												
-																	<div class='st-filter'>
-																		Filter: <input data-bind="value: $root.NodeJobFilter" />
-																	</div>
-																</div>
-																<div class="panel-body" style="overflow-x:auto;padding:0px">
-																	<div class="table-responsive" style="height:350px;overflow-y:auto; padding:15px;">
-																
-																		<table class="table table-hover">
-																			<thead>
-																				<tr>
-																				    <th>Job ID</th>
-																				    <th>Cores in use</th>
-																				    <th></th>
-																				</tr>
-																			</thead>
-																			<tbody data-bind="foreach: Jobs">
-																				<tr data-bind="visible: $root.FilterNodeJob($data)">
-																				    <td>
-																				    	<a href="#" data-bind="text:JobID, click:$root.ViewJob">
-																				    	</a>
-																				    </td>
-										                        					<td data-bind="text:Cores"></td>
-																				    <td>
-																				    	<a data-bind="attr: { id: 'n_' + JobID().replace('.', '_') }, click: function() { $root.StopJob(JobID()); }" style="hover{ cursor: pointer;}; width:38px;" title="Stop job" class="btn btn-danger btn-sm" >
-																				    		<i class="fa fa-trash-o"></i>
-																				    		<img src="{{ STATIC_URL }}img/small_red_loader.gif" style="display:none;"/>
-																				    	</a>
-																				    </td>
-																				</tr>
-																			</tbody>
-																		</table>
-																																
-																	</div>
-										        
-																	<div class="col-lg-12 panel-footer" style="padding-top:10px;background:white;">
-																		<label>No. of Jobs: </label> <span data-bind="text: Jobs().length"></span>
-																	</div>
-																</div>
-															</div>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>				
-								
-								    </div>
-								</div>
-							 </div>
-						 </div>
-						 <!-- /. NODE USAGE -->
-						 
-						 <!-- QUEUE -->
-						 <div class="col-lg-6"> 
-							 <div class="panel panel-back noti-box">
-								<span class="icon-box bg-color-green">
-								    <i class="fa fa-tasks"></i>
-								</span>
-								<div class="text-box">
-								    <p class="main-text">Queue </p>
-								    
-								    <br><hr>
-								    
-								    <div>
-								    	
-								    	<div class="panel panel-success">
-											<div class="panel-heading" style="overflow:hidden;">
-												<label>Queue:</label>
-												
-												<div class='st-filter'>
-													Filter: <input data-bind="value: $root.QueueFilter" />
-												</div>
-											</div>
-											<div class="panel-body" style="overflow-x:auto;padding:0px;">
-												
-												<div class="table-responsive" style="min-height:325px;max-height:1046px;overflow-y:auto;padding:15px;">
-										            
-										            <table id="dt-queue" class="table table-hover">
-										                <thead>
-										                    <tr>
-										                        <th>Job ID</th>
-										                        <th>Username</th>
-										                        <th>Job Name</th>
-										                        <th>Nodes</th>
-										                        <th>Cores</th>
-										                        <th>State</th>
-										                        <th>Time</th>
-										                        <th>Queue</th>
-										                        <th></th>
-										                    </tr>
-										                </thead>
-										                <tbody data-bind="foreach: $root.Queue">
-										                    <tr data-bind="visible: $root.FilterQueue($data)">
-										                        <td>
-										                        	<a data-bind="text:JobID, attr { href: '/jobs/#cluster/' + JobID()}">
-										                        	</a>
-										                        </td>
-										                        <td data-bind="text:Username"></td>
-										                        <td data-bind="text:JobName"></td>
-										                        <td data-bind="text:Nodes"></td>
-										                        <td data-bind="text:Cores"></td>
-										                        <td data-bind="text:State"></td>
-										                        <td data-bind="text:Time"></td>
-										                        <td data-bind="text:Queue"></td>
-										                        <td>
-										                        	<a data-bind="attr: { id: 'q_' + JobID().replace('.', '_') }, click: function() { $root.StopJob(JobID()); }" style="hover{ cursor: pointer;}; width:38px;" title="Stop job" class="btn btn-danger btn-sm" >
-										                        		<i class="fa fa-trash-o"></i>
-										                        		<img src="{{ STATIC_URL }}img/small_red_loader.gif" style="display:none;"/>
-										                        	</a>
-										                        </td>
-										                    </tr>
-										                </tbody>
-										            </table>
-										            
-										        </div>
-										        
-										        <div class="col-lg-12 panel-footer" style="padding-top:10px;background:white;">
-										        	<label>No. of Jobs: </label> <span data-bind="text: $root.Queue().length"></span>
-										        </div>
-											</div>
-										</div>
-								
-								    </div>
-								</div>
-							 </div>
-						 </div>
-						 <!-- /. QUEUE -->
-						 
-				    </div>
-				</div>
-				<!-- /. ROW -->
-			
+			<div id="dashboard" style="display:none;" > 
+			    
+			    <div style="text-align:center;display:none;" data-bind="visible: $root.loading_dashboard">
+    				<img src="{{ STATIC_URL }}img/big_red_loader.gif" /> <br/>
+    				<img src="{{ STATIC_URL }}img/text_loader.gif" /> <br/>
+    			</div>
+    			<!-- /. LOADER -->
+    			
+    			<div data-bind="visible: $root.loading_dashboard() == false">
+    			    
+    				<div class="row">
+    					<div class="col-md-12">
+    						<h2><i class="fa fa-dashboard"></i> Dashboard</h2>   	
+    					</div>
+    				</div>
+    				<!-- /. ROW  -->
+    						    
+    				<hr />
+    				
+    				<div class="row">
+    					<div class="col-lg-12"> 
+    				        
+    				        <div class="panel panel-primary text-center no-boder bg-color-blue col-lg-3">
+    				            <div class="panel-body" style="height:125px;">
+    				                <i class="fa fa-sitemap fa-3x"></i>
+    				                <h4 style="padding-top:0px"><span data-bind="text: $root.NodesOnline"></span> / <span data-bind="text: $root.Nodes().length"></span> (<span data-bind="text: Math.round(($root.NodesOnline()/$root.Nodes().length) * 100)"></span>%)</h4>
+    				            </div>
+    				            <div class="panel-footer back-footer-navy">
+    				                Nodes Online                           
+    				            </div>
+    				        </div> 
+    				            
+    				        <div class="panel panel-primary text-center no-boder bg-color-red col-lg-3">
+    				            <div class="panel-body" style="height:125px;">
+    				                <i class="fa fa-dashboard fa-3x"></i>
+    				                <h4 style="padding-top:0px"><span data-bind="text: $root.BusyCores"></span> / <span data-bind="text: $root.NumCores"></span> (<span data-bind="text: Math.round(($root.BusyCores()/$root.NumCores())*100)"></span>%)</h4>
+    				            </div>
+    				            <div class="panel-footer back-footer-red">
+    				                CPU Usage                            
+    				            </div>
+    				        </div>     
+    				            
+    				        <div class="panel panel-primary text-center no-boder bg-color-green col-lg-3">
+    				            <div class="panel-body" style="height:125px;">
+    				                <i class="fa fa-tasks fa-3x"></i>
+    				                <h4 style="padding-top:0px"><span data-bind="text: $root.JobsRunning"></span> Jobs Running</h4>
+    				                (<span data-bind="text: $root.JobsWaiting"></span> Jobs Waiting)
+    				            </div>
+    				            <div class="panel-footer back-footer-green">
+    				                Jobs Running                            
+    				            </div>
+    				        </div>     
+    							                 
+    				        <div class="panel panel-primary text-center no-boder bg-color-purple col-lg-3">
+    				            <div class="panel-body" style="height:125px;">
+    				                <i class="fa fa-download fa-3x"></i>
+    				                <h4 style="padding-top:0px"><span data-bind="text: $root.DiskUsage().AvailableSpace"></span> </h4>
+    				            </div>
+    				            <div class="panel-footer back-footer-purple">
+    				            	Disk Space Available                            
+    				            </div>
+    				        </div>                 
+    				    </div>
+    				</div>
+    				<!-- /. ROW  -->
+    						    
+    				<hr />
+    			
+    				<div class="row" style="min-height:1605px;">
+    					<div class="col-lg-12">    
+    					
+    						<!-- NODE USAGE -->   
+    						<div class="col-lg-6">  
+    							<div class="panel panel-back noti-box col-lg-12">
+    								<span class="icon-box bg-color-blue">
+    								    <i class="fa fa-sitemap"></i>
+    								</span>
+    								<div class="text-box">
+    								    <p class="main-text">Node Usage </p>
+    								    
+    								    <br><hr>
+    								    
+    								    <div>
+    								    	
+    								    	<!-- donut chart -->
+    								        <div class="col-lg-12">
+    										    <div class="panel panel-info">
+    												<div class="panel-heading">
+    													<label>Cores In Use:</label>
+    												</div>
+    												<div class="panel-body" style="min-height:347px;">
+    													<div data-bind="if: $root.BusyCores() > 0" id="node-usage-chart"></div>
+    												
+    													<div data-bind="if: $root.BusyCores() == 0">
+    														<h4>No nodes are currently in use:</h4>
+    														<select class="form-control" data-bind="options: $root.Nodes, optionsText: function(item) { return item.Name; }, 
+    															optionsValue: function(item) { return item }, value: $root.Node">
+    														</select>
+    													</div>
+    												
+    													<!-- usage stats -->
+    													<div class="col-lg-12" data-bind="with: $root.Node">
+    														<div class="col-lg-12">
+    															<span class="color-bottom-txt">
+    																<h3 data-bind="text: Name"></h3>
+    																<form class="form-horizontal">     				
+    																	<div class="form-group">
+    																		<label class="control-label-2 col-lg-5">State:</label>
+    																		<div class="col-lg-7">
+    																			<span data-bind="text: State"></span>		
+    																		</div>
+    																	</div>     
+    				
+    																	<div class="form-group">
+    																		<label class="control-label-2 col-lg-5">Total cores:</label>
+    																		<div class="col-lg-7">
+    																			<span data-bind="text: NumCores"></span>
+    																		</div>
+    																	</div>    
+    				
+    																	<div class="form-group">
+    																		<label class="control-label-2 col-lg-5">Cores busy:</label>
+    																		<div class="col-lg-7">
+    																			<span data-bind="text: BusyCores"></span>
+    																		</div>
+    																	</div>   
+    				
+    																	<div class="form-group">
+    																		<label class="control-label-2 col-lg-5">Cores free:</label>
+    																		<div class="col-lg-7">
+    																			<span data-bind="text: NumCores() - BusyCores()"></span>
+    																		</div>
+    																	</div>
+    							
+    																</form>
+    															</span>
+    														</div>
+    													
+    														<div class="col-lg-12" data-bind="if: BusyCores() > 0">
+    															<div class="panel panel-info">
+    																<div class="panel-heading" style="overflow:hidden;">
+    																	Jobs on node:
+    												
+    																	<div class='st-filter'>
+    																		Filter: <input data-bind="value: $root.NodeJobFilter" />
+    																	</div>
+    																</div>
+    																<div class="panel-body" style="overflow-x:auto;padding:0px">
+    																	<div class="table-responsive" style="height:350px;overflow-y:auto; padding:15px;">
+    																
+    																		<table class="table table-hover">
+    																			<thead>
+    																				<tr>
+    																				    <th>Job ID</th>
+    																				    <th>Cores in use</th>
+    																				    <th></th>
+    																				</tr>
+    																			</thead>
+    																			<tbody data-bind="foreach: Jobs">
+    																				<tr data-bind="visible: $root.FilterNodeJob($data)">
+    																				    <td>
+    																				    	<a data-bind="text:JobID, attr { href: '#jobs/' + JobID()}"></a>
+    																				    </td>
+    										                        					<td data-bind="text:Cores"></td>
+    																				    <td>
+    																				    	<a data-bind="attr: { id: 'n_' + JobID().replace('.', '_') }, click: function() { $root.StopJob(JobID()); }" style="hover{ cursor: pointer;}; width:38px;" title="Stop job" class="btn btn-danger btn-sm" >
+    																				    		<i class="fa fa-trash-o"></i>
+    																				    		<img src="{{ STATIC_URL }}img/small_red_loader.gif" style="display:none;"/>
+    																				    	</a>
+    																				    </td>
+    																				</tr>
+    																			</tbody>
+    																		</table>
+    																																
+    																	</div>
+    										        
+    																	<div class="col-lg-12 panel-footer" style="padding-top:10px;background:white;">
+    																		<label>No. of Jobs: </label> <span data-bind="text: Jobs().length"></span>
+    																	</div>
+    																</div>
+    															</div>
+    														</div>
+    													</div>
+    												</div>
+    											</div>
+    										</div>				
+    								
+    								    </div>
+    								</div>
+    							 </div>
+    						 </div>
+    						 <!-- /. NODE USAGE -->
+    						 
+    						 <!-- QUEUE -->
+    						 <div class="col-lg-6"> 
+    							 <div class="panel panel-back noti-box">
+    								<span class="icon-box bg-color-green">
+    								    <i class="fa fa-tasks"></i>
+    								</span>
+    								<div class="text-box">
+    								    <p class="main-text">Queue </p>
+    								    
+    								    <br><hr>
+    								    
+    								    <div>
+    								    	
+    								    	<div class="panel panel-success">
+    											<div class="panel-heading" style="overflow:hidden;">
+    												<label>Queue:</label>
+    												
+    												<div class='st-filter'>
+    													Filter: <input data-bind="value: $root.QueueFilter" />
+    												</div>
+    											</div>
+    											<div class="panel-body" style="overflow-x:auto;padding:0px;">
+    												
+    												<div class="table-responsive" style="min-height:325px;max-height:1046px;overflow-y:auto;padding:15px;">
+    										            
+    										            <table id="dt-queue" class="table table-hover">
+    										                <thead>
+    										                    <tr>
+    										                        <th>Job ID</th>
+    										                        <th>Username</th>
+    										                        <th>Job Name</th>
+    										                        <th>Nodes</th>
+    										                        <th>Cores</th>
+    										                        <th>State</th>
+    										                        <th>Time</th>
+    										                        <th>Queue</th>
+    										                        <th></th>
+    										                    </tr>
+    										                </thead>
+    										                <tbody data-bind="foreach: $root.Queue">
+    										                    <tr data-bind="visible: $root.FilterQueue($data)">
+    										                        <td>
+    										                        	<a data-bind="text:JobID, attr { href: '#jobs/' + JobID()}">
+    										                        	</a>
+    										                        </td>
+    										                        <td data-bind="text:Username"></td>
+    										                        <td data-bind="text:JobName"></td>
+    										                        <td data-bind="text:Nodes"></td>
+    										                        <td data-bind="text:Cores"></td>
+    										                        <td data-bind="text:State"></td>
+    										                        <td data-bind="text:Time"></td>
+    										                        <td data-bind="text:Queue"></td>
+    										                        <td>
+    										                        	<a data-bind="attr: { id: 'q_' + JobID().replace('.', '_') }, click: function() { $root.StopJob(JobID()); }" style="hover{ cursor: pointer;}; width:38px;" title="Stop job" class="btn btn-danger btn-sm" >
+    										                        		<i class="fa fa-trash-o"></i>
+    										                        		<img src="{{ STATIC_URL }}img/small_red_loader.gif" style="display:none;"/>
+    										                        	</a>
+    										                        </td>
+    										                    </tr>
+    										                </tbody>
+    										            </table>
+    										            
+    										        </div>
+    										        
+    										        <div class="col-lg-12 panel-footer" style="padding-top:10px;background:white;">
+    										        	<label>No. of Jobs: </label> <span data-bind="text: $root.Queue().length"></span>
+    										        </div>
+    											</div>
+    										</div>
+    								
+    								    </div>
+    								</div>
+    							 </div>
+    						 </div>
+    						 <!-- /. QUEUE -->
+    						 
+    				    </div>
+    				</div>
+    				<!-- /. ROW -->
+			    </div>
 			</div>
 			<!-- /. DASHBOARD -->
 				
@@ -346,8 +453,11 @@
 	<!-- DATATABLE SCRIPTS -->
 	<script src="{{ STATIC_URL }}lib/dataTables/jquery.dataTables.js"></script>
 	<script src="{{ STATIC_URL }}lib/dataTables/dataTables.bootstrap.js"></script>
+	<!-- SAMMY SCRIPTS -->
+	<script src="{{ STATIC_URL }}lib/sammy.js"></script>
 	<!-- CUSTOM SCRIPTS -->
 	<script src="{{ STATIC_URL }}lib/custom/JMS/custom.js"></script>
+	<script src="{{ STATIC_URL }}lib/custom/question.js"></script>
 	<script src="{{ STATIC_URL }}lib/custom/JMS/dashboard.js"></script>
 	
 	<script>

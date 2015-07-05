@@ -54,138 +54,141 @@ class torque(BaseResourceManager):
         out, err = process.communicate()
         data = objectify.fromstring(out)
         
-        try:
-            process.kill()
-        except OSError, ex:
-            pass
-        
         jobs = []
         for job in data.Job:
-            #get core details to update JobStage
-            exit_code = None
-            state = job.job_state
-            if state == 'H':
-                state = Status.Held
-            elif state == 'Q':
-                state = Status.Queued
-            elif state == 'R':
-                state = Status.Running
-            elif state == 'E':
-                state = Status.Complete
-            elif state == 'C':
-                state = Status.Complete
-                try:
-                    exit_code = job.exit_status
-                except Exception, ex:
-                    pass
-                    
-            output_path = str(GetAttr(job, 'Output_Path', 'n/a')).split(":")[1]
-            error_path = str(GetAttr(job, 'Error_Path', 'n/a')).split(":")[1]
-            
-            env = str(GetAttr(job, 'Variable_List', 'n/a'))
-            vars = env.split(',')
-            
-            working_dir = "~"
-            for v in vars:
-                kv = v.split("=")
-                if kv[0] == "PBS_O_WORKDIR":
-                    working_dir = kv[1]
-                    flag = True
-                    break
-            
-            c = ClusterJob(job.Job_Id, job.Job_Name, job.euser, state, 
-                output_path, error_path, working_dir, exit_code, [])
-            
-            #get resource manager specific details
-            resources_allocated = DataSection("Allocated Resources", [
-                DataField(Key='mem', Label="Allocated Memory", ValueType=4, 
-                    DefaultValue=str(deepgetattr(job, 'Resource_List.mem'))
-                ),
-                DataField(Key='nodes', Label="Allocated Nodes", ValueType=4, 
-                    DefaultValue=str(deepgetattr(job, "Resource_List.nodes"))
-                ),
-                DataField(Key='walltime', Label="Allocated Walltime", 
-                    ValueType=4, DefaultValue=str(deepgetattr(job, "Resource_List.walltime"))
-                ),
-                DataField(Key='queue', Label="Queue", ValueType=4, 
-                    DefaultValue=str(deepgetattr(job, 'queue'))
-                ),
-            ])
-            
-            resources_used = DataSection("Resources Used", [
-                DataField(Key='cput', Label="CPU Time", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'resources_used.cput', 'n/a'))
-                ),
-                DataField(Key='mem_used', Label="Memory Used", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'resources_used.mem', 'n/a'))
-                ),
-                DataField(Key='vmem', Label="Virtual Memory Used", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'resources_used.vmem', 'n/a'))
-                ),
-                DataField(Key='walltime_used', Label="Walltime Used", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'resources_used.walltime', 'n/a'))
-                ),
-                DataField(Key='exec_host', Label="Execution Node", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'exec_host', 'n/a')).split("/")[0]
-                )
-            ])
-            
-            other = DataSection("Other", [
-                DataField(Key='server', Label="Server", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'server', 'n/a'))
-                ),
-                DataField(Key='submit_args', Label="Submit Args", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'submit_args', 'n/a'))
-                ),
-                DataField(Key='Output_Path', Label="Output Log", ValueType=4, 
-                    DefaultValue=output_path
-                ),
-                DataField(Key='Error_Path', Label="Error Log", ValueType=4, 
-                    DefaultValue=error_path
-                ),
-                DataField(Key='Priority', Label="Priority", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'Priority', 'n/a'))
-                ),
-                DataField(Key='Variable_List', Label="Environmental Variables", 
-                    ValueType=4, DefaultValue=env
-                ),
-                DataField(Key='comment', Label="Comment", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'comment', 'n/a'))
-                )
-            ])
-            
-            time = DataSection("Time", [
-                DataField(Key='ctime', Label="Created Time", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'ctime', 'n/a'))
-                ),
-                DataField(Key='qtime', Label="Time Entered Queue", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'qtime', 'n/a'))
-                ),
-                DataField(Key='etime', Label="Time Eligible to Run", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'etime', 'n/a'))
-                ),
-                DataField(Key='mtime', Label="Last Modified", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'mtime', 'n/a'))
-                ),
-                DataField(Key='start_time', Label="Start Time", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'start_time', 'n/a'))
-                ),
-                DataField(Key='comp_time', Label="Completed Time", ValueType=4, 
-                    DefaultValue=str(GetAttr(job, 'comp_time', 'n/a'))
-                ),
-            ])
-            
-            c.DataSections.append(resources_allocated)
-            c.DataSections.append(resources_used)
-            c.DataSections.append(time)
-            c.DataSections.append(other)
-            
-            jobs.append(c)
-        
+            j = self._ParseJob(job)
+            jobs.append(j)
         
         return jobs
     
     
+    def GetJob(self, id):
+        out = self.RunUserProcess("qstat -x %s" % id)
+        data = objectify.fromstring(out)
+        return self._ParseJob(data.Job)
+
+
+    def _ParseJob(self, job):
+        #get core details to update JobStage
+        exit_code = str(GetAttr(job, 'exit_status', None))
+        state = str(GetAttr(job, 'job_state', Status.Held))
+        if state == 'H':
+            state = Status.Held
+        elif state == 'Q':
+            state = Status.Queued
+        elif state == 'R':
+            state = Status.Running
+        elif state == 'E':
+            state = Status.Complete
+        elif state == 'C':
+            state = Status.Complete
+                
+        output_path = str(GetAttr(job, 'Output_Path', 'n/a')).split(":")[1]
+        error_path = str(GetAttr(job, 'Error_Path', 'n/a')).split(":")[1]
+        
+        env = str(GetAttr(job, 'Variable_List', 'n/a'))
+        vars = env.split(',')
+        
+        working_dir = "~"
+        for v in vars:
+            kv = v.split("=")
+            if kv[0] == "PBS_O_WORKDIR":
+                working_dir = kv[1]
+                flag = True
+                break
+        
+        job_id = str(GetAttr(job, 'Job_Id', 'Unknown'))
+        name = str(GetAttr(job, 'Job_Name', 'Unknown'))
+        user = str(GetAttr(job, 'euser', 'Unknown'))
+        
+        c = ClusterJob(job_id, name, user, state, output_path, error_path, 
+            working_dir, exit_code, [])
+        
+        #get resource manager specific details
+        resources_allocated = DataSection("Allocated Resources", [
+            DataField(Key='mem', Label="Allocated Memory", ValueType=4, 
+                DefaultValue=str(deepgetattr(job, 'Resource_List.mem'))
+            ),
+            DataField(Key='nodes', Label="Allocated Nodes", ValueType=4, 
+                DefaultValue=str(deepgetattr(job, "Resource_List.nodes"))
+            ),
+            DataField(Key='walltime', Label="Allocated Walltime", 
+                ValueType=4, DefaultValue=str(deepgetattr(job, "Resource_List.walltime"))
+            ),
+            DataField(Key='queue', Label="Queue", ValueType=4, 
+                DefaultValue=str(deepgetattr(job, 'queue'))
+            ),
+        ])
+        
+        resources_used = DataSection("Resources Used", [
+            DataField(Key='cput', Label="CPU Time", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'resources_used.cput', 'n/a'))
+            ),
+            DataField(Key='mem_used', Label="Memory Used", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'resources_used.mem', 'n/a'))
+            ),
+            DataField(Key='vmem', Label="Virtual Memory Used", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'resources_used.vmem', 'n/a'))
+            ),
+            DataField(Key='walltime_used', Label="Walltime Used", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'resources_used.walltime', 'n/a'))
+            ),
+            DataField(Key='exec_host', Label="Execution Node", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'exec_host', 'n/a')).split("/")[0]
+            )
+        ])
+        
+        other = DataSection("Other", [
+            DataField(Key='server', Label="Server", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'server', 'n/a'))
+            ),
+            DataField(Key='submit_args', Label="Submit Args", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'submit_args', 'n/a'))
+            ),
+            DataField(Key='Output_Path', Label="Output Log", ValueType=4, 
+                DefaultValue=output_path
+            ),
+            DataField(Key='Error_Path', Label="Error Log", ValueType=4, 
+                DefaultValue=error_path
+            ),
+            DataField(Key='Priority', Label="Priority", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'Priority', 'n/a'))
+            ),
+            DataField(Key='Variable_List', Label="Environmental Variables", 
+                ValueType=4, DefaultValue=env
+            ),
+            DataField(Key='comment', Label="Comment", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'comment', 'n/a'))
+            )
+        ])
+        
+        time = DataSection("Time", [
+            DataField(Key='ctime', Label="Created Time", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'ctime', 'n/a'))
+            ),
+            DataField(Key='qtime', Label="Time Entered Queue", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'qtime', 'n/a'))
+            ),
+            DataField(Key='etime', Label="Time Eligible to Run", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'etime', 'n/a'))
+            ),
+            DataField(Key='mtime', Label="Last Modified", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'mtime', 'n/a'))
+            ),
+            DataField(Key='start_time', Label="Start Time", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'start_time', 'n/a'))
+            ),
+            DataField(Key='comp_time', Label="Completed Time", ValueType=4, 
+                DefaultValue=str(GetAttr(job, 'comp_time', 'n/a'))
+            ),
+        ])
+        
+        c.DataSections.append(resources_allocated)
+        c.DataSections.append(resources_used)
+        c.DataSections.append(time)
+        c.DataSections.append(other)
+        
+        return c
     
     
     def GetSettings(self):

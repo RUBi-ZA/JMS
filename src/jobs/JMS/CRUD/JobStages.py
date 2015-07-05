@@ -42,4 +42,12 @@ def GetJobStageByID(user, id):
     else:
         raise PermissionDenied
 
+
+def GetJobStageByClusterID(user, id):
+    stage = JobStage.objects.get(ClusterJobID=id)
+    if JobPermissions.CanView(user, stage.Job):
+        return stage
+    else:
+        raise PermissionDenied
+
     

@@ -845,9 +845,21 @@ function WorkflowViewModel() {
         		
         		$.each(stage.ToolVersion().ToolParameters(), function(i, p) {
         		    if(p.InputBy() == "user") {
+        		        
             		    var param = new Object();
             		    param.ParameterID = p.ParameterID();
-            		    param.Value = p.Value();
+            		    
+            		    if(p.Type() == 5) {
+                		    var temp_files = $('#param_' + p.ParameterID() + '"]').prop('files');
+    						param.Value = "";
+    					    $.each(temp_files, function(k, f) {
+    						    param.Value += f.name + ",";
+    					    });
+					        param.Value = param.Value.substring(0, param.Value.length - 1);
+            		    }
+            		    else {
+            		        param.Value = p.Value();
+            		    }
             		    
             		    s.Parameters.push(param);
         		    }

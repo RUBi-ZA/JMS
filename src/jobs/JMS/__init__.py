@@ -853,7 +853,13 @@ class JobManager:
                                 Parameter__ParameterID=param.ParameterID
                             )
                             
-                            val = stage_parameter.Value
+                            if stage_parameter.StageParameterType == 1:
+                                val = stage_parameter.Value
+                            elif stage_parameter.StageParameterType == 2:
+                                val = JobStageParameter.objects.get(JobStage__Job=job, ParameterID=stage_parameter.Value)
+                            elif stage_parameter.StageParameterType == 3:
+                                val = ExpectedOutput.objects.get(ExpectedOutputID=stage_parameter.Value)
+                                
                         except Exception, ex:
                             pass
                     
@@ -908,7 +914,7 @@ class JobManager:
             stage = Stages.GetStage(self.user, s["StageID"])
             parameters = s["Parameters"]
             
-            jobstage = self.RunToolJob(job, parameters, files, stage, i)
+            jobstage = self.RunToolJob(job, parameters, files.get("stage_%d" % stage.StageID, []), stage, i)
             
             executed_stages[stage.StageID] = jobstage.JobStageID
             
@@ -922,12 +928,21 @@ class JobManager:
                 )
     
     
+    def GetClusterJob(self, id):
+        r = ResourceManager(self.user)
+        return r.GetJob(id)
+
+    
     def GetJobs(self, start=0, end=300):
         return Jobs.GetJobs(self.user)[start:end]
     
     
     def GetJob(self, job_id):
         return Jobs.GetJob(self.user, job_id)
+    
+    
+    def GetJobByClusterJobID(self, id):
+        return JobStages.GetJobStageByClusterID(self.user, id).Job
     
     
     def FilterJobsByParameter(self, filters):
