@@ -270,9 +270,11 @@ class JobListSerializer(serializers.ModelSerializer):
 
 
 class StageSerializer(serializers.ModelSerializer):
+    ToolVersion = JobToolVersionSerializer()
+    
     class Meta:
         model = Stage
-        fields = ('StageID', 'Checkpoint')
+        fields = ('StageID', 'StageLevel', 'ToolVersion', 'Checkpoint')
     
 
 class JobStageDataFieldSerializer(serializers.ModelSerializer):

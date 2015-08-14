@@ -25,7 +25,6 @@ class Impersonator(Resource):
         if process == None:
             process = subprocess.Popen('su %s -c " python login.py %s %s"' % (username, username, password), shell=True, stdout=subprocess.PIPE)
             output, error = process.communicate()
-            print output
             
             if output.startswith("0"): 
                 self.processes.add(username, "")
@@ -36,6 +35,8 @@ class Impersonator(Resource):
     
     def render_POST(self, request):
         try:
+            print "### Received request ###"
+            
             data = request.content.read()
             data_lines = data.split("\n")
             
@@ -55,7 +56,9 @@ class Impersonator(Resource):
             #if command should be run as sudo
             if sudo:
                 command = 'sudo -S %s' % command
-                    
+            
+            command = 'source /srv/Webinal/venv/bin/activate;%s;deactivate' % command
+            
             if self.authenticate(credentials[0], credentials[1]):
                 print "Permission granted."
                 print "Running '%s' as '%s'" % (command, credentials[0])
@@ -70,7 +73,9 @@ class Impersonator(Resource):
                     output, error = process.communicate(credentials[1] + "\n")
                 else:
                     output, error = process.communicate()
-                               
+                
+                print output
+
                 output = str(output).strip("None")
                 return output
             else:

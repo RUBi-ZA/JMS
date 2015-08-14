@@ -22,7 +22,7 @@ var Node = function(name, state, num_cores, busy_cores, jobs) {
 
 var NodeJob = function(job_id, cores){
 	this.JobID = ko.observable(job_id);
-	this.Cores = ko.observableArray(cores);
+	this.Cores = ko.observable(cores);
 }
 
 var Job = function(job_id, username, job_name, nodes, cores, state, time, queue, server, resources){
@@ -218,6 +218,8 @@ function DashboardViewModel() {
 	
 	self.StopJob = function(job_id) {
 	    question.Show("Stop Job?", "Are you sure you want to stop this job (" + job_id + ")? You will not be able to reverse this action.", function() {
+    		question.ToggleLoading(true);
+    		
     		$("#n_" + job_id.replace('.', '_') + " > i").hide();
     		$("#n_" + job_id.replace('.', '_') + " > img").show();
     		
@@ -259,6 +261,10 @@ function DashboardViewModel() {
     				
     				$("#q_" + job_id + " > img").hide();
     				$("#q_" + job_id + " > i").show();
+    			},
+    			complete: function() {
+    			    question.Hide();
+    			    question.ToggleLoading(false);
     			}
     		});
     	});

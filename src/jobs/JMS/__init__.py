@@ -14,8 +14,8 @@ from helpers import *
 from resource_managers import objects
 
 from utilities.io.filesystem import *
-
-import shutil, json, requests
+ 
+import shutil, json, requests, traceback, sys
 
 #dynamically import the resource manager module
 module_name = settings.JMS_SETTINGS["resource_manager"]["name"]
@@ -126,8 +126,8 @@ class JobManager:
             
             abspath = os.path.join(stage.WorkingDirectory, filepath)
             
-            cmd = "python %s/manage.py acl CREATE_TEMP_FILE %s %s" % (
-                self.project_dir, abspath, tmp_path) 
+            cmd = "%s/venv/bin/python %s/manage.py acl CREATE_TEMP_FILE %s %s" % (
+                self.project_dir, self.project_dir, abspath, tmp_path) 
             
             out = self.RunUserProcess(cmd, user=stage.Job.User)
             
@@ -141,8 +141,8 @@ class JobManager:
     
     def get_job_directory_listing(self, job_stage_id, directory):
         stage = JobStages.GetJobStageByID(self.user, job_stage_id)
-        return self.RunUserProcess("python %s/manage.py acl GET_DIR %s %s" % 
-            (self.project_dir, stage.WorkingDirectory, directory), 
+        return self.RunUserProcess("%s/venv/bin/python %s/manage.py acl GET_DIR %s %s" % 
+            (self.project_dir, self.project_dir, stage.WorkingDirectory, directory), 
             user=stage.Job.User)
 
     
@@ -750,9 +750,9 @@ class JobManager:
             Directory.copy_directory(tool_directory, tmp_dir)
         
         #spawn process as user to create job directory with correct permissions
-        job_dir = self.RunUserProcess("%s/manage.py jobs_acl setup_job %d %d" % 
+        job_dir = self.RunUserProcess("%s/venv/bin/python %s/manage.py jobs_acl setup_job %d %d" % 
             (
-                self.project_dir, jobstage.JobStageID, stage_index
+                self.project_dir, self.project_dir, jobstage.JobStageID, stage_index
             )
         )
         
@@ -989,6 +989,7 @@ class JobManager:
     def UpdateJobHistory(self):
         r = ResourceManager(self.user)
         jobs = r.GetDetailedQueue()
+        new_status = None
         
         for job in jobs:
             try:
@@ -1007,6 +1008,9 @@ class JobManager:
                     if old_status < 5:
                         if new_status == 4 and jobstage.RequiresEditInd:
                             new_status = 5
+                        f = open("/tmp/continue1.txt", 'w')
+                        print >> f, type(job.ExitCode)
+                        f.close()
                         
                         jobstage = JobStages.UpdateJobStage(jobstage, new_status, 
                             job.ExitCode, job.OutputLog, job.ErrorLog, 
@@ -1032,7 +1036,7 @@ class JobManager:
                             PWD=job.WorkingDir, JobData=JobData)
                 
             except Exception, ex:
-                File.print_to_file("/tmp/continue.txt", str(ex))
+                File.print_to_file("/tmp/continue.txt", traceback.format_exc())
                 pass
     
     

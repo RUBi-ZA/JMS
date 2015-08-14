@@ -71,8 +71,9 @@ var JobStageDataField = function(key, value, label, type) {
 }
 
 
-var Stage = function(id, checkpoint){
+var Stage = function(id, name, checkpoint){
     this.StageID = ko.observable(id);
+    this.StageName = ko.observable(name)
     this.Checkpoint = ko.observable(checkpoint);
 }
 
@@ -209,8 +210,11 @@ function JobsViewModel() {
 	            
 	            $.each(j.JobStages, function(i, js) {
 	                var stage = js.Stage
+	                
+	                console.log(js);
+	                
 	                if(stage != null) {
-	                    stage = new Stage(js.Stage.StageID, js.Stage.Checkpoint)
+	                    stage = new Stage(js.Stage.StageID, js.Stage.ToolVersion.Tool.ToolName, js.Stage.Checkpoint)
 	                }
 	                
 	                var jobstage = new JobStage(js.JobStageID, stage, js.ToolName, 
@@ -417,7 +421,6 @@ $(function() {
 	var app = Sammy(function() {
 
 		this.get('#:job', function() {
-			
 			clearInterval(job_interval);
 			jobs.GetJob(this.params.job);	
 		});

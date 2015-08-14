@@ -23,14 +23,18 @@ class Impersonator(Resource):
     def authenticate(self, username, password, venv=None):
         process = self.processes.get(username)
         if process == None:
-            process = subprocess.Popen('su %s -c " python login.py %s %s"' % (username, username, password), shell=True, stdout=subprocess.PIPE)
+            process = subprocess.Popen('su %s -c " ../venv/bin/python login.py %s %s"' % (username, username, password), shell=True, stdout=subprocess.PIPE)
             output, error = process.communicate()
             
-            if output.startswith("0"): 
-                self.processes.add(username, "")
-            else:
-                return False
+            print output, error
             
+            if output.endswith('0\n'):
+                self.processes.add(username, password)
+            else: 
+                return False
+        elif process != password:
+            self.process.expire(username)
+            return False
         return True
     
     def render_POST(self, request):
@@ -56,7 +60,9 @@ class Impersonator(Resource):
             #if command should be run as sudo
             if sudo:
                 command = 'sudo -S %s' % command
-                    
+            
+            command = 'source /srv/Webinal/venv/bin/activate;%s;deactivate' % command
+            
             if self.authenticate(credentials[0], credentials[1]):
                 print "Permission granted."
                 print "Running '%s' as '%s'" % (command, credentials[0])
@@ -73,6 +79,7 @@ class Impersonator(Resource):
                     output, error = process.communicate()
                                
                 output = str(output).strip("None")
+                print output
                 return output
             else:
                 print "Permission denied\n"
@@ -92,7 +99,7 @@ resource = Impersonator()
 path = os.path.dirname(os.path.realpath(__file__))
 with cd(path):
     if __name__ == "__main__":
-        port = 8123
+        port = 8124
         if len(sys.argv) > 1:
             port = int(sys.argv[1])
             

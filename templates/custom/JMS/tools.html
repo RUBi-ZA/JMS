@@ -897,7 +897,7 @@
                                                     <span data-bind="text: Command"></span>
                                                     <!-- ko foreach: ToolParameters -->
                                                         <span data-bind="text: Context"></span>
-                                                        <!-- ko if: InputBy() == "user" -->
+                                                        <!-- ko if: InputBy() == "user" && Context().indexOf("${VALUE}") < 0 -->
                                                             &lt;user_input_arg&gt;
                                                         <!-- /ko -->
                                                         <!-- ko if: InputBy() == "system" -->

@@ -17,7 +17,7 @@ DATABASES = {
         # The following settings are not used with sqlite3:
         'USER': 'jms',
         'PASSWORD': 'jms82',
-        'HOST': 'node001',      
+        'HOST': 'dbserver',      
         'PORT': '',                      # Set to empty string for default.
     }
 }
@@ -204,5 +204,5 @@ FILEMANAGER_SETTINGS = {
 
 IMPERSONATOR_SETTINGS = {
     "key": os.path.join(BASE_DIR, "impersonator/pub.key"),
-    "url": "127.0.0.1:8124"
+    "url": "127.0.0.1:8123"
 }

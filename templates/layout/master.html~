@@ -1,10 +1,14 @@
-﻿<!DOCTYPE html>
+{% load staticfiles %}
+
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <title>{% block title %}Binary Admin Template{% endblock %}</title>
+    
+    <link rel="shortcut icon" href="{{ STATIC_URL }}img/favicon.ico" type="image/x-icon">
     
     {% block css %}
     
@@ -34,7 +38,7 @@
                     <span class="icon-bar"></span>
                 </button>
                 
-                <a class="navbar-brand" href="#dashboard">
+                <a class="navbar-brand" href="/">
                 	{% block page_title %}Binary Admin Template{% endblock %}
                 </a> 
                 

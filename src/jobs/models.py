@@ -339,7 +339,7 @@ class JobStage(models.Model):
     Commands = models.TextField(null=True, blank=True)
     Status = models.ForeignKey(Status, db_column='StatusID', related_name='StatusJobStages', null=True, blank=True)
     RequiresEditInd = models.NullBooleanField(null=True, blank=True, default=False)
-    ExitCode = models.IntegerField(null=True, blank=True)
+    ExitCode = models.IntegerField(default=None, null=True, blank=True)
     ClusterJobID = models.CharField(max_length=30, unique=True, null=True, blank=True)
     JobData = models.TextField()
     

@@ -6,7 +6,7 @@ from utilities.io.filesystem import Directory
 
 from lxml import objectify
 
-import os, subprocess, socket, xml.etree.ElementTree as ET
+import os, subprocess, socket
 
 def GetAttr(obj, attr, default):
     try:
@@ -70,7 +70,7 @@ class torque(BaseResourceManager):
 
     def _ParseJob(self, job):
         #get core details to update JobStage
-        exit_code = str(GetAttr(job, 'exit_status', None))
+        exit_code = GetAttr(job, 'exit_status', None)
         state = str(GetAttr(job, 'job_state', Status.Held))
         if state == 'H':
             state = Status.Held
@@ -78,11 +78,9 @@ class torque(BaseResourceManager):
             state = Status.Queued
         elif state == 'R':
             state = Status.Running
-        elif state == 'E':
+        elif state in ['E', 'C']:
             state = Status.Complete
-        elif state == 'C':
-            state = Status.Complete
-                
+
         output_path = str(GetAttr(job, 'Output_Path', 'n/a')).split(":")[1]
         error_path = str(GetAttr(job, 'Error_Path', 'n/a')).split(":")[1]
         
@@ -99,7 +97,7 @@ class torque(BaseResourceManager):
         
         job_id = str(GetAttr(job, 'Job_Id', 'Unknown'))
         name = str(GetAttr(job, 'Job_Name', 'Unknown'))
-        user = str(GetAttr(job, 'euser', 'Unknown'))
+        user = str(GetAttr(job, 'Job_Owner', 'Unknown'))
         
         c = ClusterJob(job_id, name, user, state, output_path, error_path, 
             working_dir, exit_code, [])
@@ -311,6 +309,10 @@ class torque(BaseResourceManager):
                 ])
                 
                 queue_dict[queue_name] = queue
+                acl[queue_name] = {
+                    "groups": "",
+                    "users": ""
+                }
                 
             elif line.startswith("set queue"):
                 setting_line = line[10:].split("=")
@@ -319,29 +321,17 @@ class torque(BaseResourceManager):
                 queue = queue_dict[queue_name]
                 
                 setting = setting_line[0].split(" ")[1].strip()
-                value = setting_line[1].strip()
+                value = "=".join(setting_line[1:]).strip()
                 
                 if setting in ["enabled", "started", "acl_group_enable", "acl_user_enable"]:
                     value = value.lower() == "true"
                 
                 #groups with access   
                 if setting in ["acl_groups", "acl_groups +"]:
-                    if queue_name not in acl:
-                        acl[queue_name] = {
-                            "groups": "",
-                            "users": ""
-                        }
-                    
                     acl[queue_name]["groups"] += value + ","
                 
                 #users with access
                 elif setting in ["acl_users", "acl_users +"]:
-                    if queue_name not in acl:
-                        acl[queue_name] = {
-                            "groups": "",
-                            "users": ""
-                        }
-                    
                     acl[queue_name]["users"] += value + ","
                 
                 #all other settings
@@ -354,10 +344,42 @@ class torque(BaseResourceManager):
                     elif setting in ["max_user_queuable", "max_user_run"]:
                         queue.SettingsSections[1].Settings.append(s)
                         
-                    elif setting in ["resources_max.mem", "resources_max.ncpus", "resources_max.nodes", 
-                        "resources_max.walltime", "resources_default.mem", "resources_default.ncpus", 
-                        "resources_default.nodes","resources_default.walltime"]:
+                    elif setting in ["resources_max.mem", "resources_max.walltime", 
+                        "resources_default.mem", "resources_default.walltime"]:
                         queue.SettingsSections[2].Settings.append(s)
+                        
+                    elif setting == "resources_max.nodes":
+                        new_values = value.split(":")
+                        
+                        if len(new_values) > 1:
+                            s.Value = new_values[0]
+                            queue.SettingsSections[2].Settings.append(s)
+                            queue.SettingsSections[2].Settings.append(Setting(
+                                Name="resources_max.ncpus", 
+                                Value=new_values[1].split("=")[1]
+                            ))
+                        else:
+                            queue.SettingsSections[2].Settings.append(s)
+                            queue.SettingsSections[2].Settings.append(Setting(
+                                Name="resources_max.ncpus", 
+                                Value=1
+                            ))
+                        
+                    elif setting == "resources_default.nodes":
+                        new_values = value.split(":ppn=")
+                        if len(new_values) > 1:
+                            s.Value = new_values[0]
+                            queue.SettingsSections[2].Settings.append(s)
+                            queue.SettingsSections[2].Settings.append(Setting(
+                                Name="resources_default.ncpus", 
+                                Value=new_values[1]
+                            ))
+                        else:
+                            queue.SettingsSections[2].Settings.append(s)
+                            queue.SettingsSections[2].Settings.append(Setting(
+                                Name="resources_default.ncpus", 
+                                Value=1
+                            ))
                     
                     elif setting in ["acl_group_enable", "acl_user_enable"]:
                         queue.SettingsSections[3].Settings.append(s)
@@ -384,8 +406,14 @@ class torque(BaseResourceManager):
     
     def UpdateQueue(self, queue):
         output = ""
+        max_nodes = 1
+        max_procs = 1
+        def_nodes = 1
+        def_procs = 1
+        
         for section in queue.SettingsSections:
             for setting in section.Settings:
+                print >> f, setting.Name, setting.Value
                 #set access controls - values come as csv
                 if setting.Name in ["acl_groups", "acl_users"]:
                     values = setting.Value.split(",")
@@ -400,8 +428,20 @@ class torque(BaseResourceManager):
                                 output += self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (queue.QueueName, setting.Name, value))
                             else:
                                 output += self.RunUserProcess('qmgr -c "set queue %s %s += %s"' % (queue.QueueName, setting.Name, value))
-                    
+                elif setting.Name == "resources_max.nodes":
+                    max_nodes = setting.Value
+                elif setting.Name == "resources_max.ncpus":
+                    max_procs = setting.Value
+                elif setting.Name == "resources_default.nodes":
+                    def_nodes = setting.Value
+                elif setting.Name == "resources_default.ncpus":
+                    def_procs = setting.Value
+                
                 output += self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (queue.QueueName, setting.Name, str(setting.Value)))
+        
+        output += self.RunUserProcess('qmgr -c "set queue %s resources_max.nodes = %s:ppn=%s"' % (queue.QueueName, str(max_nodes), str(max_procs)))
+        output += self.RunUserProcess('qmgr -c "set queue %s resources_default.nodes = %s:ppn=%s"' % (queue.QueueName, def_nodes, def_procs))
+        
         return output
     
     
@@ -486,42 +526,27 @@ class torque(BaseResourceManager):
         
         try:
             out = self.RunUserProcess("qnodes -x")
-        
-            root = ET.fromstring(out)
+            data = objectify.fromstring(out)
             
-            for node in root.iter('Node'):
-                name = node.find('name').text
-                state = node.find('state').text
-                num_cores = int(node.find('np').text)
-                properties = node.find('properties').text
+            for node in data.Node:
+                name = str(node.name)
+                state = str(node.state)
+                num_cores = int(node.np)
+                properties = str(GetAttr(node, 'properties', ''))
                 busy_cores = 0;            
                 
                 job_dict = dict()
                 
-                jobs = node.find('jobs')
-                if jobs is not None:            
-                    jobs = jobs.text
-                    job_cores = jobs.split(',')            
-                
-                    for core in job_cores:
-                        job_core = core.split('/')
-                    
-                        key = job_core[1]
-                        
-                        core_range = job_core[0].split("-")
-                        if len(core_range) > 1:
-                            for i in range(int(core_range[0]), int(core_range[1])+1):                            
-                                busy_cores += 1
-                                if key in job_dict:
-                                    job_dict[key].append(i)
-                                else:
-                                    job_dict[key] = [i]
+                jobs = GetAttr(node, 'jobs', None)
+                if jobs:
+                    for job in str(jobs).split(','):
+                        job_cores = job.split("/")
+                        busy_cores += 1
+                            
+                        if job_cores[1] in job_dict:
+                            job_dict[job] += 1
                         else:
-                            busy_cores += 1
-                            if key in job_dict:
-                                job_dict[key].append(job_core[0])
-                            else:
-                                job_dict[key] = [job_core[0]]
+                            job_dict[job] = 1
                 
                 free_cores = num_cores - busy_cores
                 
@@ -533,8 +558,10 @@ class torque(BaseResourceManager):
                 
                 nodes.append(n)
         
-        except Exception:
-            pass
+        except Exception, ex:
+            f = open('/tmp/nodes.txt', 'w')
+            print >> f, str(ex)
+            f.close()
         
         return nodes
     
@@ -609,8 +636,7 @@ class torque(BaseResourceManager):
         ])
 
     
-    def CreateJobScript(self, job_name, job_dir, script_name, output_log, 
-        error_log, settings, has_dependencies, commands):
+    def CreateJobScript(self, job_name, job_dir, script_name, output_log, error_log, settings, has_dependencies, commands):
         
         script = os.path.join(job_dir, script_name)
         

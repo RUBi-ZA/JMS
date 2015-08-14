@@ -13,7 +13,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import Http404
 
 import xml.etree.ElementTree as ET
-import subprocess, os, pexpect, pylibmc, sys, pxssh, socket, requests, base64
+import subprocess, os, pexpect,sys, pxssh, socket, requests, base64 #, pylibmc
 from datetime import datetime
 from shutil import copyfile  
 from lxml import objectify
