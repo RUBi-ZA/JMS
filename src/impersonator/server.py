@@ -6,7 +6,7 @@ from twisted.web.server import Site
 from twisted.web.resource import Resource
 from twisted.internet import reactor
 
-sys.path.append("/srv/JMS/src")
+sys.path.append("..")
 from utilities.structures import TimeExpiredDict
 from utilities.context_managers import cd
 from utilities.security.cryptography import PubPvtKey
@@ -62,7 +62,7 @@ class Impersonator(Resource):
             if sudo:
                 command = 'sudo -S %s' % command
             
-            command = 'source /srv/Webinal/venv/bin/activate;%s;deactivate' % command
+            command = 'source ../venv/bin/activate;%s;deactivate' % command
             
             if self.authenticate(credentials[0], credentials[1]):
                 print "Permission granted."
