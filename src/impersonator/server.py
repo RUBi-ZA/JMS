@@ -50,10 +50,11 @@ class Impersonator(Resource):
             credentials = decrypted.split(":")
             
             command = data_lines[1]
-            prompt = "prompt"
+            prompt = "prompt" #legacy - not currently used
             sudo = False
+            
             if len(data_lines) > 2:
-                prompt = data_lines[2]
+                prompt = data_lines[2] #legacy - not currently used
                 if len(data_lines) > 3:
                     sudo = data_lines[3].lower() == "true"
             

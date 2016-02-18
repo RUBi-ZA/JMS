@@ -185,24 +185,38 @@ AUTHENTICATION_BACKENDS = (
 
 AUTH_PROFILE_MODULE = 'users.UserProfile'
 
+shared_directory = "/jabba/JMS/"
+
 JMS_SETTINGS = {
-    "JMS_shared_directory": "/jabba/JMS/",
+    "JMS_shared_directory": shared_directory,
     "resource_manager": {
-        "name": "torque"
+        "name": "torque",
+        "poll_interval": 30
     },
-    "ansible": True,
+    "ansible": False,
+    "modules": False,
     "impersonator": {
         "key": os.path.join(BASE_DIR, "impersonator/pub.key"),
-        "port": "8124"
+        "port": "8123"
+    },
+    "filemanager": {
+        "root_url": os.path.join(shared_directory, "users/"),
+        "temp_dir": "/tmp/jms/"
     }
 }
+
 
 FILEMANAGER_SETTINGS = {
     "root_url": os.path.join(JMS_SETTINGS["JMS_shared_directory"], "users/"),
     "temp_dir": "/tmp/jms/"
 }
 
-IMPERSONATOR_SETTINGS = {
-    "key": os.path.join(BASE_DIR, "impersonator/pub.key"),
-    "url": "127.0.0.1:8123"
-}
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.live.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'jms.rubi@outlook.com'
+EMAIL_HOST_PASSWORD = 'JMS>Galaxy'
+ 
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+SERVER_EMAIL = EMAIL_HOST_USER

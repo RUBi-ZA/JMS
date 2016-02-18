@@ -3,10 +3,53 @@
 ***/
 
 if (typeof String.prototype.startsWith != 'function') {
-  String.prototype.startsWith = function (str){
-    return this.slice(0, str.length) == str;
-  };
+    String.prototype.startsWith = function (str){
+        return this.slice(0, str.length) == str;
+    };
 }
+
+var escapeRegExp = function(strToEscape) {
+    // Escape special characters for use in a regular expression
+    return strToEscape.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+};
+
+
+var trimChar = function(origString, charToTrim) {
+    charToTrim = escapeRegExp(charToTrim);
+    var regEx = new RegExp("^[" + charToTrim + "]+|[" + charToTrim + "]+$", "g");
+    return origString.replace(regEx, "");
+};
+
+/***
+ * Knockout extensions
+ ***/
+
+ko.bindingHandlers.enterkey = {
+    init: function (element, valueAccessor, allBindings, viewModel) {
+        var callback = valueAccessor();
+        $(element).keypress(function (event) {
+            var keyCode = (event.which ? event.which : event.keyCode);
+            if (keyCode === 13) {
+                element.blur();
+                callback.call(viewModel);
+                return false;
+            }
+            return true;
+        });
+    }
+};
+
+
+ko.observableArray.fn.swap = function(index1, index2) {
+    this.valueWillMutate();
+
+    var temp = this()[index1];
+    this()[index1] = this()[index2];
+    this()[index2] = temp;
+
+    this.valueHasMutated();
+}
+
 
 /***
 * SETUP AJAX CSRF TOKEN
@@ -63,3 +106,5 @@ function setupAjax() {
 		}
 	});
 }
+
+

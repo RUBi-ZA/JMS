@@ -306,6 +306,14 @@ class Job(models.Model):
     BatchJobID = models.ForeignKey(BatchJob, null=True, blank=True, db_column="BatchJobID", related_name="Jobs")
     
     JobTypeID = models.IntegerField() #1-Custom, 2-Tool, 3-Workflow, 4-External
+    StatusID = models.IntegerField() #1-Created/Held, 2-Queued, 3-Running, 4-Completed
+    
+    NotificationMethod = models.CharField(max_length=10, blank=True, null=True)
+    NotificationURL = models.CharField(max_length=255, blank=True, null=True)
+    HttpStatusID = models.IntegerField(blank=True, null=True)
+    
+    NotificationEmail = models.CharField(max_length=255, blank=True, null=True)
+    EmailStatusID = models.IntegerField(blank=True, null=True)
     
     DeletedInd = models.BooleanField(default=False)
     
@@ -402,6 +410,7 @@ class JobStageParameter(models.Model):
     Parameter = models.ForeignKey(Parameter, db_column='ParameterID', related_name='ParameterJobTools')
     ParameterName = models.CharField(max_length=30, null=True, blank=True, default=None)
     JobStage = models.ForeignKey(JobStage, db_column='JobStageID', related_name='JobStageParameters')
+    StageParameter = models.ForeignKey(StageParameter, db_column='StageParameterID', related_name='StageParameterInstances', null=True, blank=True, default=None)
     Value = models.TextField()
     
     class Meta:
@@ -420,7 +429,7 @@ class FileType(models.Model):
 
 class ExpectedOutput(models.Model):
     ExpectedOutputID = models.AutoField(primary_key=True)
-    OutputName = models.CharField(max_length=30)
+    OutputName = models.CharField(max_length=60)
     FileName = models.CharField(max_length=256)
     FileType = models.ForeignKey(FileType, db_column='FileTypeID', related_name='FileOutputs')
     ToolVersion = models.ForeignKey(ToolVersion, db_column='ToolVersionID', related_name='ExpectedOutputs')

@@ -14,25 +14,24 @@ import os, json, mimetypes, platform, shutil, traceback, requests
 from filemanager.models import *
 from filemanager.objects import *
 
-from job.JMS import JMS
-from job import objects
+from jobs.JMS import JobManager
 
 from utilities.security.cryptography import PubPvtKey
 
 #Global variables and functions
 PROJECT_PATH = settings.BASE_DIR
 VIRTUAL_ACTIVATE = os.path.join(PROJECT_PATH, "venv/bin/activate")
-ROOT = settings.FILEMANAGER_SETTINGS["root_url"]
+ROOT = settings.JMS_SETTINGS["filemanager"]["root_url"]
    
 def RunUserProcess(user, command):
     payload = "%s\n%s\nprompt" % (user.filemanagersettings.ServerPass, command)
-    r = requests.post("http://%s/impersonate" % settings.IMPERSONATOR_SETTINGS["url"], data=payload)
+    r = requests.post("http://127.0.0.1:%s/impersonate" % settings.JMS_SETTINGS["impersonator"]["port"], data=payload)
     return r.text
 
 
     
 def CreateTempDir(user):
-    tmp_dir = os.path.join(settings.FILEMANAGER_SETTINGS["temp_dir"], "." + user.username)
+    tmp_dir = os.path.join(settings.JMS_SETTINGS["filemanager"]["temp_dir"], "." + user.username)
     if not os.path.exists(tmp_dir):
         os.makedirs(tmp_dir)
         os.chmod(tmp_dir, 0777)
@@ -145,7 +144,7 @@ class FileDetail(APIView):
             filepath = request.GET.get("path", os.path.abspath(os.path.sep))
             job_id = filepath.split("/")[1]
             
-            jms = JMS(user=request.user)
+            jms = JobManager(user=request.user)
             job = jms.GetJob(job_id)
             
             #Get file type

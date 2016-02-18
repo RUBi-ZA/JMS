@@ -10,8 +10,8 @@ import pexpect, base64, requests
 
 class LinuxBackend(ModelBackend):
     
-    key_file = settings.IMPERSONATOR_SETTINGS["key"]
-    imp_url = settings.IMPERSONATOR_SETTINGS["url"]
+    key_file = settings.JMS_SETTINGS["impersonator"]["key"]
+    imp_url = "http://127.0.0.1:%s/impersonate" % settings.JMS_SETTINGS["impersonator"]["port"]
     
     def authenticate(self, username=None, password=None):
         
@@ -43,5 +43,5 @@ class LinuxBackend(ModelBackend):
        
     def linux_auth(self, encoded):
         data = "%s\n%s\nprompt" % (encoded, "whoami")
-        r = requests.post("http://%s/impersonate" % self.imp_url, data=data)
+        r = requests.post(self.imp_url, data=data)
         return r.status_code == requests.codes.ok

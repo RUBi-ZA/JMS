@@ -713,7 +713,7 @@
 								<div class="panel-body" style="overflow-y:auto;padding:0px;">
 								    
 									<div id="table-responsive" style="overflow-y:auto; padding:15px;padding-bottom:15px;" data-bind="foreach: $root.Categories">
-									    <div style="width:100%">
+									    <div style="width:100%" data-bind="if: Tools().length > 0">
 									        <a class="st-link-header-2" data-bind="click: $root.ToggleVisible">
 									            <!-- ko if: Visible() == false -->
 									                <i class="fa fa-plus-square-o"></i> 
@@ -947,6 +947,10 @@
                     							<div class="col-lg-9" data-bind="with: $root.SelectedParameters()[0]">
                     							    <h4>Edit Parameter</h4>
                     							    <hr/>
+                    							    <div class="form-group">
+                    								    <label>Parameter ID</label> <br>
+                    								    <span data-bind="text: ParameterID">
+                    							    </div>
                     							    <div class="form-group">
                     								    <label>Parameter Label</label>
                     								    <input class="form-control" data-bind="value: ParameterName"  />
@@ -1281,6 +1285,11 @@
                     									<hr/>
                                             			<div class="col-lg-12">
                             								<div class="form-group">
+                            									<label>Version ID</label><br/>
+                            									<span data-bind="text: ToolVersionID"></span>
+                            								</div>
+                            								
+                            								<div class="form-group">
                             									<label>Date Published</label><br/>
                             									<span data-bind="text: DatePublished"></span>
                             								</div>
@@ -1306,6 +1315,7 @@
                             									<table class="table table-hover">
                                                 					<thead>
                                                 						<tr>
+                                                							<th>Parameter ID</th>
                                                 							<th>Parameter Label</th>
                                                 							<th>Parameter Type</th>
                                                 							<th>Context</th>
@@ -1314,6 +1324,9 @@
                                                 					</thead>
                                                 					<tbody data-bind="foreach: ToolParameters">
                         												<tr>
+                        													<td>
+                        														<span data-bind="text: ParameterID"></span>
+                        													</td>
                         													<td>
                         														<span data-bind="text: ParameterName"></span>
                         													</td>

@@ -70,7 +70,7 @@ class torque(BaseResourceManager):
 
     def _ParseJob(self, job):
         #get core details to update JobStage
-        exit_code = GetAttr(job, 'exit_status', None)
+        exit_code = str(GetAttr(job, 'exit_status', None))
         state = str(GetAttr(job, 'job_state', Status.Held))
         if state == 'H':
             state = Status.Held
@@ -81,8 +81,13 @@ class torque(BaseResourceManager):
         elif state in ['E', 'C']:
             state = Status.Complete
 
-        output_path = str(GetAttr(job, 'Output_Path', 'n/a')).split(":")[1]
-        error_path = str(GetAttr(job, 'Error_Path', 'n/a')).split(":")[1]
+        output_path = str(GetAttr(job, 'Output_Path', 'n/a'))
+        error_path = str(GetAttr(job, 'Error_Path', 'n/a'))
+        
+        if len(output_path.split(":")) == 2:
+            output_path = output_path.split(":")[1]
+        if len(error_path.split(":")) == 2:
+            error_path = error_path.split(":")[1]
         
         env = str(GetAttr(job, 'Variable_List', 'n/a'))
         vars = env.split(',')

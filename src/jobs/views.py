@@ -13,7 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-import json, mimetypes, os
+import json, mimetypes, os, traceback
 
 #Resource manager views
 
@@ -520,7 +520,7 @@ class ParameterDetail(APIView):
         """
         jms = JobManager(user=request.user)
         
-        #GetParameter will return a list as a parameter may have child parameters
+        #GetParameter returns a list as a parameter may have child parameters
         parameters = jms.GetParameter(parameter_id)
         serializer = ParameterDetailSerializer(parameters, many=True)
         return Response(serializer.data)
@@ -963,10 +963,16 @@ class CustomJob(APIView):
         settings = json.loads(request.POST["Settings"])
         
         files = request.FILES.getlist("files")
+            
+        notification_method = request.POST.get("NotificationMethod", "GET")
+        notification_url = request.POST.get("NotificationURL", None)
+        notification_email = request.POST.get("NotificationEmail", None)
         
         jms = JobManager(user=request.user)
         
-        job = jms.CreateJob(job_name, description, 1)
+        job = jms.CreateJob(job_name, description, 1, NotificationMethod=notification_method, 
+            NotificationURL=notification_url, NotificationEmail=notification_email)
+        
         jobstage = jms.RunCustomJob(job, commands, settings, files)
         
         return Response(jobstage.Job.JobID)
@@ -980,24 +986,44 @@ class ToolJob(APIView):
         """
         Run a tool on the cluster
         """
-        job_name = request.POST.get("JobName", "")
-        description = request.POST.get("Description", "")
-        parameters = json.loads(request.POST["Parameters"])
-        #settings = json.loads(request.POST["Settings"])
-        
-        files = []
-        for k, v in request.FILES.iteritems():
-            for f in request.FILES.getlist(k):
-                files.append(f)
-        
-        jms = JobManager(user=request.user)
-        version = jms.GetToolVersionByID(version_id)
-        
-        job = jms.CreateJob(job_name, description, ToolVersion=version, 
-            JobTypeID=2)
-        jobstage = jms.RunToolJob(job, parameters, files)
-        
-        return Response(jobstage.Job.JobID)
+        try:
+            notification_method = None
+            notification_url = None
+            
+            notification = request.POST.get("Notification", None)
+            if notification:
+                notification_method = notification.split()[0]
+                notification_url = notification.split()[1]
+            
+            notification_email = request.POST.get("NotificationEmail", None)
+            
+            job_name = request.POST.get("JobName", "")
+            description = request.POST.get("Description", "")
+            parameters = json.loads(request.POST["Parameters"])
+            #settings = json.loads(request.POST["Settings"])
+            
+            
+            files = []
+            for k, v in request.FILES.iteritems():
+                for pf in request.FILES.getlist(k):
+                    files.append(pf)
+            
+            jms = JobManager(user=request.user)
+            
+            version = jms.GetToolVersionByID(int(version_id))
+            
+            job = jms.CreateJob(job_name, description, ToolVersion=version, JobTypeID=2, 
+                NotificationMethod=notification_method, NotificationURL=notification_url,
+                NotificationEmail=notification_email)
+            
+            jobstage = jms.RunToolJob(job, parameters, files)
+            
+            return Response(jobstage.Job.JobID)
+        except Exception, ex:
+            with open("/tmp/create_tool_job.txt", "w") as f:
+                print >> f, traceback.format_exc()
+            
+            return Response(str(ex), status=500)
 
 
 
@@ -1008,13 +1034,23 @@ class WorkflowJob(APIView):
         """
         Run a workflow on the cluster
         """
+        notification_method = None
+        notification_url = None
+        
+        notification = request.POST.get("Notification", None)
+        if notification:
+            notification_method = notification.split()[0]
+            notification_url = notification.split()[1]
+        
+        notification_email = request.POST.get("NotificationEmail", None)
+            
         job_name = request.POST["JobName"]
         description = request.POST["Description"]
         stages = json.loads(request.POST["Stages"])
         
         files = {}
         for k, v in request.FILES.iteritems():
-            if not files[k]:
+            if k not in files:
                 files[k] = []
             
             for f in request.FILES.getlist(k):
@@ -1023,8 +1059,10 @@ class WorkflowJob(APIView):
         jms = JobManager(user=request.user)
         version = jms.GetWorkflowVersionByID(version_id)
         
-        job = jms.CreateJob(job_name, description, WorkflowVersion=version, 
-            JobTypeID=3)
+        job = jms.CreateJob(job_name, description, WorkflowVersion=version, JobTypeID=3 ,
+                NotificationMethod=notification_method, NotificationURL=notification_url,
+                NotificationEmail=notification_email)
+        
         jms.RunWorkflowJob(job, stages, files)
         
         return Response(job.JobID)
@@ -1189,4 +1227,19 @@ class DirectoryDetail(APIView):
         data = jms.get_job_directory_listing(job_stage_id, path)
         
         return Response(data)
+
+
+
+class Status(APIView):
+    permission_classes = (IsAuthenticated,)
+    
+    def get(self, request, job_id):
+        """
+        Get the status ID of the job
+        """
+        jms = JobManager(user=request.user)
+        stage = jms.GetJob(job_id).JobStages.all()[0]
+        
+        return Response(stage.Status.StatusID)
+    
     

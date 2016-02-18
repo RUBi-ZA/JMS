@@ -496,7 +496,7 @@
 								<div class="panel-body" style="overflow-y:auto;padding:0px;">
 								    
 									<div id="table-responsive" style="overflow-y:auto; padding:15px;padding-bottom:15px;" data-bind="foreach: $root.Categories">
-									    <div style="width:100%">
+									    <div style="width:100%" data-bind="if: Workflows().length > 0">
 									        <a class="st-link-header-2" data-bind="click: $root.ToggleVisible">
 									            <!-- ko if: Visible() == false -->
 									                <i class="fa fa-plus-square-o"></i> 

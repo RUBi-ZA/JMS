@@ -15,6 +15,9 @@ from resource_managers import objects
 
 from utilities.io.filesystem import *
  
+from multiprocessing.pool import ThreadPool
+import shutil, json, requests, traceback, sys
+
 import shutil, json, requests, traceback, sys
 
 #dynamically import the resource manager module
@@ -48,7 +51,7 @@ class JobManager:
         payload = "%s\n%s\n%s\n%s" % (user.filemanagersettings.ServerPass, cmd, expect, str(sudo))
         #File.print_to_file("/tmp/files.txt", payload, permissions=0777)
         
-        r = requests.post("http://%s/impersonate" % settings.IMPERSONATOR_SETTINGS["url"], data=payload)
+        r = requests.post("http://127.0.0.1:%s/impersonate" % settings.JMS_SETTINGS["impersonator"]["port"], data=payload)
         #File.print_to_file("/tmp/files.txt", payload, mode="a", permissions=0777)
         
         return r.text
@@ -730,6 +733,10 @@ class JobManager:
         #create temp job stage directory
         tmp_dir = self.make_tmp_directory(jobstage.JobStageID)
         
+        with open("/tmp/dirs.txt", "w") as f:
+            print >> f, tmp_dir
+            print >> f, jobstage.WorkingDirectory
+        
         #upload files to temp directory
         for f in files:
             with open(os.path.join(tmp_dir, f.name), 'wb+') as destination:
@@ -761,10 +768,13 @@ class JobManager:
 
     
     
-    def CreateJob(self, job_name, description, JobTypeID, ToolVersion=None, WorkflowVersion=None):
+    def CreateJob(self, job_name, description, JobTypeID, ToolVersion=None, WorkflowVersion=None, 
+                NotificationMethod=None, NotificationURL=None, NotificationEmail=None):
         return Jobs.AddJob(User=self.user, JobName=job_name, 
                 Description=description, ToolVersion=ToolVersion, 
-                WorkflowVersion=WorkflowVersion, JobTypeID=JobTypeID)
+                WorkflowVersion=WorkflowVersion, JobTypeID=JobTypeID, 
+                NotificationMethod=NotificationMethod, NotificationURL=NotificationURL, 
+                NotificationEmail=NotificationEmail)
     
     
     def RunCustomJob(self, job, commands, parsed_settings, files):
@@ -795,9 +805,18 @@ class JobManager:
         
         r = ResourceManager(self.user)
         cluster_id = r.ExecuteJobScript(job_script)
+        with open("/tmp/cluster_id.txt", 'w') as f:
+            print >> f, cluster_id
         
         jobstage.ClusterJobID = cluster_id.strip()
         jobstage.save()
+        
+        j = r.GetJob(jobstage.ClusterJobID)
+        JobData = json.dumps(j.DataSections, default=lambda o: o.__dict__, 
+            sort_keys=True)
+        jobstage = JobStages.UpdateJobStage(jobstage, j.Status, 
+            j.ExitCode, j.OutputLog, j.ErrorLog, 
+            j.WorkingDir, JobData)
             
         return jobstage
     
@@ -856,9 +875,14 @@ class JobManager:
                             if stage_parameter.StageParameterType == 1:
                                 val = stage_parameter.Value
                             elif stage_parameter.StageParameterType == 2:
-                                val = JobStageParameter.objects.get(JobStage__Job=job, ParameterID=stage_parameter.Value)
+                                try:
+                                    val = JobStageParameter.objects.get(JobStage__Job=job, Parameter_id=stage_parameter.Value).Value
+                                except Exception, ex:
+                                    with open("/tmp/jobstageparameter.txt", 'w') as f:
+                                        print >> f, traceback.format_exc()
+                                    
                             elif stage_parameter.StageParameterType == 3:
-                                val = ExpectedOutput.objects.get(ExpectedOutputID=stage_parameter.Value)
+                                val = ExpectedOutput.objects.get(ExpectedOutputID=stage_parameter.Value).FileName
                                 
                         except Exception, ex:
                             pass
@@ -900,33 +924,54 @@ class JobManager:
         
         r = ResourceManager(self.user)
         cluster_id = r.ExecuteJobScript(job_script)
+        with open("/tmp/job_id.txt", 'w') as f:
+            print >> f, job_script
+            print >> f, cluster_id
         
         jobstage.ClusterJobID = cluster_id.strip()
         jobstage.save()
+        
+        j = r.GetJob(jobstage.ClusterJobID)
+        JobData = json.dumps(j.DataSections, default=lambda o: o.__dict__, 
+            sort_keys=True)
+        jobstage = JobStages.UpdateJobStage(jobstage, j.Status, 
+            j.ExitCode, j.OutputLog, j.ErrorLog, 
+            j.WorkingDir, JobData)
         
         return jobstage
     
     
     def RunWorkflowJob(self, job, stages, files):
+        stage_levels = {}
         executed_stages = {}
         
+        #create job stages
         for i, s in enumerate(stages):
             stage = Stages.GetStage(self.user, s["StageID"])
-            parameters = s["Parameters"]
             
-            jobstage = self.RunToolJob(job, parameters, files.get("stage_%d" % stage.StageID, []), stage, i)
+            if not stage_levels.get(stage.StageLevel):
+                stage_levels[stage.StageLevel] = []
             
-            executed_stages[stage.StageID] = jobstage.JobStageID
+            stage_obj = { "stage": stage, "parameters": s["Parameters"] }
+            stage_levels[stage.StageLevel].append(stage_obj)
+        
+        for stages in sorted(stage_levels):
+            for s in stage_levels[stages]:
+                stage = s["stage"]
+                parameters = s["parameters"]
+                
+                jobstage = self.RunToolJob(job, parameters, files.get("stage_%d" % stage.StageID, []), stage, i)
+                
+                executed_stages[stage.StageID] = jobstage.JobStageID
             
-            #create dependencies
-            for dep in stage.StageDependencies.all():
-                JobStageDependency.objects.create(
-                    JobStageOI=jobstage,
-                    DependantOn_id=executed_stages[dep.DependantOn.StageID],
-                    Condition_id=dep.Condition.ConditionID,
-                    ExitCodeValue=dep.ExitCodeValue
-                )
-    
+                for dep in jobstage.Stage.StageDependencies.all():
+                    JobStageDependency.objects.create(
+                        JobStageOI=jobstage,
+                        DependantOn_id=executed_stages[dep.DependantOn.StageID],
+                        Condition_id=dep.Condition.ConditionID,
+                        ExitCodeValue=dep.ExitCodeValue
+                    )
+
     
     def GetClusterJob(self, id):
         r = ResourceManager(self.user)
@@ -986,10 +1031,39 @@ class JobManager:
         )
     
     
+    def UpdateJobStatus(self, job):
+        
+        #if job.JobStages.filter(Status_id__lt=4).count() == 0:
+            #if there are no jobstages in job with status < 4, the job must be complete
+            
+                
+        #elif job.JobStages.filter(Status_id=3).count() > 0:
+            #else if atleast one jobstage is in a running state, the job is still running
+            
+            
+        #elif job.JobStages.filter(Status_id=3).count() == 0 and jobstage.Job.JobStages.filter(Status_id__lt=3).count() > 0:
+            #else if there are no jobstages running, but there are still jobs in the queued or created states, the job is queued
+            
+        
+        #send notifications
+        if jobstage.Job.NotificationEmail is not None:
+            emails.append(jobstage.Job)
+        
+        if jobstage.Job.NotificationURL is not None:
+            http.append(jobstage.Job)
+        
+    
     def UpdateJobHistory(self):
+        #f = open("/tmp/continue1.txt", 'w')
+        #print >> f, "here"
+        
         r = ResourceManager(self.user)
         jobs = r.GetDetailedQueue()
         new_status = None
+        
+        emails = []
+        http = []
+
         
         for job in jobs:
             try:
@@ -1008,9 +1082,6 @@ class JobManager:
                     if old_status < 5:
                         if new_status == 4 and jobstage.RequiresEditInd:
                             new_status = 5
-                        f = open("/tmp/continue1.txt", 'w')
-                        print >> f, type(job.ExitCode)
-                        f.close()
                         
                         jobstage = JobStages.UpdateJobStage(jobstage, new_status, 
                             job.ExitCode, job.OutputLog, job.ErrorLog, 
@@ -1020,15 +1091,31 @@ class JobManager:
                         #release job if dependencies have been satisfied
                         if new_status == 1 and jobstage.Job.JobTypeID < 4:
                             self.ReleaseJob(jobstage)
+                    
+                    #if status has changed to completed state, send notifications
+                    if old_status < 4 and new_status >= 4:
+                    
+                        if jobstage.Job.JobStages.filter(Status_id__lt=4).count() == 0:
+                            #if there are no jobstages in job with status < 4, the job must be complete
+                            if jobstage.Job.NotificationEmail is not None:
+                                emails.append(jobstage.Job)
+                            
+                            if jobstage.Job.NotificationURL is not None:
+                                http.append(jobstage.Job)
+                    
+                    #if status has changed, get new status and send notifications
+                    #if old_status != new_status:
+                        #self.UpdateJobStatus(jobstage.Job)
+                        
                 else:
                     with transaction.atomic():
                         user, created = User.objects.get_or_create(
-                            username=job.User
+                            username=job.User.split("@")[0]
                         )
                         
                         j = Jobs.AddJob(User=user, JobName=job.JobName, 
                             Description="External submission - job was not submitted via JMS", 
-                            ToolVersion=None, JobTypeID=4)
+                            ToolVersion=None, WorkflowVersion=None, JobTypeID=4)
                         
                         jobstage = JobStages.AddJobStage(user, j, StatusID=job.Status, 
                             ClusterJobID=job.JobID, ExitCode=job.ExitCode, 
@@ -1038,7 +1125,9 @@ class JobManager:
             except Exception, ex:
                 File.print_to_file("/tmp/continue.txt", traceback.format_exc())
                 pass
-    
+        #f.close()
+        return emails, http
+
     
     def ContinueJob(self, jobstage):
         #set status to complete
@@ -1053,9 +1142,14 @@ class JobManager:
     
     
     def ReleaseJob(self, jobstage):
-        if self.JobStageDependenciesSatisfied(jobstage):
-            r = ResourceManager(jobstage.Job.User)
-            out = r.ReleaseJob(jobstage.ClusterJobID)
+        with open("/tmp/stage_%d.txt" % jobstage.Stage.StageID, "a") as f:
+            print >> f, "Attmepting to release stage %d" % jobstage.Stage.StageID
+            
+            if self.JobStageDependenciesSatisfied(jobstage):
+                self.CopyRequiredFiles(jobstage)
+                
+                r = ResourceManager(jobstage.Job.User)
+                out = r.ReleaseJob(jobstage.ClusterJobID)
     
     
     def JobStageDependenciesSatisfied(self, js):
@@ -1063,7 +1157,6 @@ class JobManager:
         for dep in js.JobStageDependencies.all():
             dep_js = dep.DependantOn
             
-            File.print_to_file("/tmp/continue.txt", "%s %s %s\n" % (str(dep_js.Stage.ToolVersion.Tool.ToolName), str(dep.Condition.ConditionID), str(dep_js.Status.StatusID)))
             if int(dep_js.Status.StatusID) in [4, 6, 7]:
                 if dep.Condition.ConditionID == 1 and dep_js.Status.StatusID != 4:
                     return False
@@ -1075,9 +1168,24 @@ class JobManager:
                     return False
             else:
                 return False
-            
-            #if we are here, this dependency is satisfied. Copy files from working directory.
-            Directory.copy_directory(dep_js.WorkingDirectory, 
-                js.WorkingDirectory, permissions=0777, replace=False)
         
         return True
+    
+    
+    def CopyRequiredFiles(self, js):
+        for dep in js.JobStageDependencies.all():
+            dep_js = dep.DependantOn
+            if int(dep_js.Status.StatusID) in [4, 6, 7]:
+                Directory.copy_directory(dep_js.WorkingDirectory, 
+                    js.WorkingDirectory, permissions=0777, replace=False,
+                    exclude=[os.path.join(dep_js.WorkingDirectory, "logs")])
+                    
+            
+        
+        
+        
+        
+        
+        
+        
+        

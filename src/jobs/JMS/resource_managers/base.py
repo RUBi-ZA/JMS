@@ -26,7 +26,7 @@ class BaseResourceManager:
     
     def RunUserProcess(self, cmd, expect="prompt", sudo=False):
         payload = "%s\n%s\n%s\n%s" % (self.user.filemanagersettings.ServerPass, cmd, expect, str(sudo))
-        r = requests.post("http://%s/impersonate" % settings.IMPERSONATOR_SETTINGS["url"], data=payload)
+        r = requests.post("http://127.0.0.1:%s/impersonate" % settings.JMS_SETTINGS["impersonator"]["port"], data=payload)
         return r.text
     
     def GetDashboard(self):

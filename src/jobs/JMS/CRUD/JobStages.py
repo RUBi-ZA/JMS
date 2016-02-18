@@ -17,11 +17,13 @@ def AddJobStage(user, job, Stage=None, RequiresEditInd=False, StatusID=1,
 
 def UpdateJobStage(jobstage, Status, ExitCode, OutputLog, ErrorLog, PWD, JobData):
     jobstage.Status_id = Status
-    jobstage.ExitCode = ExitCode
     jobstage.ErrorLog = ErrorLog
     jobstage.OutputLog = OutputLog
     jobstage.WorkingDirectory = PWD
     jobstage.JobData = JobData
+    
+    if ExitCode != str(None):
+        jobstage.ExitCode = ExitCode
     
     jobstage.save()
     return jobstage

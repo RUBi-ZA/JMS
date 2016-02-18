@@ -15,6 +15,11 @@
 /*===================================
 			CUSTOM METHODS
 ======================================*/
+if (typeof String.prototype.startsWith != 'function') {
+    String.prototype.startsWith = function (str){
+        return this.slice(0, str.length) == str;
+    };
+}
 
 function sendFiles(files, url, name, success_callback, error_callback, complete_callback, progress_callback) {
 	try {	

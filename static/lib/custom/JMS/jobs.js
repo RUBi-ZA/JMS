@@ -105,7 +105,7 @@ function JobsViewModel() {
         }, {
             separator: true
         }, {
-            text: "<i class='fa fa-copy'></i> Stop",
+            text: "<i class='fa fa-minus-circle'></i> Stop",
             action: function(data) { self.StopJob(data); }
         }, {
             text: "<i class='fa fa-trash-o'></i> Delete",

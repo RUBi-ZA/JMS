@@ -36,6 +36,7 @@ public_urls = patterns('jobs.views',
     #url(r'jobs/(?P<job_id>[^/]+)/downloads/(?P<download_type>[^/]+)/(?P<type_id>[^/]+)/?', views.FileDownload.as_view()),  
     #url(r'jobs/(?P<job_id>[^/]+)/?', views.JobDetail.as_view()),
     url(r'jobs/filter/(?P<detail>[^/]+)/?', views.JobFilter.as_view()), 
+    url(r'jobs/(?P<job_id>[^/]+)/status/?', views.Status.as_view()), 
     url(r'jobs/(?P<job_id>[^/]+)/?', views.JobDetail.as_view()), 
     url(r'jobs/?', views.JobList.as_view()), 
        

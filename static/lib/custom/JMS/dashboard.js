@@ -83,9 +83,23 @@ function DashboardViewModel() {
 	self.QueueFilter = ko.observable("");
 	self.NodeJobFilter = ko.observable("");
 	
+	self.page = ko.observable(1);
+	self.page.subscribe(function(){
+	    self.ShowVisibleJobs();
+	});
+	
+	self.page_size = ko.observable(20);
+	self.last_page = ko.observable()
+	self.range_start = ko.observable();
+	self.range_end = ko.observable()
+	
 	//Data
 	self.Nodes = ko.observableArray(null);
+	
 	self.Queue = ko.observableArray(null);
+	self.queue = [];
+	self.FilteredQueue = ko.observableArray(null);
+	self.VisibleQueue = ko.observableArray(null);
 		
 	//summary data	
 	self.NodesOnline = ko.observable(0);
@@ -106,12 +120,43 @@ function DashboardViewModel() {
 	self.selected_node_index = 0;
 	self.Job = ko.observable();
 	
+	self.ShowVisibleJobs = function() {
+	    var queue_length = self.Queue().length;
+	    var range_end = self.page_size() * self.page();
+	    
+	    self.range_start(range_end - self.page_size());
+	    self.range_end(Math.min(range_end, queue_length));
+	    
+	    self.last_page(Math.ceil(
+	            queue_length/self.page_size()
+	        ));
+	    
+	    var vis = [];
+	    
+	    for(var i = self.range_start(); i < self.range_end(); i++) {
+	        var q = self.Queue()[i];
+	        
+	        vis.push(q);
+	    }
+	    
+	    self.VisibleQueue(vis);
+	}
+	
+	//nodes graph data
+	self.nodes_data = [];	
+
+	//selected data
+	self.Node = ko.observable(new Node("", "", 64, 0, []));
+	self.selected_node_index = 0;
+	self.Job = ko.observable();
+	
 	self.loading_dashboard = ko.observable(false);
 	self.LoadDashboard = function() {
 		$.ajax({
 			url: "/api/jms/dashboard",
 			success: function(json) {
-				var data = JSON.parse(json);
+				self.queue = JSON.parse(json);
+				var data = self.queue;
 				
 				self.DiskUsage(new DiskUsage(data.disk.disk_size, 
 					data.disk.available_space, data.disk.used_space));
@@ -121,11 +166,12 @@ function DashboardViewModel() {
 				jobs_waiting = 0;
 				
 				var queue = []
+				
 				$.each(data.queue, function(index, q) {
 					var j = new Job(q.job_id, q.username, 
 						q.job_name, q.nodes, q.cores, q.state, 
 						q.time, q.queue);
-										
+					
 					queue.push(j);	
 					
 					if(q.state == "R")
@@ -134,7 +180,8 @@ function DashboardViewModel() {
 						jobs_waiting++;			
 				});				
 				
-				self.Queue(queue);				
+				self.Queue(queue);	
+				self.ShowVisibleJobs();
 				
 				self.JobsRunning(jobs_running);
 				self.JobsWaiting(jobs_waiting);
@@ -193,6 +240,9 @@ function DashboardViewModel() {
 			},
 			complete: function() {	
 				self.loading_dashboard(false);
+    			    
+	            interval = setTimeout(function() {
+	                self.LoadDashboard() }, 20000);
 			}
 		});		
 	}
@@ -214,6 +264,22 @@ function DashboardViewModel() {
         return true;
 	}
 	
+	self.FirstPage = function() {
+	   self.page(1);
+	}
+	
+	self.PreviousPage = function() {
+	    self.page(self.page() - 1);
+	}
+	
+	self.NextPage = function() {
+	    self.page(self.page() + 1);
+	}
+	
+	self.LastPage = function() {
+	    self.page(self.last_page());
+	}
+
 	self.FilterNodeJob = function(job)  {}
 	
 	self.StopJob = function(job_id) {
@@ -265,18 +331,12 @@ function DashboardViewModel() {
     			complete: function() {
     			    question.Hide();
     			    question.ToggleLoading(false);
+    			    
+    			    clearTimeout(interval);
+		            self.LoadDashboard();
     			}
     		});
     	});
-	}
-    
-	self.ViewDashboard = function() {
-	    self.loading_dashboard(true);
-	    
-		self.LoadDashboard();
-		
-		clearInterval(interval);		
-		interval = setInterval(self.LoadDashboard, 10000);
 	}
 	
 	self.loading_job = ko.observable(false);
@@ -310,6 +370,12 @@ function DashboardViewModel() {
 	        },
 	        complete: function() {
 	            self.loading_job(false);
+        		
+        		if(self.Job().Status() < 4) {
+            		interval = setTimeout(function() {
+            		        self.GetJob(id);
+            		    }, 10000);
+        		}
 	        }
 	    })
 	}
@@ -317,12 +383,15 @@ function DashboardViewModel() {
 	self.ViewJob = function(id) {
 	    self.loading_job(true);
 	    
+	    clearTimeout(interval);
 	    self.GetJob(id);
+	}
+    
+	self.ViewDashboard = function() {
+	    self.loading_dashboard(true);
 	    
-		clearInterval(interval);
-		interval = setInterval(function() {
-		    self.GetJob(id);
-		    }, 10000);
+	    clearTimeout(interval);
+		self.LoadDashboard();
 	}
 }
 

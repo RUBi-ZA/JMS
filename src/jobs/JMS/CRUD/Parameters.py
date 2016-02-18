@@ -6,7 +6,7 @@ from copy import deepcopy
 
 from jobs.models import Parameter
 
-import ToolPermissions, ToolVersions
+import ToolPermissions, ToolVersions, ParameterOptions
 
 def GetParameters(version, with_children=True):
     if with_children:
@@ -20,8 +20,10 @@ def CopyParameters(user, old_version, new_version):
         parameters = GetParameters(old_version)
         params = {}
         
-        for param in parameters:
-            parent_param_id = param.ParameterID
+        for old_param in parameters:
+            parent_param_id = old_param.ParameterID
+            
+            param = deepcopy(old_param)
             
             param.ParameterID = None
             param.ToolVersion = new_version
@@ -32,6 +34,8 @@ def CopyParameters(user, old_version, new_version):
             
             #save to add copy to datebase with new ID
             param.save()
+            
+            ParameterOptions.CopyOptions(user, old_param, param)
             
             #store the ID change for any child parameters
             params[parent_param_id] = param

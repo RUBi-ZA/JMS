@@ -145,6 +145,20 @@ var Parameter = function(param_id, name, context, input_by, type, multiple, valu
 	}
 }
 
+var ParameterOption = function(param_option_id, option_text, option_value) {
+	this.ParameterOptionID = ko.observable(param_option_id);
+	this.ParameterOptionText = ko.observable(option_text);
+	this.ParameterOptionValue = ko.observable(option_value);
+	this.DeleteInd = ko.observable(false);
+	
+	this.clone = function() {
+		var copy = new ParameterOption(this.ParameterOptionID(), 
+		    this.ParameterOptionText(), this.ParameterOptionValue());
+		
+		return copy;
+	}
+}
+
 var ComplexObject = function(parameter) {
 	this.Parameter = ko.observable(parameter);
 	
@@ -850,7 +864,7 @@ function WorkflowViewModel() {
             		    param.ParameterID = p.ParameterID();
             		    
             		    if(p.Type() == 5) {
-                		    var temp_files = $('#param_' + p.ParameterID() + '"]').prop('files');
+                		    var temp_files = $('#param_' + p.ParameterID()).prop('files');
     						param.Value = "";
     					    $.each(temp_files, function(k, f) {
     						    param.Value += f.name + ",";
