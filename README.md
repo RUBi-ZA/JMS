@@ -8,9 +8,7 @@ JMS was originally developed for use in the field of bioinformatics. It is, howe
 
 JMS is a Django project. We will welcome any and all help in developing it further.
 
-We have a [publication](http://arxiv.org/abs/1501.06907) in preparation. If you find JMS useful in your research, please cite us as follows:
-
-Brown, DK., Penkler, DL., Musyoka, TM. JMS: A workflow management system and web-based cluster front-end for the Torque resource manager. [arXiv:1501.06907](http://arxiv.org/abs/1501.06907) [cs.SE]
+JMS has been published [here](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0134273).
 
 Installation
 ---
