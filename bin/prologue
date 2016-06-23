@@ -1,2 +1,0 @@
-#!/bin/sh
-curl ip.address:port_no/api/jms/prologue/${2}/${1} 2> /jabba/JMS/logs/prologue/prologue.${1}.log

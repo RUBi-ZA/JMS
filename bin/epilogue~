@@ -1,2 +1,0 @@
-#!/bin/sh
-curl http://jms.biosci.ru.ac.za/api/jms/epilogue/${2}/${1}/${10} 2> /jabba/JMS/logs/epilogue/epilogue.${1}.log
