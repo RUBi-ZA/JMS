@@ -17,38 +17,55 @@ def GetAttr(obj, attr, default):
 class torque(BaseResourceManager):
     
     def GetQueue(self):
-        queue = []
+        column_names = ["Job ID", "Username", "Queue", "Job Name", "State", "Nodes", "Cores", "Time Requested", "Time Used"]
+        rows = []
         
-        out = self.RunUserProcess("qstat -x")
-            
+        queue = JobQueue(column_names, rows)
+        
         try:
+            out = self.RunUserProcess("qstat -x")
             data = objectify.fromstring(out)
         except Exception, e:
             return queue
-        
+            
         for job in data.Job:
-            job_id = str(job.Job_Id)
-            username = str(job.Job_Owner).split("@")[0]
-            job_name = str(job.Job_Name)
             cores = 1
             nodes = str(job.Resource_List.nodes).split(":")
             if len(nodes) > 1:
                 cores = int(nodes[1].split("=")[1])
             nodes = nodes[0]
-            state = str(job.job_state)
             
             try:
-                time = int(job.Walltime.Remaining)
+                time_used = str(job.resources_used.walltime)
             except:
-                time = "n/a"
+                time_used = "n/a"
             
-            job_queue = str(job.queue)
+            state = str(job.job_state)
+            if state == "H":
+                state = Status.Held
+            elif state == "Q":
+                state = Status.Queued
+            elif state == "R" or state == "E":
+                state = Status.Running
+            elif state == "C":
+                state = Status.Complete
             
-            queue.append(QueueItem(job_id, username, job_name, nodes, cores, state, time, job_queue))            
+            row = [
+                str(job.Job_Owner).split("@")[0],
+                str(job.queue),
+                str(job.Job_Name),
+                str(job.job_state),
+                nodes,
+                cores,
+                str(job.Resource_List.walltime),
+                time_used
+            ]
+            
+            queue.rows.append(QueueRow(str(job.Job_Id), state, row))         
             
         return queue
     
-    
+    '''
     def GetDetailedQueue(self):
         process = subprocess.Popen("qstat -x", shell=True, stdout=subprocess.PIPE, close_fds=True)
         out, err = process.communicate()
@@ -60,7 +77,7 @@ class torque(BaseResourceManager):
             jobs.append(j)
         
         return jobs
-    
+    '''
     
     def GetJob(self, id):
         out = self.RunUserProcess("qstat -x %s" % id)

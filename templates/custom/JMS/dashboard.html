@@ -373,32 +373,23 @@
     										            <table id="dt-queue" class="table table-hover">
     										                <thead>
     										                    <tr>
-    										                        <th>Job ID</th>
-    										                        <th>Username</th>
-    										                        <th>Job Name</th>
-    										                        <th>Nodes</th>
-    										                        <th>Cores</th>
-    										                        <th>State</th>
-    										                        <th>Time</th>
-    										                        <th>Queue</th>
-    										                        <th></th>
+    										                        <!-- ko foreach: $root.Queue().ColumnNames -->
+    										                        <th data-bind="text: $data"></th>
+    										                        <!-- /ko -->
+    										                        <th>Options</th>
     										                    </tr>
     										                </thead>
 
-    										                <tbody data-bind="foreach: $root.VisibleQueue">
+    										                <tbody data-bind="foreach: $root.VisibleQueue().Rows">
 
-    										                    <tr data-bind="visible: $root.FilterQueue($data)">
+    										                    <tr>
     										                        <td>
     										                        	<a data-bind="text:JobID, attr { href: '#jobs/' + JobID()}">
     										                        	</a>
     										                        </td>
-    										                        <td data-bind="text:Username"></td>
-    										                        <td data-bind="text:JobName"></td>
-    										                        <td data-bind="text:Nodes"></td>
-    										                        <td data-bind="text:Cores"></td>
-    										                        <td data-bind="text:State"></td>
-    										                        <td data-bind="text:Time"></td>
-    										                        <td data-bind="text:Queue"></td>
+    										                        <!-- ko foreach: Values -->
+    										                        <td data-bind="text:$data"></td>
+    										                        <!-- /ko -->
     										                        <td>
     										                        	<a data-bind="attr: { id: 'q_' + JobID().replace('.', '_') }, click: function() { $root.StopJob(JobID()); }" style="hover{ cursor: pointer;}; width:38px;" title="Stop job" class="btn btn-danger btn-sm" >
     										                        		<i class="fa fa-trash-o"></i>
@@ -418,7 +409,7 @@
     										        	    to 
     										        	    <span data-bind="text: range_end"></span>
     										        	    of
-    										        	    <span data-bind="text: $root.Queue().length"></span>
+    										        	    <span data-bind="text: $root.FilteredQueue().Rows().length"></span>
     										        	</label>
     										        	
     										        	<div style="float:right;">
@@ -429,7 +420,6 @@
     										        	        <button class="btn btn-default" title="Last page" data-bind="disable: $root.page() == $root.last_page(), click: $root.LastPage">>></button>
                             								</div>
     										        	</div>
-    										        	<label>No. of Jobs: </label> <span data-bind="text: $root.Queue().length"></span>
     										        </div>
     											</div>
     										</div>

@@ -24,7 +24,7 @@ def GetTools(user):
             Q(User__id=user.id) | 
             Q(UserToolPermissions__User__id=user.id)
         )
-    )
+    ).distinct()
 
 
 def AddTool(user, ToolName, CategoryID, ToolDescription, PublicInd = False):

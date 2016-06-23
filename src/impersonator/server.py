@@ -19,9 +19,12 @@ class Impersonator(Resource):
         self.processes = TimeExpiredDict(600)
         with open("pvt.key", "r") as key_file:
             self.key = key_file.read()
-            
+    
+    
+    
     def authenticate(self, username, password, venv=None):
         process = self.processes.get(username)
+        
         if process == None:
             process = subprocess.Popen('su %s -c " ../venv/bin/python login.py %s %s"' % (username, username, password), shell=True, stdout=subprocess.PIPE)
             output, error = process.communicate()
@@ -32,15 +35,17 @@ class Impersonator(Resource):
                 self.processes.add(username, password)
             else: 
                 return False
+            
         elif process != password:
             self.process.expire(username)
             return False
+        
         return True
+    
+    
     
     def render_POST(self, request):
         try:
-            print "### Received request ###"
-            
             data = request.content.read()
             data_lines = data.split("\n")
             
@@ -50,11 +55,11 @@ class Impersonator(Resource):
             credentials = decrypted.split(":")
             
             command = data_lines[1]
-            prompt = "prompt" #legacy - not currently used
+            prompt = "prompt" #legacy - should be phased out
             sudo = False
             
             if len(data_lines) > 2:
-                prompt = data_lines[2] #legacy - not currently used
+                prompt = data_lines[2] #legacy - should be phased out
                 if len(data_lines) > 3:
                     sudo = data_lines[3].lower() == "true"
             
@@ -62,11 +67,10 @@ class Impersonator(Resource):
             if sudo:
                 command = 'sudo -S %s' % command
             
+            #activate python virtual environment
             command = 'source ../venv/bin/activate;%s;deactivate' % command
             
             if self.authenticate(credentials[0], credentials[1]):
-                print "Permission granted."
-                print "Running '%s' as '%s'" % (command, credentials[0])
                 
                 cmd = "su - %s -c '%s'" % (credentials[0], command)
                 process = subprocess.Popen(cmd, shell=True, 
@@ -80,32 +84,35 @@ class Impersonator(Resource):
                     output, error = process.communicate()
                                
                 output = str(output).strip("None")
-                print output
+                
                 return output
             else:
-                print "Permission denied\n"
                 
                 request.setResponseCode(403)
                 return "Permission denied"
             
         except Exception, err:
-            print(err)
+            print str(err)
             
             request.setResponseCode(400)
             return "Bad Request" 
+
 
 
 resource = Impersonator()
 
 path = os.path.dirname(os.path.realpath(__file__))
 with cd(path):
+
     if __name__ == "__main__":
+        
         port = 8124
         if len(sys.argv) > 1:
             port = int(sys.argv[1])
             
         root = Resource()
         root.putChild("impersonate", resource)
+        
         factory = Site(root)
         reactor.listenTCP(port, factory)
         reactor.run()

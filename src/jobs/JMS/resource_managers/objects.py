@@ -81,7 +81,21 @@ class Job:
     def __init__(self, job_id, cores):
         self.job_id = job_id
         self.cores = cores
- 
+
+
+class JobQueue:
+    
+    def __init__(self, column_names, rows):
+        self.column_names = column_names # A list of column names
+        self.rows = rows # a list of QueueRows
+
+class QueueRow: 
+    
+    def __init__(self, job_id, state, values):
+        self.job_id = job_id
+        self.state = state
+        self.values = values
+
 
 class QueueItem:
     

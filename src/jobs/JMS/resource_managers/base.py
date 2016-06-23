@@ -12,7 +12,7 @@
     exceptions.py files respectively.
 '''
 
-import requests
+import requests, subprocess
 
 from objects import *
 from exceptions import *
@@ -25,9 +25,14 @@ class BaseResourceManager:
         self.user = user
     
     def RunUserProcess(self, cmd, expect="prompt", sudo=False):
-        payload = "%s\n%s\n%s\n%s" % (self.user.filemanagersettings.ServerPass, cmd, expect, str(sudo))
-        r = requests.post("http://127.0.0.1:%s/impersonate" % settings.JMS_SETTINGS["impersonator"]["port"], data=payload)
-        return r.text
+        if self.user:
+            payload = "%s\n%s\n%s\n%s" % (self.user.filemanagersettings.ServerPass, cmd, expect, str(sudo))
+            r = requests.post("http://127.0.0.1:%s/impersonate" % settings.JMS_SETTINGS["impersonator"]["port"], data=payload)
+            return r.text
+        else:
+            process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, close_fds=True)
+            out, err = process.communicate()
+            return out
     
     def GetDashboard(self):
         return Dashboard(self.GetNodes(), self.GetQueue(), self.GetDiskUsage(settings.JMS_SETTINGS["JMS_shared_directory"]))
@@ -46,7 +51,7 @@ class BaseResourceManager:
         
     def GetQueue(self):
         '''
-        Success: return list of QueueItem objects
+        Success: return a JobQueue object
         Failure: raise ResourceManagerException 
         '''
         raise NotImplementedError

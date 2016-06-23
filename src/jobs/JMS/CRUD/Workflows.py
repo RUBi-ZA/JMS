@@ -16,7 +16,7 @@ def GetWorkflows(user):
             Q(User__id=user.id) | 
             Q(UserWorkflowPermissions__User__id=user.id)
         )
-    )
+    ).distinct()
 
 
 def GetWorkflow(user, workflow_id):

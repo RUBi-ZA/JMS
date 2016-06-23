@@ -129,7 +129,7 @@ class Parameter(models.Model):
 
 class ParameterOption(models.Model):
     ParameterOptionID = models.AutoField(primary_key=True)
-    ParameterOptionText = models.CharField(max_length=30)
+    ParameterOptionText = models.CharField(max_length=50)
     ParameterOptionValue = models.CharField(max_length=30)
     Parameter = models.ForeignKey(Parameter, db_column='ParameterID', related_name='ParameterOptions')
     
@@ -403,6 +403,7 @@ class JobStageDataField(models.Model):
     class Meta:
         unique_together = ('JobStageDataSection', 'Key',)
         db_table = 'JobStageDataFields'
+
 
 
 class JobStageParameter(models.Model):

@@ -36,6 +36,16 @@ var Job = function(job_id, username, job_name, nodes, cores, state, time, queue,
 	this.Queue = ko.observable(queue);
 }
 
+var JobQueue = function() {
+    this.ColumnNames = ko.observableArray();
+    this.Rows = ko.observableArray();
+}
+
+var JobRow = function() {
+    this.JobID = ko.observable();
+    this.Values = ko.observableArray();
+}
+
 var Resource = function(resource, allocated) {
 	this.ResourceName = ko.observable(resource)
 	this.ResourcesAllocated = ko.observable(allocated)
@@ -81,7 +91,9 @@ function DashboardViewModel() {
 	
 	//Filters			
 	self.QueueFilter = ko.observable("");
-	self.NodeJobFilter = ko.observable("");
+	self.QueueFilter.subscribe(function(){
+	    self.FilterQueue();
+	});
 	
 	self.page = ko.observable(1);
 	self.page.subscribe(function(){
@@ -96,10 +108,10 @@ function DashboardViewModel() {
 	//Data
 	self.Nodes = ko.observableArray(null);
 	
-	self.Queue = ko.observableArray(null);
+	self.Queue = ko.observable(new JobQueue());
 	self.queue = [];
-	self.FilteredQueue = ko.observableArray(null);
-	self.VisibleQueue = ko.observableArray(null);
+	self.FilteredQueue = ko.observable(new JobQueue());
+	self.VisibleQueue = ko.observable(new JobQueue());
 		
 	//summary data	
 	self.NodesOnline = ko.observable(0);
@@ -121,7 +133,7 @@ function DashboardViewModel() {
 	self.Job = ko.observable();
 	
 	self.ShowVisibleJobs = function() {
-	    var queue_length = self.Queue().length;
+	    var queue_length = self.FilteredQueue().Rows().length;
 	    var range_end = self.page_size() * self.page();
 	    
 	    self.range_start(range_end - self.page_size());
@@ -134,12 +146,11 @@ function DashboardViewModel() {
 	    var vis = [];
 	    
 	    for(var i = self.range_start(); i < self.range_end(); i++) {
-	        var q = self.Queue()[i];
-	        
+	        var q = self.FilteredQueue().Rows()[i];
 	        vis.push(q);
 	    }
 	    
-	    self.VisibleQueue(vis);
+	    self.VisibleQueue().Rows(vis);
 	}
 	
 	//nodes graph data
@@ -165,22 +176,35 @@ function DashboardViewModel() {
 				jobs_running = 0;
 				jobs_waiting = 0;
 				
-				var queue = []
+				var queue = new JobQueue();
+				var filtered = new JobQueue();
+				var visible = new JobQueue();
 				
-				$.each(data.queue, function(index, q) {
-					var j = new Job(q.job_id, q.username, 
-						q.job_name, q.nodes, q.cores, q.state, 
-						q.time, q.queue);
+				queue.ColumnNames(data.queue.column_names);
+				filtered.ColumnNames(data.queue.column_names);
+				visible.ColumnNames(data.queue.column_names);
+				
+				$.each(data.queue.rows, function(index, row) {
+					var j = new JobRow();
+					j.JobID(row.job_id);
+					j.Values(row.values);
 					
-					queue.push(j);	
+					queue.Rows.push(j);	
 					
-					if(q.state == "R")
+					if(row.state == 3)
 						jobs_running++;
-					else if(q.state == "Q" || q.state == "H")
-						jobs_waiting++;			
-				});				
+					else if(row.state < 3)
+						jobs_waiting++;	
+						
+					if(self.Filter(j)) {
+					    filtered.Rows.push(j)
+					}
+				});			
 				
-				self.Queue(queue);	
+				self.Queue(queue);
+				self.FilteredQueue(filtered);
+				self.VisibleQueue(visible);
+				
 				self.ShowVisibleJobs();
 				
 				self.JobsRunning(jobs_running);
@@ -247,21 +271,42 @@ function DashboardViewModel() {
 		});		
 	}
 	
-	self.FilterQueue = function(job) {
+	self.Filter = function(job_row) {
 		if(self.QueueFilter().length > 0) {
-			if(job.JobID().indexOf(self.QueueFilter()) >= 0) {
+			if(job_row.JobID().indexOf(self.QueueFilter()) >= 0) {
 			   	return true;
-		    } else if(job.JobName().indexOf(self.QueueFilter()) >= 0) {
-			   	return true;
-		    } else if(job.Username().indexOf(self.QueueFilter()) >= 0) {
-			   	return true;
-		    } else if(job.State() == self.QueueFilter()) {
-			   	return true;
+		    } else { 
+		        var found = false;
+			   	$.each(job_row.Values(), function(i, val) {
+			   	    if (typeof val != "string") {
+			   	        val = val.toString();
+			   	    }
+			   	    index = val.indexOf(self.QueueFilter());
+			   	    
+			   	    if(index >= 0) {
+			   	        found = true;
+			   	        
+			   	        return false;
+			   	    }
+			   	});
 		    }    
 		    
-		    return false;
+		    return found;
         }                
         return true;
+	}
+	
+	self.FilterQueue = function() {
+	    var filtered = new JobQueue();
+	    
+	    $.each(self.Queue().Rows(), function(i, j) {
+	        if(self.Filter(j)) {
+	            filtered.Rows.push(j);
+	        }
+	    });
+	    
+	    self.FilteredQueue(filtered);
+	    self.ShowVisibleJobs();
 	}
 	
 	self.FirstPage = function() {

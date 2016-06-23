@@ -1661,6 +1661,19 @@ $(document).ready(function () {
 	tool.GetDefaultResources();
 	tool.GetFileTypes();
 	
+	$(window).bind('keydown', function(event) {
+        if (event.ctrlKey || event.metaKey) {
+            switch (String.fromCharCode(event.which).toLowerCase()) {
+                case 's':
+                    event.preventDefault();
+                    
+                    tool.SaveFile(tool.SelectedFile());
+                        
+                    break;
+            }
+        }
+    });
+	
 	// initialize the application
 	var app = Sammy(function() {
 

@@ -886,9 +886,9 @@ class JobManager:
                                 
                         except Exception, ex:
                             pass
-                    
-                    JobStageParameter.objects.create(JobStage=jobstage, Parameter=param,
-                        ParameterName=param.ParameterName, Value=val)
+                    if val:
+                        JobStageParameter.objects.create(JobStage=jobstage, Parameter=param,
+                            ParameterName=param.ParameterName, Value=val)
                     
                     if param.ParameterType.ParameterTypeID != 3 and len(str(val)) > 0:
                         try:
@@ -1054,60 +1054,75 @@ class JobManager:
         
     
     def UpdateJobHistory(self):
-        #f = open("/tmp/continue1.txt", 'w')
-        #print >> f, "here"
+        f = open("/tmp/continue1.txt", 'w')
         
         r = ResourceManager(self.user)
-        jobs = r.GetDetailedQueue()
+        queue = r.GetQueue()
         new_status = None
+        
+        #print >> f, queue
+        #print >> f, queue.rows
         
         emails = []
         http = []
-
         
-        for job in jobs:
+        for row in queue.rows:
             try:
-                JobData = json.dumps(job.DataSections, 
-                    default=lambda o: o.__dict__, sort_keys=True)
-                
                 #update or create JobStage
-                jobstage = JobStages.GetJobStage(job.JobID)
+                jobstage = JobStages.GetJobStage(row.job_id)
+                #print >> f, "Working on %s" % row.job_id
+                #print >> f, jobstage
                 
-                new_status = job.Status
-                if new_status == 4 and job.ExitCode == None:
-                    new_status = 6
-                
-                if jobstage:
+                if jobstage: # if the job exists in the database and the status has changed
+                    
+                    new_status = row.state
                     old_status = jobstage.Status.StatusID
-                    if old_status < 5:
-                        if new_status == 4 and jobstage.RequiresEditInd:
-                            new_status = 5
+                    #print >> f, old_status
+                    
+                    if new_status == 4 and jobstage.RequiresEditInd:
+                        new_status = 5
+                        
+                    #print >> f, new_status
+                    
+                    #if the job status has changed or the job is running
+                    if old_status != new_status or new_status == 3:
+                        #print >> f, "Update %s" % row.job_id
+                        
+                        job = r.GetJob(row.job_id)
+                        data = json.dumps(job.DataSections, 
+                            default=lambda o: o.__dict__, sort_keys=True)
+                        
+                        if new_status == 4 and job.ExitCode == None:
+                            new_status = 6
                         
                         jobstage = JobStages.UpdateJobStage(jobstage, new_status, 
                             job.ExitCode, job.OutputLog, job.ErrorLog, 
-                            job.WorkingDir, JobData)
-                        
+                            job.WorkingDir, data)
+                            
                         #if the status is held and the job is a workflow
-                        #release job if dependencies have been satisfied
+                        #release job if dependencies have been satisfied.
+                        #This should only happen if an error has occured 
+                        #when continuing the job
                         if new_status == 1 and jobstage.Job.JobTypeID < 4:
                             self.ReleaseJob(jobstage)
-                    
-                    #if status has changed to completed state, send notifications
-                    if old_status < 4 and new_status >= 4:
-                    
-                        if jobstage.Job.JobStages.filter(Status_id__lt=4).count() == 0:
-                            #if there are no jobstages in job with status < 4, the job must be complete
-                            if jobstage.Job.NotificationEmail is not None:
-                                emails.append(jobstage.Job)
-                            
-                            if jobstage.Job.NotificationURL is not None:
-                                http.append(jobstage.Job)
-                    
-                    #if status has changed, get new status and send notifications
-                    #if old_status != new_status:
-                        #self.UpdateJobStatus(jobstage.Job)
                         
-                else:
+                        #if status has changed to completed state, send notifications
+                        if new_status >= 4:
+                        
+                            if jobstage.Job.JobStages.filter(Status_id__lt=4).count() == 0:
+                                #if there are no jobstages in job with status < 4, the job must be complete
+                                if jobstage.Job.NotificationEmail is not None:
+                                    emails.append(jobstage.Job)
+                                
+                                if jobstage.Job.NotificationURL is not None:
+                                    http.append(jobstage.Job)
+                        
+                else: # if the job doesnt exist in the database, add it
+                    
+                    job = r.GetJob(row.job_id)
+                    data = json.dumps(job.DataSections, 
+                        default=lambda o: o.__dict__, sort_keys=True)
+                        
                     with transaction.atomic():
                         user, created = User.objects.get_or_create(
                             username=job.User.split("@")[0]
@@ -1120,7 +1135,7 @@ class JobManager:
                         jobstage = JobStages.AddJobStage(user, j, StatusID=job.Status, 
                             ClusterJobID=job.JobID, ExitCode=job.ExitCode, 
                             ErrorLog=job.ErrorLog, OutputLog=job.OutputLog, 
-                            PWD=job.WorkingDir, JobData=JobData)
+                            PWD=job.WorkingDir, JobData=data)
                 
             except Exception, ex:
                 File.print_to_file("/tmp/continue.txt", traceback.format_exc())
@@ -1131,14 +1146,16 @@ class JobManager:
     
     def ContinueJob(self, jobstage):
         #set status to complete
-        jobstage.Status.StatusID = 4
+        jobstage.Status_id = 4
         jobstage.RequiresEditInd = False
         jobstage.save()
         
         #loop through reliant jobs and release them if conditions are met
         for dep in jobstage.ReliantJobStages.all():
             js = dep.JobStageOI
-            self.ReleaseJob(js)
+            if self.ReleaseJob(js):
+                js.Status_id = 3
+                js.save()
     
     
     def ReleaseJob(self, jobstage):
@@ -1150,6 +1167,10 @@ class JobManager:
                 
                 r = ResourceManager(jobstage.Job.User)
                 out = r.ReleaseJob(jobstage.ClusterJobID)
+                
+                return True
+            else:
+                return False
     
     
     def JobStageDependenciesSatisfied(self, js):

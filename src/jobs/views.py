@@ -1000,8 +1000,6 @@ class ToolJob(APIView):
             job_name = request.POST.get("JobName", "")
             description = request.POST.get("Description", "")
             parameters = json.loads(request.POST["Parameters"])
-            #settings = json.loads(request.POST["Settings"])
-            
             
             files = []
             for k, v in request.FILES.iteritems():
@@ -1121,7 +1119,18 @@ class JobDetail(APIView):
         Delete job
         """
         jms = JobManager(user=request.user)
-        job = jms.DeleteJob(job_id)
+        job = jms.GetJob(job_id)
+        jms.DeleteJob(job)
+        
+        return Response()
+    
+    def put(self, request, job_id):
+        """
+        Stop job
+        """
+        jms = JobManager(user=request.user)
+        job = jms.GetJob(job_id)
+        jms.StopJob(job)
         
         return Response()
 
