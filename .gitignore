@@ -1,4 +1,4 @@
 src/venv
 src/JMS/settings.py
-logs
+logs/*
 src/impersonator/nohup.out
