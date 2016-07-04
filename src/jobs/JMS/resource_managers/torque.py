@@ -658,16 +658,17 @@ class torque(BaseResourceManager):
         ])
 
     
-    def CreateJobScript(self, job_name, job_dir, script_name, output_log, error_log, settings, has_dependencies, commands):
+    def CreateJobScript(self, job_name, job_dir, script_name, output_log, error_log, settings, has_dependencies, commands, shell="/bin/bash"):
         
         script = os.path.join(job_dir, script_name)
         
         with open(script, 'w') as job_script:
-            print >> job_script, "#!/bin/sh"
+            print >> job_script, "#!%s" % shell
             print >> job_script, "#PBS -o localhost:%s" % output_log
             print >> job_script, "#PBS -e localhost:%s" % error_log
             print >> job_script, "#PBS -d %s" % job_dir
             print >> job_script, "#PBS -N %s" % job_name
+            print >> job_script, "#PBS -S %s" % shell
             
             nodes = ""
             for setting in settings:
