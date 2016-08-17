@@ -95,9 +95,9 @@ sudo venv/bin/python manage.py queue_daemon stop
 
 The impersonator allows JMS to submit jobs as you. It is also used for a number of other reasons. If you are unable to login, chances are the impersonator is not running. To start it, run the following commands:
 ```
-cd impersonator
 sudo su
-nohup python server.py 8124 &
+source venv/bin/activate
+impersonator/start.sh
 ```
 
 You can set which port JMS communicates with the impersonator on in the settings.py file:
@@ -105,7 +105,7 @@ You can set which port JMS communicates with the impersonator on in the settings
 ```
 IMPERSONATOR_SETTINGS = {
     "key": os.path.join(BASE_DIR, "impersonator/pub.key"),
-    "url": "127.0.0.1:8124"
+    "url": "127.0.0.1:8123"
 }
 ```
 
