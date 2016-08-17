@@ -74,14 +74,13 @@ With the settings.py file set up with your database details and the path to your
 ``` bash
 cd /srv/JMS/src
 source venv/bin/activate
-python manage.py syncdb
-python manage.py setup
+python manage.py migrate
 ```
 
 ### 2. Start the queue daemon
 
 The queue daemon is responsible for updating the JMS job history with details from the resource manager. If you don't start the queue_daemon, your job history will not be updated after the a job has been submitted i.e. no changes in state will be tracked during the job. To start the queue daemon, run the following command:
-```
+``` bash
 sudo venv/bin/python manage.py queue_daemon start
 ```
 
@@ -94,15 +93,13 @@ sudo venv/bin/python manage.py queue_daemon stop
 ### 3. Start the impersonator server
 
 The impersonator allows JMS to submit jobs as you. It is also used for a number of other reasons. If you are unable to login, chances are the impersonator is not running. To start it, run the following commands:
-```
-sudo su
-source venv/bin/activate
-impersonator/start.sh
+``` bash
+sudo venv/bin/python impersonator/server.py 8123 >/dev/null 2>&1 &
 ```
 
 You can set which port JMS communicates with the impersonator on in the settings.py file:
 
-```
+``` python
 IMPERSONATOR_SETTINGS = {
     "key": os.path.join(BASE_DIR, "impersonator/pub.key"),
     "url": "127.0.0.1:8123"
@@ -112,7 +109,7 @@ IMPERSONATOR_SETTINGS = {
 ### 4. Test the JMS
 
 To test that your installation is working, run the Django development web server:
-```
+``` bash
 python manage.py runserver ip.address:8000
 ```
 
