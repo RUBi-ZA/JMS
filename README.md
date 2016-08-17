@@ -75,6 +75,7 @@ With the settings.py file set up with your database details and the path to your
 cd /srv/JMS/src
 source venv/bin/activate
 python manage.py migrate
+python manage.py setup
 ```
 
 ### 2. Start the queue daemon
