@@ -82,13 +82,13 @@ python manage.py setup
 
 The queue daemon is responsible for updating the JMS job history with details from the resource manager. If you don't start the queue_daemon, your job history will not be updated after the a job has been submitted i.e. no changes in state will be tracked during the job. To start the queue daemon, run the following command:
 ```
-sudo python manage.py queue_daemon start
+sudo venv/bin/python manage.py queue_daemon start
 ```
 
 To restart or stop the queue daemon, run the following commands respectively:
 ```
-sudo python manage.py queue_daemon restart
-sudo python manage.py queue_daemon stop
+sudo venv/bin/python manage.py queue_daemon restart
+sudo venv/bin/python manage.py queue_daemon stop
 ```
 
 ### 3. Start the impersonator server
@@ -115,6 +115,5 @@ To test that your installation is working, run the Django development web server
 ```
 python manage.py runserver ip.address:8000
 ```
-You should now be able to browse to the JMS at http://ip.address:8000. The IP address you use to run the server should match the IP address used in with the `python manage.py setup <base_url>` command
 
 For improved performance, [host the JMS with Apache](https://github.com/RUBi-ZA/JMS/wiki/Hosting-with-Apache) or some other production web server.
