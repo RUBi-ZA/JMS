@@ -58,23 +58,15 @@ class slurm(BaseResourceManager):
         return queue
     
     def GetJob(self, id):
-<<<<<<< HEAD
         out = self.RunUserProcess('/mounts/rey/software/slurm/bin/squeue -j {0} -o "%r %t %Z %r %F %j %u %m %D %l %P %C N/A %d %M %B %V %S %e %o %p %k"'.format(id) )
-=======
-        out = self.RunUserProcess('/mounts/rey/software/slurm/bin/squeue -j {0} -o "%r %t %Z %r %F %j %u"'.format(id) )
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         data = out.splitlines()
         return self._ParseJob(data[1])
 
 
     def _ParseJob(self, data):
         job = data.strip().split()
-<<<<<<< HEAD
-	
-=======
-        
-        	
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         #get core details to update JobStage
         exit_code = job[0]
         state = job[1]
@@ -114,7 +106,6 @@ class slurm(BaseResourceManager):
             working_dir, exit_code, [])
         
         #get resource manager specific details
-<<<<<<< HEAD
         resources_allocated = DataSection("Allocated Resources", [
             DataField(Key='mem', Label="Allocated Memory", ValueType=4, 
                 DefaultValue=str(job[7])
@@ -127,26 +118,10 @@ class slurm(BaseResourceManager):
             ),
             DataField(Key='queue', Label="Queue", ValueType=4, 
                 DefaultValue=str(job[10])
-=======
-        '''
-        resources_allocated = DataSection("Allocated Resources", [
-            DataField(Key='mem', Label="Allocated Memory", ValueType=4, 
-                DefaultValue=str(deepgetattr(job, 'Resource_List.mem'))
-            ),
-            DataField(Key='nodes', Label="Allocated Nodes", ValueType=4, 
-                DefaultValue=str(deepgetattr(job, "Resource_List.nodes"))
-            ),
-            DataField(Key='walltime', Label="Allocated Walltime", 
-                ValueType=4, DefaultValue=str(deepgetattr(job, "Resource_List.walltime"))
-            ),
-            DataField(Key='queue', Label="Queue", ValueType=4, 
-                DefaultValue=str(deepgetattr(job, 'queue'))
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
             ),
         ])
         
         resources_used = DataSection("Resources Used", [
-<<<<<<< HEAD
             DataField(Key='cput', Label="CPUs requested", ValueType=4, 
                 DefaultValue=str(job[11])
             ),
@@ -179,31 +154,6 @@ class slurm(BaseResourceManager):
         other = DataSection("Other", [
             DataField(Key='submit_args', Label="Submit Args", ValueType=4, 
                 DefaultValue=str(job[19])
-=======
-            DataField(Key='cput', Label="CPU Time", ValueType=4, 
-                DefaultValue=str(GetAttr(job, 'resources_used.cput', 'n/a'))
-            ),
-            DataField(Key='mem_used', Label="Memory Used", ValueType=4, 
-                DefaultValue=str(GetAttr(job, 'resources_used.mem', 'n/a'))
-            ),
-            DataField(Key='vmem', Label="Virtual Memory Used", ValueType=4, 
-                DefaultValue=str(GetAttr(job, 'resources_used.vmem', 'n/a'))
-            ),
-            DataField(Key='walltime_used', Label="Walltime Used", ValueType=4, 
-                DefaultValue=str(GetAttr(job, 'resources_used.walltime', 'n/a'))
-            ),
-            DataField(Key='exec_host', Label="Execution Node", ValueType=4, 
-                DefaultValue=str(GetAttr(job, 'exec_host', 'n/a')).split("/")[0]
-            )
-        ])
-        
-        other = DataSection("Other", [
-            DataField(Key='server', Label="Server", ValueType=4, 
-                DefaultValue=str(GetAttr(job, 'server', 'n/a'))
-            ),
-            DataField(Key='submit_args', Label="Submit Args", ValueType=4, 
-                DefaultValue=str(GetAttr(job, 'submit_args', 'n/a'))
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
             ),
             DataField(Key='Output_Path', Label="Output Log", ValueType=4, 
                 DefaultValue=output_path
@@ -212,17 +162,12 @@ class slurm(BaseResourceManager):
                 DefaultValue=error_path
             ),
             DataField(Key='Priority', Label="Priority", ValueType=4, 
-<<<<<<< HEAD
                 DefaultValue=str(job[20])
-=======
-                DefaultValue=str(GetAttr(job, 'Priority', 'n/a'))
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
             ),
             DataField(Key='Variable_List', Label="Environmental Variables", 
                 ValueType=4, DefaultValue=env
             ),
             DataField(Key='comment', Label="Comment", ValueType=4, 
-<<<<<<< HEAD
                 DefaultValue=str(job[21])
             )
         ])
@@ -231,37 +176,6 @@ class slurm(BaseResourceManager):
         c.DataSections.append(resources_used)
         c.DataSections.append(time)
         c.DataSections.append(other)
-=======
-                DefaultValue=str(GetAttr(job, 'comment', 'n/a'))
-            )
-        ])
-        
-        time = DataSection("Time", [
-            DataField(Key='ctime', Label="Created Time", ValueType=4, 
-                DefaultValue=str(GetAttr(job, 'ctime', 'n/a'))
-            ),
-            DataField(Key='qtime', Label="Time Entered Queue", ValueType=4, 
-                DefaultValue=str(GetAttr(job, 'qtime', 'n/a'))
-            ),
-            DataField(Key='etime', Label="Time Eligible to Run", ValueType=4, 
-                DefaultValue=str(GetAttr(job, 'etime', 'n/a'))
-            ),
-            DataField(Key='mtime', Label="Last Modified", ValueType=4, 
-                DefaultValue=str(GetAttr(job, 'mtime', 'n/a'))
-            ),
-            DataField(Key='start_time', Label="Start Time", ValueType=4, 
-                DefaultValue=str(GetAttr(job, 'start_time', 'n/a'))
-            ),
-            DataField(Key='comp_time', Label="Completed Time", ValueType=4, 
-                DefaultValue=str(GetAttr(job, 'comp_time', 'n/a'))
-            ),
-        ])'''
-        
-        #c.DataSections.append(resources_allocated)
-        #c.DataSections.append(resources_used)
-        #c.DataSections.append(time)
-        #c.DataSections.append(other)
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
         
         return c
     
@@ -276,7 +190,6 @@ class slurm(BaseResourceManager):
                     DataField("ControlMachine", "Server name", ValueType.Label, "", True),
                     DataField("SLURM_VERSION", "SLURM version", ValueType.Label, "", True),
                     DataField("SLURM_CONF", "SLURM config", ValueType.Label, False),
-<<<<<<< HEAD
                     DataField("SlurmdUser", "Slurmd user", ValueType.Label, False),
                     #DataField("default_queue", "Default queue", ValueType.Text, ""),
                     DataField("MinJobAge", "Min job age (s)", ValueType.Number, False),
@@ -286,25 +199,11 @@ class slurm(BaseResourceManager):
                     DataField("KillWait", "Kill wait (s)", ValueType.Number, False),
                     DataField("MaxJobCount", "Max jobs", ValueType.Number, False),
                     #DataField("SchedulerTimeSlice", "Scheduler time slice (s)", ValueType.Number, False),
-=======
-                    #DataField("default_queue", "Default queue", ValueType.Text, ""),
-                    DataField("BatchStartTimeout", "Batch start timeout (ms)", ValueType.Number, False),
-                    DataField("CompleteWait", "Complete wait (ms)", ValueType.Number, False),
-                    DataField("GetEnvTimeout", "Get Env timeout (ms)", ValueType.Number, False),
-                    DataField("TCPTimeout", "TCP timeout (ms)", ValueType.Number, False),
-                    DataField("KillWait", "Kill wait (s)", ValueType.Number, False),
-                    DataField("MaxJobCount", "Max jobs", ValueType.Number, False),
-                    DataField("SchedulerTimeSlice", "Scheduler time slice (s)", ValueType.Number, False),
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
                     DataField("SlurmUser", "Slurm user", ValueType.Text, False),
                     DataField("SlurmctldPort", "Slurmctld port", ValueType.Number, False),
                     DataField("SlurmctldTimeout", "Slurmctld timeout (s)", ValueType.Number, False),
                     DataField("SlurmdPort", "Slurmd port", ValueType.Number, False),
                     DataField("SlurmdTimeout", "Slurmd timeout (s)", ValueType.Number, False),
-<<<<<<< HEAD
-=======
-                    DataField("SlurmdUser", "Slurmd user", ValueType.Text, False)
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
                 ]
             )
         ]
@@ -329,32 +228,21 @@ class slurm(BaseResourceManager):
                     settings_section.Settings.append(s)
                     
                 # Remove text chars
-<<<<<<< HEAD
                 if setting in ["KillWait", "SlurmctldTimeout", "SlurmdTimeout", "MinJobAge", "InactiveLimit"]:
-=======
-                if setting in ["KillWait", "SchedulerTimeSlice", "SlurmctldTimeout", "SlurmdTimeout"]:
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
                     temp = re.sub(r'\D', "", value)
                     s = Setting(Name=setting, Value=int(temp))
                     settings_section.Settings.append(s)
                 # Remove text chars and convert to milliseconds
-<<<<<<< HEAD
                 '''elif setting in ["TCPTimeout"]:
                     temp = re.sub(r'\D', "", value)
                     s = Setting(Name=setting, Value=int(temp)*1000)
                     settings_section.Settings.append(s)'''
-=======
-                elif setting in ["TCPTimeout", "BatchStartTimeout", "CompleteWait", "GetEnvTimeout"]:
-                    temp = re.sub(r'\D', "", value)
-                    s = Setting(Name=setting, Value=int(temp)*1000)
-                    settings_section.Settings.append(s)
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
                 
         settings = Data(data_sections, [settings_section])
         
         return settings
     
-<<<<<<< HEAD
+
     def UpdateSettings(self, settings_sections):#duplicate entries to file, probably simple logic oversight
         with open(settings_sections[0].Settings[2].Value) as f:
         	configFile = f.readlines()
@@ -395,17 +283,7 @@ class slurm(BaseResourceManager):
 
         #self.RunUserProcess("cp /mounts/rey/software/slurm/etc/slurm.conf /mounts/rey/software/slurm/etc/slurm.conf.old".format(settings_sections[0].Settings[2].Value))
         #self.RunUserProcess("/mounts/rey/software/slurm/bin/scontrol reconfigure") # Must be run as SLURM user
-=======
-    def UpdateSettings(self, settings_sections):
-        
-        output = ""
-        for section in settings_sections:
-            for setting in section.Settings:
-                with open("/tmp/debug.txt", "w") as f: #debugging
-                	f.write(str(datetime.datetime.now()) + " " + os.path.basename(__file__) + "\n")
-                	f.write(str(setting.Name) + "\n")
-                #output += "debug"#self.RunUserProcess('qmgr -c "set server %s = %s"' % (setting.Name, str(setting.Value)))
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         return output
 
     def GetQueues(self):
@@ -530,19 +408,13 @@ class slurm(BaseResourceManager):
             queues.Data.append(queue)
         return queues
     
-<<<<<<< HEAD
     def AddQueue(self, queue_name): #sudo not working
         #raise NotImplementedError
         output = self.RunUserProcess('/mounts/rey/software/slurm/bin/scontrol create PartitionName=%s"' % queue_name, sudo=True)
-=======
-    def AddQueue(self, queue_name):
-        output = "debug"#self.RunUserProcess('qmgr -c "create queue %s"' % queue_name)
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
     
     
     def UpdateQueue(self, queue):
         
-<<<<<<< HEAD
         with open("/tmp/debug.txt", "w") as f: #debugging
         	f.write(str(datetime.datetime.now()) + " " + os.path.basename(__file__) + "\n")
         	f.write(queue + "\n")
@@ -550,10 +422,7 @@ class slurm(BaseResourceManager):
         raise NotImplementedError
 	    
         output = ""
-=======
-	
-        '''output = ""
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         max_nodes = 1
         max_procs = 1
         def_nodes = 1
@@ -589,7 +458,6 @@ class slurm(BaseResourceManager):
         
         output += "debug"#self.RunUserProcess('qmgr -c "set queue %s resources_max.nodes = %s:ppn=%s"' % (queue.QueueName, str(max_nodes), str(max_procs)))
         output += "debug"#self.RunUserProcess('qmgr -c "set queue %s resources_default.nodes = %s:ppn=%s"' % (queue.QueueName, def_nodes, def_procs))
-<<<<<<< HEAD
         
         #output += self.RunUserProcess('/mounts/rey/software/slurm/bin/scontrol create PartitionName=%s" ' % (queue.QueueName, def_nodes, def_procs))
         
@@ -602,16 +470,7 @@ class slurm(BaseResourceManager):
 
     def GetAdministrators(self):
         raise NotImplementedError
-=======
-        '''
-        return output
-    
-    
-    def DeleteQueue(self, queue_name):       
-        output = "debug"#self.RunUserProcess('qmgr -c "delete queue %s"' % queue_name)
-
-    def GetAdministrators(self):
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+        
         output = "debug"#self.RunUserProcess('qmgr -c "print server"', expect=self.user.username + "@%s:" % socket.gethostname())
         
         data_sections = [
@@ -660,20 +519,16 @@ class slurm(BaseResourceManager):
         return administrators
     
     def AddAdministrator(self, administrator_name):
-<<<<<<< HEAD
         raise NotImplementedError
-=======
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         output = "debug"#self.RunUserProcess('qmgr -c "set server managers += %s"' % (administrator_name))
         output += "debug"#self.RunUserProcess('qmgr -c "set server operators += %s"' % (administrator_name))
         return output
     
     
     def UpdateAdministrator(self, administrator):
-<<<<<<< HEAD
         raise NotImplementedError
-=======
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         output = ""
         for section in administrator.SettingsSections:
             for setting in section.Settings:
@@ -685,10 +540,8 @@ class slurm(BaseResourceManager):
     
     
     def DeleteAdministrator(self, administrator_name):
-<<<<<<< HEAD
         raise NotImplementedError
-=======
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         output = "debug"#"\n" + self.RunUserProcess('qmgr -c "set server managers -= %s"' % administrator_name)
         output += "debug"#"\n" + self.RunUserProcess('qmgr -c "set server operators -= %s"' % administrator_name)
         return output
@@ -734,66 +587,50 @@ class slurm(BaseResourceManager):
         
         return nodes
     
-<<<<<<< HEAD
-    
+
     def AddNode(self, node):
         raise NotImplementedError
-=======
-    def AddNode(self, node):
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         output = "debug"#self.RunUserProcess('qmgr -c "create node %s"' % node.name)   
         self.UpdateNode(node)
     
-    
-<<<<<<< HEAD
+
     def UpdateNode(self, node):
         raise NotImplementedError
-=======
-    def UpdateNode(self, node):    
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         output = "debug"#self.RunUserProcess('qmgr -c "set node %s np = %s"' % (node.name, str(node.num_cores)))
         output += "debug"#self.RunUserProcess('qmgr -c "set node %s properties = %s"' % (node.name, node.other))
     
     
     def DeleteNode(self, id):
-<<<<<<< HEAD
         raise NotImplementedError
-=======
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         output = "debug"#self.RunUserProcess('qmgr -c "delete node %s"' % id) 
     
     
     def Stop(self):
-<<<<<<< HEAD
         raise NotImplementedError
-=======
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         return "debug"#self.RunUserProcess("qterm -t quick")
     
     
     def Start(self):
-<<<<<<< HEAD
         raise NotImplementedError
-=======
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         return "debug"#self.RunUserProcess("qserverd", sudo=True)
     
     
     def Restart(self):
-<<<<<<< HEAD
         raise NotImplementedError
-=======
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         output = self.Stop()
         output += self.Start()
         return output
     
     
     def GetDefaultResources(self):
-<<<<<<< HEAD
         raise NotImplementedError
-=======
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         return DataSection("torque", [
             DataField(
                 Key = "nodes",
@@ -836,11 +673,8 @@ class slurm(BaseResourceManager):
 
     
     def CreateJobScript(self, job_name, job_dir, script_name, output_log, error_log, settings, has_dependencies, commands):
-<<<<<<< HEAD
         raise NotImplementedError
-=======
-        
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
+
         script = os.path.join(job_dir, script_name)
         
         with open(script, 'w') as job_script:
@@ -875,7 +709,6 @@ class slurm(BaseResourceManager):
             
             print >> job_script, ""
             print >> job_script, commands   
-<<<<<<< HEAD
         
         return script
     
@@ -903,32 +736,6 @@ class slurm(BaseResourceManager):
         
         return debug
     
-=======
-        
-        return script
-    
-    
-    def ExecuteJobScript(self, script):
-        return "debug"#self.RunUserProcess("qsub %s" % script)
-    
-    
-    def HoldJob(self, id):
-        return "debug"#self.RunUserProcess("qhold %s" % id)
-    
-    
-    def ReleaseJob(self, id):
-        return "debug"#self.RunUserProcess("qrls %s" % id)
-    
-    def KillJob(self, id):
-        debug = self.RunUserProcess("/mounts/rey/software/slurm/bin/scancel %s" % id)
-        
-        with open("/tmp/debug.txt", "w") as f: #debugging
-        	f.write(str(datetime.datetime.now()) + " " + os.path.basename(__file__) + "\n")
-        	f.write(debug + "\n")
-        
-        return debug
-    
->>>>>>> b1993c7d2c93e11e2273c055cc352b9dc1fc78ab
     def AlterJob(self, Key, Value):
         raise NotImplementedError
         
