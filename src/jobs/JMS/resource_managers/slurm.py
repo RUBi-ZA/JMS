@@ -1,7 +1,7 @@
 from base import *
 from objects import *
 
-import os, sys, datetime, socket, re
+import os, sys, time, datetime, socket, re
 
 class slurm(BaseResourceManager):
 
@@ -10,7 +10,6 @@ class slurm(BaseResourceManager):
         rows = []
         
         queue = JobQueue(column_names, rows)
-        
         
         try:
             out = self.RunUserProcess('/mounts/rey/software/slurm/bin/squeue -o "%F %u %P %j %T %R %C %l %M"')
@@ -70,6 +69,7 @@ class slurm(BaseResourceManager):
         #get core details to update JobStage
         exit_code = job[0]
         state = job[1]
+        '''
         if state == 'H':
             state = Status.Held
         elif state == 'Q':
@@ -78,7 +78,7 @@ class slurm(BaseResourceManager):
             state = Status.Running
         elif state in ['E', 'C']:
             state = Status.Complete
-        
+        '''
         output_path = job[2]
         error_path = job[2]
         
@@ -91,13 +91,14 @@ class slurm(BaseResourceManager):
         vars = env.split(',')
         
         working_dir = "~"
+        '''
         for v in vars:
             kv = v.split("=")
             if kv[0] == "PBS_O_WORKDIR":
                 working_dir = kv[1]
                 flag = True
                 break
-        
+        '''
         job_id = job[4]
         name = job[5]
         user = job[6]
@@ -139,15 +140,29 @@ class slurm(BaseResourceManager):
             ),
         ])
         
+        tempCreatedTime = job[16].replace("T", " ")
+        tempStartTime = job[17].replace("T", " ")
+        tempMaxTime = job[18].replace("T", " ")
+        
+        cT = datetime.datetime.strptime(tempCreatedTime, "%Y-%m-%d %H:%M:%S")
+        sT = datetime.datetime.strptime(tempStartTime, "%Y-%m-%d %H:%M:%S")
+        mT = datetime.datetime.strptime(tempMaxTime, "%Y-%m-%d %H:%M:%S")
+        
+        epoch = datetime.datetime.fromtimestamp(0)
+        
+        tempCT = (cT - epoch).total_seconds()
+        tempST = (sT - epoch).total_seconds()
+        tempMT = (mT - epoch).total_seconds()
+        
         time = DataSection("Time", [
             DataField(Key='ctime', Label="Created Time", ValueType=4, 
-                DefaultValue=str(job[16])
+                DefaultValue=str(tempCT)
             ),
             DataField(Key='start_time', Label="Start Time", ValueType=4, 
-                DefaultValue=str(job[17])
+                DefaultValue=str(tempST)
             ),
-            DataField(Key='comp_time', Label="Completed Time", ValueType=4, 
-                DefaultValue=str(job[18])
+            DataField(Key='comp_time', Label="Max End Time", ValueType=4, 
+                DefaultValue=str(tempMT)
             ),
         ])
         
@@ -223,7 +238,12 @@ class slurm(BaseResourceManager):
                     "moab_array_compatible"]:
                     value = value.lower() == "true"'''
                 
-                if setting in ["ControlMachine", "SLURM_VERSION", "MaxJobCount", "SlurmUser", "SlurmctldPort", "SlurmdPort", "SlurmdUser", "SLURM_CONF"]:
+                
+                if setting in ["SlurmUser", "SlurmdUser"]:
+                    s = Setting(Name=setting, Value=value.split("(")[0])
+                    settings_section.Settings.append(s)
+                    
+                if setting in ["ControlMachine", "SLURM_VERSION", "MaxJobCount", "SlurmctldPort", "SlurmdPort", "SLURM_CONF"]:
                     s = Setting(Name=setting, Value=value)
                     settings_section.Settings.append(s)
                     
@@ -243,47 +263,58 @@ class slurm(BaseResourceManager):
         return settings
     
 
-    def UpdateSettings(self, settings_sections):#duplicate entries to file, probably simple logic oversight
-        with open(settings_sections[0].Settings[2].Value) as f:
+    def UpdateSettings(self, settings_sections):
+        output = ""
+        confPath = "/mounts/rey/software/slurm/etc/slurm.conf"
+        
+        with open(confPath) as f:
         	configFile = f.readlines()
         	
-        #self.RunUserProcess("mv {0} {0}.old".format(settings_sections[0].Settings[2].Value))
-        
-        with open(settings_sections[0].Settings[2].Value + ".new", "a") as f:
+        for section in settings_sections:
+            for setting in section.Settings:
+                if setting.Name == "MinJobAge":
+                    minJobAge = setting.Value
+                elif setting.Name == "InactiveLimit":
+                    inactiveLimit = setting.Value
+                elif setting.Name == "KillWait":
+                    killWait = setting.Value
+                elif setting.Name == "MaxJobCount":
+                    maxJobCount = setting.Value
+                elif setting.Name == "SlurmUser":
+                    slurmUser = setting.Value
+                elif setting.Name == "SlurmctldPort":
+                    slurmctldPort = setting.Value
+                elif setting.Name == "SlurmctldTimeout":
+                    slurmctldTimeout = setting.Value
+                elif setting.Name == "SlurmdPort":
+                    slurmdPort = setting.Value
+                elif setting.Name == "SlurmdTimeout":
+                    slurmdTimeout = setting.Value
+
+        with open(confPath, "w") as f:
             for line in configFile:
-                edit = False
-                for section in settings_sections:
-                    for setting in section.Settings:
-                        if setting.Name == line.split("=")[0]:
-                            f.write(setting.Name + "=" + str(setting.Value) + "\n")
-                            edit = False
-                            
-                        else:
-                            edit = True
-                if edit:
+                if "MinJobAge" in line:
+                    f.write("MinJobAge={0}\n".format(minJobAge))
+                elif "InactiveLimit" in line:
+                    f.write("InactiveLimit={0}\n".format(inactiveLimit))
+                elif "KillWait" in line:
+                    f.write("KillWait={0}\n".format(killWait))
+                elif "MaxJobCount" in line:
+                    f.write("MaxJobCount={0}\n".format(maxJobCount))
+                elif "SlurmUser" in line:
+                    f.write("SlurmUser={0}\n".format(slurmUser))
+                elif "SlurmctldPort" in line:
+                    f.write("SlurmctldPort={0}\n".format(slurmctldPort))
+                elif "SlurmdPort" in line:
+                    f.write("SlurmdPort={0}\n".format(slurmdPort))
+                elif "SlurmdTimeout" in line:
+                    f.write("SlurmdTimeout={0}\n".format(slurmdTimeout))
+                
+                else:
                     f.write(line)
-            	
-        '''
-        with open("/tmp/debug.txt", "w") as f: #debugging
-        	f.write(str(datetime.datetime.now()) + " " + os.path.basename(__file__) + "\n")
-        	f.write(str(configFile[4].split("=")[0]) + "\n")
-
-        	if configFile[4].split("=")[0] in settings_sections[0].Settings:
-        	    f.write("true" + "\n")
-        	else:
-        	    f.write(settings_sections[0].Settings[2].Value + "\n")
-        '''
-            
-        output = ""
-        #for section in settings_sections:
-        #    for setting in section.Settings:
-                # Duplicate and update .conf file for lack of a better config update command
-
-                #output += self.RunUserProcess('qmgr -c "set server %s = %s"' % (setting.Name, str(setting.Value)))
-
-        #self.RunUserProcess("cp /mounts/rey/software/slurm/etc/slurm.conf /mounts/rey/software/slurm/etc/slurm.conf.old".format(settings_sections[0].Settings[2].Value))
-        #self.RunUserProcess("/mounts/rey/software/slurm/bin/scontrol reconfigure") # Must be run as SLURM user
-
+        
+        self.RunUserProcess('/mounts/rey/software/slurm/bin/scontrol reconfigure')
+        
         return output
 
     def GetQueues(self):
@@ -310,22 +341,13 @@ class slurm(BaseResourceManager):
                     DataFields = [
                         DataField("TotalNodes", "Total nodes", ValueType.Label, "1"),
                         DataField("TotalCPUs", "Total CPUs", ValueType.Label, "1"),
-                        DataField("MaxMemPerNode", "Max memory", ValueType.Text, "1gb"),
+                        DataField("MaxMemPerNode", "Max memory (mb)", ValueType.Text, "1gb"),
                         DataField("MaxCPUsPerNode", "Max cores", ValueType.Text, "1"),
                         DataField("MaxNodes", "Max nodes", ValueType.Text, "1"),
-                        DataField("MaxTime", "Max walltime", ValueType.Text, "01:00:00"),
-                        DataField("DefMemPerNode", "Default memory", ValueType.Text, "1gb"),
+                        DataField("MaxTime", "Max walltime (hh:mm:ss)", ValueType.Text, "01:00:00"),
+                        #DataField("DefMemPerNode", "Default memory (mb)", ValueType.Text, "1gb"),
                         #DataField("resources_default.ncpus", "x Default cores", ValueType.Number, 1),
                         #DataField("resources_default.nodes", "x Default nodes", ValueType.Number, 1),
-                        DataField("DefaultTime", "Default walltime", ValueType.Text, "01:00:00"),
-                    ]
-                ), DataSection(
-                    SectionHeader = "Access Control",
-                    DataFields = [
-                        #DataField("group_enable", "x Enable group-based access control?", ValueType.Checkbox, False),
-                        #DataField("user_enable", "x Enable user-based access control?", ValueType.Checkbox, False),
-                        DataField("AllowGroups", "Groups with access", ValueType.Text, ""),
-                        DataField("AllowAccounts", "Users with access", ValueType.Text, "")
                     ]
                 )
             ]
@@ -400,153 +422,80 @@ class slurm(BaseResourceManager):
             queue.SettingsSections[2].Settings.append(s)
             s = Setting(Name="SelectTypeParameters", Value=line[27].split("=")[1])#
             queue.SettingsSections[0].Settings.append(s)
-            s = Setting(Name="DefMemPerNode", Value=line[28].split("=")[1])
-            queue.SettingsSections[2].Settings.append(s)
+            #s = Setting(Name="DefMemPerNode", Value=line[28].split("=")[1])
+            #queue.SettingsSections[2].Settings.append(s)
             s = Setting(Name="MaxMemPerNode", Value=line[29].split("=")[1])
             queue.SettingsSections[2].Settings.append(s)
 
             queues.Data.append(queue)
         return queues
     
-    def AddQueue(self, queue_name): #sudo not working
-        #raise NotImplementedError
-        output = self.RunUserProcess('/mounts/rey/software/slurm/bin/scontrol create PartitionName=%s"' % queue_name, sudo=True)
-    
+    def AddQueue(self, queue_name):
+        confPath = "/mounts/rey/software/slurm/etc/slurm.conf"
+        
+        with open(confPath) as f:
+        	configFile = f.readlines()
+        
+        with open(confPath, "w") as f:
+            for line in configFile:
+                f.write(line)
+                if "# PARTITIONS" in line:
+                    f.write("PartitionName={0}\n".format(queue_name))
+                    
+        self.RunUserProcess('/mounts/rey/software/slurm/bin/scontrol reconfigure')
     
     def UpdateQueue(self, queue):
-        
-        with open("/tmp/debug.txt", "w") as f: #debugging
-        	f.write(str(datetime.datetime.now()) + " " + os.path.basename(__file__) + "\n")
-        	f.write(queue + "\n")
-        
-        raise NotImplementedError
-	    
         output = ""
-
-        max_nodes = 1
-        max_procs = 1
-        def_nodes = 1
-        def_procs = 1
+        confPath = "/mounts/rey/software/slurm/etc/slurm.conf"
         
+        with open(confPath) as f:
+        	configFile = f.readlines()
+        	
         for section in queue.SettingsSections:
             for setting in section.Settings:
-                print >> f, setting.Name, setting.Value
-                #set access controls - values come as csv
-                if setting.Name in ["acl_groups", "acl_users"]:
-                    values = setting.Value.split(",")
-                    if len(values) == 1 and values[0] == "":
-                        #remove all users
-                        output += "debug"#self.RunUserProcess('qmgr -c "set queue %s %s = temp"' % (queue.QueueName, setting.Name))
-                        output += "debug"#self.RunUserProcess('qmgr -c "set queue %s %s -= temp"' % (queue.QueueName, setting.Name))
+                if setting.Name == "Nodes":
+                    nodes = setting.Value
+                elif setting.Name == "Default":
+                    default = setting.Value
+                elif setting.Name == "MaxTime":
+                    maxTime = setting.Value
+                elif setting.Name == "MaxMemPerNode":
+                    maxMem = setting.Value
+                elif setting.Name == "MaxCPUsPerNode":
+                    maxCPUs = setting.Value
+                #elif setting.Name == "DefMemPerNode":
+                #    defaultMem = setting.Value
+                elif setting.Name == "State":
+                    state = setting.Value
+
+        with open(confPath , "w") as f:
+            for line in configFile:
+                if queue.QueueName in line:
+                    if nodes in "(null)":
+                        f.write("PartitionName={0} Default={1} MaxTime={2} MaxMemPerNode={3} MaxCPUsPerNode={4} State={5}\n".format(queue.QueueName, default, maxTime, maxMem, maxCPUs, state))
                     else:
-                        for index, value in enumerate(values):
-                            value = value.strip()
-                            if index == 0:
-                                output += "debug"#self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (queue.QueueName, setting.Name, value))
-                            else:
-                                output += "debug"#self.RunUserProcess('qmgr -c "set queue %s %s += %s"' % (queue.QueueName, setting.Name, value))
-                elif setting.Name == "resources_max.nodes":
-                    max_nodes = setting.Value
-                elif setting.Name == "resources_max.ncpus":
-                    max_procs = setting.Value
-                elif setting.Name == "resources_default.nodes":
-                    def_nodes = setting.Value
-                elif setting.Name == "resources_default.ncpus":
-                    def_procs = setting.Value
-                
-                output += "debug"#self.RunUserProcess('qmgr -c "set queue %s %s = %s"' % (queue.QueueName, setting.Name, str(setting.Value)))
+                        f.write("PartitionName={0} Nodes={1} Default={2} MaxTime={3} MaxMemPerNode={4} MaxCPUsPerNode={5} State={6}\n".format(queue.QueueName, nodes, default, maxTime, maxMem, maxCPUs, state))
+                else:
+                    f.write(line)
         
-        output += "debug"#self.RunUserProcess('qmgr -c "set queue %s resources_max.nodes = %s:ppn=%s"' % (queue.QueueName, str(max_nodes), str(max_procs)))
-        output += "debug"#self.RunUserProcess('qmgr -c "set queue %s resources_default.nodes = %s:ppn=%s"' % (queue.QueueName, def_nodes, def_procs))
-        
-        #output += self.RunUserProcess('/mounts/rey/software/slurm/bin/scontrol create PartitionName=%s" ' % (queue.QueueName, def_nodes, def_procs))
-        
+        self.RunUserProcess('/mounts/rey/software/slurm/bin/scontrol reconfigure')
+
         return output
     
     
     def DeleteQueue(self, queue_name):
-        raise NotImplementedError
-        output = "debug"#self.RunUserProcess('qmgr -c "delete queue %s"' % queue_name)
+        confPath = "/mounts/rey/software/slurm/etc/slurm.conf"
+        
+        with open(confPath) as f:
+        	configFile = f.readlines()
+        	
+        with open(confPath , "w") as f:
+            for line in configFile:
+                if queue_name not in line:
+                    f.write(line)
+        #output = self.RunUserProcess('/mounts/rey/software/slurm/bin/scontrol delete PartitionName=%s' % (queue_name))
+        self.RunUserProcess('/mounts/rey/software/slurm/bin/scontrol reconfigure')
 
-    def GetAdministrators(self):
-        raise NotImplementedError
-        
-        output = "debug"#self.RunUserProcess('qmgr -c "print server"', expect=self.user.username + "@%s:" % socket.gethostname())
-        
-        data_sections = [
-                DataSection(
-                    SectionHeader = "Privileges",
-                    DataFields = [
-                        DataField("managers", "Manager?", ValueType.Checkbox, False),
-                        DataField("operators", "Operator?", ValueType.Checkbox, False)
-                    ]
-                )
-            ]
-        
-        admins = {}
-        
-        for line in output.split('\n'):
-            
-            #server details 
-            if line.startswith("set server"):
-                setting_line = line[11:].split("=")
-                
-                setting = setting_line[0].strip().strip(" +")
-                value = setting_line[1].strip()
-                
-                
-                #the managers setting forms part of the admin object
-                if setting == "managers" or setting == "managers +":
-                    setting = Setting(Name=setting, Value=True)
-                    if value in admins:
-                        admins[value].SettingsSections[0].Settings.append(setting)
-                    else:
-                        Section = SettingsSection(SectionHeader="Privileges", Settings=[setting])
-                        admins[value] = Administrator(AdministratorName=value, SettingsSections=[Section]) 
-                #the operators setting also forms part of the admin object
-                elif setting == "operators" or setting == "operators +":
-                    setting = Setting(Name=setting, Value=True)
-                    if value in admins:
-                        admins[value].SettingsSections[0].Settings.append(setting)
-                    else:
-                        Section = SettingsSection(SectionHeader="Privileges", Settings=[setting])
-                        admins[value] = Administrator(AdministratorName=value, SettingsSections=[Section])
-        
-        administrators = Data(data_sections, [])
-        for k in admins:
-            administrators.Data.append(admins[k])
-        
-        return administrators
-    
-    def AddAdministrator(self, administrator_name):
-        raise NotImplementedError
-
-        output = "debug"#self.RunUserProcess('qmgr -c "set server managers += %s"' % (administrator_name))
-        output += "debug"#self.RunUserProcess('qmgr -c "set server operators += %s"' % (administrator_name))
-        return output
-    
-    
-    def UpdateAdministrator(self, administrator):
-        raise NotImplementedError
-
-        output = ""
-        for section in administrator.SettingsSections:
-            for setting in section.Settings:
-                if setting.Value:
-                    output += "debug"#"\n" + self.RunUserProcess('qmgr -c "set server %s += %s"' % (setting.Name, administrator.AdministratorName))
-                else:
-                    output += "debug"#"\n" + self.RunUserProcess('qmgr -c "set server %s -= %s"' % (setting.Name, administrator.AdministratorName))
-        return output
-    
-    
-    def DeleteAdministrator(self, administrator_name):
-        raise NotImplementedError
-
-        output = "debug"#"\n" + self.RunUserProcess('qmgr -c "set server managers -= %s"' % administrator_name)
-        output += "debug"#"\n" + self.RunUserProcess('qmgr -c "set server operators -= %s"' % administrator_name)
-        return output
-
-    
     def GetNodes(self):
         nodes = []
         
@@ -577,7 +526,7 @@ class slurm(BaseResourceManager):
                         nodeDict['properties'] = line[3]
                     
                         n = Node(nodeDict['name'], nodeDict['state'], nodeDict['num_cores'], nodeDict['busy_cores'], nodeDict['free_cores'], nodeDict['properties'])
-                    
+                        
                         nodes.append(n)
 
         except Exception, ex:
@@ -590,48 +539,55 @@ class slurm(BaseResourceManager):
 
     def AddNode(self, node):
         raise NotImplementedError
-
-        output = "debug"#self.RunUserProcess('qmgr -c "create node %s"' % node.name)   
-        self.UpdateNode(node)
+        # must be added directly to slurm.conf
+        confPath = "/mounts/rey/software/slurm/etc/slurm.conf"
+        
+        with open(confPath) as f:
+        	configFile = f.readlines()
+        
+        with open(confPath + ".new", "w") as f:
+            for line in configFile:
+                f.write(line)
+                if "# slave node" in line:
+                    f.write("NodeName={0} CPUs={1} NodeAddr={2} Port={3} State=UNKNOWN\n".format(node.name, node.num_cores, node.other.split(":")[0], node.other.split(":")[1]))
+        
+        #self.RunUserProcess('/mounts/rey/software/slurm/bin/scontrol reconfigure')
     
 
     def UpdateNode(self, node):
         raise NotImplementedError
+        # must be modified directly in slurm.conf
+        confPath = "/mounts/rey/software/slurm/etc/slurm.conf"
+        
+        with open(confPath) as f:
+        	configFile = f.readlines()
 
-        output = "debug"#self.RunUserProcess('qmgr -c "set node %s np = %s"' % (node.name, str(node.num_cores)))
-        output += "debug"#self.RunUserProcess('qmgr -c "set node %s properties = %s"' % (node.name, node.other))
+        with open(confPath + ".new", "w") as f:
+            for line in configFile:
+                f.write(line)
+                if line in ["NodeName={0}".format(node.name)]:
+                    f.write("wut")
+                    #f.write("NodeName={0} CPUs={1} Feature={2}".format(node.name, node.num_cores, node.other))
     
     
     def DeleteNode(self, id):
         raise NotImplementedError
+        # must be deleted directly from slurm.conf
+        confPath = "/mounts/rey/software/slurm/etc/slurm.conf"
+        
+        with open(confPath) as f:
+        	configFile = f.readlines()
 
-        output = "debug"#self.RunUserProcess('qmgr -c "delete node %s"' % id) 
-    
-    
-    def Stop(self):
-        raise NotImplementedError
-
-        return "debug"#self.RunUserProcess("qterm -t quick")
-    
-    
-    def Start(self):
-        raise NotImplementedError
-
-        return "debug"#self.RunUserProcess("qserverd", sudo=True)
-    
-    
-    def Restart(self):
-        raise NotImplementedError
-
-        output = self.Stop()
-        output += self.Start()
-        return output
+        with open(confPath + ".new", "w") as f:
+            for line in configFile:
+                f.write(line)
+                if line in ["NodeName={0}".format(node.name)]:
+                    f.write("wut")
+                    #f.write("NodeName={0} CPUs={1} Feature={2}".format(node.name, node.num_cores, node.other))
     
     
     def GetDefaultResources(self):
-        raise NotImplementedError
-
-        return DataSection("torque", [
+        return DataSection("slurm", [
             DataField(
                 Key = "nodes",
                 Label = "Nodes",
@@ -646,9 +602,9 @@ class slurm(BaseResourceManager):
                 Disabled = False
             ), DataField(
                 Key = "mem",
-                Label = "Memory (GB)",
+                Label = "Memory (mb)",
                 ValueType = ValueType.Number,
-                DefaultValue = 1,
+                DefaultValue = 1000,
                 Disabled = False
             ), DataField(
                 Key = "walltime",
@@ -670,73 +626,67 @@ class slurm(BaseResourceManager):
                 Disabled = False
             )
         ])
-
+    
     
     def CreateJobScript(self, job_name, job_dir, script_name, output_log, error_log, settings, has_dependencies, commands):
-        raise NotImplementedError
-
         script = os.path.join(job_dir, script_name)
         
         with open(script, 'w') as job_script:
-            print >> job_script, "#!/bin/sh"
-            print >> job_script, "#PBS -o localhost:%s" % output_log
-            print >> job_script, "#PBS -e localhost:%s" % error_log
-            print >> job_script, "#PBS -d %s" % job_dir
-            print >> job_script, "#PBS -N %s" % job_name
+            print >> job_script, "#!/bin/bash"
+
+            print >> job_script, "#SBATCH -J %s" % job_name
+            print >> job_script, "#SBATCH -o %s" % output_log
+            print >> job_script, "#SBATCH -e %s" % error_log
+            print >> job_script, "#SBATCH -D %s" % job_dir
             
             nodes = ""
             for setting in settings:
                 if setting.Name == "nodes":
-                    nodes += "#PBS -l nodes=%s" % setting.Value
-                elif setting.Name == "ppn":
-                    nodes += ":ppn=%s" % setting.Value
-                elif setting.Name == "mem":
-                    print >> job_script, "#PBS -l mem=%sgb" % setting.Value
+                    nodes += "#SBATCH -N %s" % setting.Value
+                elif setting.Name == "ppn":#Cores
+                    print >> job_script, "#SBATCH -n %s" % setting.Value
+                #elif setting.Name == "mem":
+                #    print >> job_script, "#SBATCH --mem=%s" % setting.Value
                 elif setting.Name == "walltime":
-                    print >> job_script, "#PBS -l walltime=%s" % setting.Value
+                    print >> job_script, "#SBATCH -t %s" % setting.Value
                 elif setting.Name == "queue":
-                    print >> job_script, "#PBS -q %s" % setting.Value
+                    print >> job_script, "#SBATCH -p %s" % setting.Value
                 elif setting.Name == "variables":
                     if setting.Value.strip() != "":
-                        print >> job_script, "#PBS -v %s" % setting.Value
-                    else:
-                        print >> job_script, "#PBS -V"
+                        print >> job_script, "#SBATCH --export=%s" % setting.Value
+                    #else:
+                    #    print >> job_script, "#SBATCH -V"
             print >> job_script, nodes 
             
             #has_dependencies?
             if has_dependencies:
-                print >> job_script, "#PBS -h"
+                print >> job_script, "#SBATCH -d"
             
             print >> job_script, ""
-            print >> job_script, commands   
+            print >> job_script, commands
+            
         
         return script
     
     
     def ExecuteJobScript(self, script):
-        raise NotImplementedError
-        return "debug"#self.RunUserProcess("qsub %s" % script)
-    
-    
-    def HoldJob(self, id):
-        raise NotImplementedError
-        return "debug"#self.RunUserProcess("qhold %s" % id)
-    
-    
-    def ReleaseJob(self, id):
-        raise NotImplementedError
-        return "debug"#self.RunUserProcess("qrls %s" % id)
-    
-    def KillJob(self, id): #may need sudo?
-        debug = self.RunUserProcess("/mounts/rey/software/slurm/bin/scancel %s" % id)
+        '''temp = script.splitlines()
+        jobSript = temp[0]
         
         with open("/tmp/debug.txt", "w") as f: #debugging
         	f.write(str(datetime.datetime.now()) + " " + os.path.basename(__file__) + "\n")
-        	f.write(debug + "\n")
-        
-        return debug
+        	f.write(jobSript + "\n")'''
+	
+        return self.RunUserProcess("/mounts/rey/software/slurm/bin/sbatch %s" % script)
+
+    def HoldJob(self, id):
+        return self.RunUserProcess("/mounts/rey/software/slurm/bin/scontrol suspend %s" % id)
+
+    def ReleaseJob(self, id):
+        return self.RunUserProcess("/mounts/rey/software/slurm/bin/scontrol resume %s" % id)
     
-    def AlterJob(self, Key, Value):
-        raise NotImplementedError
-        
+    def KillJob(self, id):
+        debug = self.RunUserProcess("/mounts/rey/software/slurm/bin/scancel %s" % id)
+        return debug
+
     
