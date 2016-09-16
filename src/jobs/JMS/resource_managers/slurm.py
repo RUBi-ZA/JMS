@@ -69,16 +69,7 @@ class slurm(BaseResourceManager):
         #get core details to update JobStage
         exit_code = job[0]
         state = job[1]
-        '''
-        if state == 'H':
-            state = Status.Held
-        elif state == 'Q':
-            state = Status.Queued
-        elif state == 'R':
-            state = Status.Running
-        elif state in ['E', 'C']:
-            state = Status.Complete
-        '''
+        
         output_path = job[2]
         error_path = job[2]
         
@@ -91,14 +82,7 @@ class slurm(BaseResourceManager):
         vars = env.split(',')
         
         working_dir = "~"
-        '''
-        for v in vars:
-            kv = v.split("=")
-            if kv[0] == "PBS_O_WORKDIR":
-                working_dir = kv[1]
-                flag = True
-                break
-        '''
+
         job_id = job[4]
         name = job[5]
         user = job[6]
@@ -252,11 +236,6 @@ class slurm(BaseResourceManager):
                     temp = re.sub(r'\D', "", value)
                     s = Setting(Name=setting, Value=int(temp))
                     settings_section.Settings.append(s)
-                # Remove text chars and convert to milliseconds
-                '''elif setting in ["TCPTimeout"]:
-                    temp = re.sub(r'\D', "", value)
-                    s = Setting(Name=setting, Value=int(temp)*1000)
-                    settings_section.Settings.append(s)'''
                 
         settings = Data(data_sections, [settings_section])
         
@@ -327,14 +306,8 @@ class slurm(BaseResourceManager):
                     SectionHeader = "General",
                     DataFields = [
                         DataField("Nodes", "Nodes", ValueType.Text, "node-1"),
-                        DataField("State", "Enabled", ValueType.Checkbox, False),
-                        DataField("Default", "Default", ValueType.Checkbox, False),
-                    ]
-                ), DataSection(
-                    SectionHeader = "User Settings",
-                    DataFields = [
-                        #DataField("max_user_queuable", "x Max jobs queuable per user", ValueType.Number, 5),
-                        #DataField("max_user_run", "x Max jobs running per user", ValueType.Number, 1),
+                        DataField("State", "State (UP/DRAIN/DOWN)", ValueType.Text, False),
+                        DataField("Default", "Default queue", ValueType.Text, False),
                     ]
                 ), DataSection(
                     SectionHeader = "Resources",
@@ -367,7 +340,7 @@ class slurm(BaseResourceManager):
                 SettingsSection("Resources", []), 
                 SettingsSection("Access Control", [])
             ])
-
+            
             s = Setting(Name="AllowGroups", Value=line[1].split("=")[1])
             queue.SettingsSections[3].Settings.append(s)
             s = Setting(Name="AllowAccounts", Value=line[2].split("=")[1])
@@ -463,18 +436,21 @@ class slurm(BaseResourceManager):
                     maxMem = setting.Value
                 elif setting.Name == "MaxCPUsPerNode":
                     maxCPUs = setting.Value
+                elif setting.Name == "MaxNodes":
+                    maxNodes = setting.Value
                 #elif setting.Name == "DefMemPerNode":
                 #    defaultMem = setting.Value
                 elif setting.Name == "State":
                     state = setting.Value
+                    
 
         with open(confPath , "w") as f:
             for line in configFile:
                 if queue.QueueName in line:
                     if nodes in "(null)":
-                        f.write("PartitionName={0} Default={1} MaxTime={2} MaxMemPerNode={3} MaxCPUsPerNode={4} State={5}\n".format(queue.QueueName, default, maxTime, maxMem, maxCPUs, state))
+                        f.write("PartitionName={0} Default={1} MaxTime={2} MaxMemPerNode={3} MaxCPUsPerNode={4} MaxNodes={5} State={6}\n".format(queue.QueueName, default, maxTime, maxMem, maxCPUs, maxNodes, state))
                     else:
-                        f.write("PartitionName={0} Nodes={1} Default={2} MaxTime={3} MaxMemPerNode={4} MaxCPUsPerNode={5} State={6}\n".format(queue.QueueName, nodes, default, maxTime, maxMem, maxCPUs, state))
+                        f.write("PartitionName={0} Nodes={1} Default={2} MaxTime={3} MaxMemPerNode={4} MaxCPUsPerNode={5} MaxNodes={6} State={7}\n".format(queue.QueueName, nodes, default, maxTime, maxMem, maxCPUs, maxNodes, state))
                 else:
                     f.write(line)
         
@@ -538,20 +514,20 @@ class slurm(BaseResourceManager):
     
 
     def AddNode(self, node):
-        raise NotImplementedError
+        raise NotImplementedError # currently crashes the control daemon, also hard coded inputs should be changed to allow IP and port parameters
         # must be added directly to slurm.conf
         confPath = "/mounts/rey/software/slurm/etc/slurm.conf"
         
         with open(confPath) as f:
         	configFile = f.readlines()
         
-        with open(confPath + ".new", "w") as f:
+        with open(confPath, "w") as f:
             for line in configFile:
                 f.write(line)
                 if "# slave node" in line:
                     f.write("NodeName={0} CPUs={1} NodeAddr={2} Port={3} State=UNKNOWN\n".format(node.name, node.num_cores, node.other.split(":")[0], node.other.split(":")[1]))
         
-        #self.RunUserProcess('/mounts/rey/software/slurm/bin/scontrol reconfigure')
+        self.RunUserProcess('/mounts/rey/software/slurm/bin/scontrol reconfigure')
     
 
     def UpdateNode(self, node):
@@ -564,10 +540,10 @@ class slurm(BaseResourceManager):
 
         with open(confPath + ".new", "w") as f:
             for line in configFile:
-                f.write(line)
-                if line in ["NodeName={0}".format(node.name)]:
-                    f.write("wut")
-                    #f.write("NodeName={0} CPUs={1} Feature={2}".format(node.name, node.num_cores, node.other))
+                if "NodeName={0}".format(node.name) in line:
+                    f.write("NodeName={0} CPUs={1} NodeAddr={2} Port={3} State=UNKNOWN\n".format(node.name, node.num_cores, node.other.split(":")[0], node.other.split(":")[1]))
+                else:
+                    f.write(line)
     
     
     def DeleteNode(self, id):
@@ -670,13 +646,8 @@ class slurm(BaseResourceManager):
     
     
     def ExecuteJobScript(self, script):
-        '''temp = script.splitlines()
-        jobSript = temp[0]
-        
-        with open("/tmp/debug.txt", "w") as f: #debugging
-        	f.write(str(datetime.datetime.now()) + " " + os.path.basename(__file__) + "\n")
-        	f.write(jobSript + "\n")'''
-	
+        #temp = script.splitlines()
+        #jobSript = temp[0]
         return self.RunUserProcess("/mounts/rey/software/slurm/bin/sbatch %s" % script)
 
     def HoldJob(self, id):
