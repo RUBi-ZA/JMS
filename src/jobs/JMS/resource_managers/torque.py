@@ -81,6 +81,7 @@ class torque(BaseResourceManager):
     
     def GetJob(self, id):
         out = self.RunUserProcess("qstat -x %s" % id)
+        print out
         data = objectify.fromstring(out)
         return self._ParseJob(data.Job)
 

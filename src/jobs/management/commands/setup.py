@@ -1,16 +1,19 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
 
-from job.models import AccessRight, Condition, Status, ParameterType
+from jobs.models import Condition, Status, ParameterType
 from django.db import transaction
 
 import os
 
 def create_dir(path):
+    path = os.path.expanduser(path)
     if not os.path.exists(path):
         os.makedirs(path)
         os.chmod(path, 0775)
-    print "%s created." % path
+        print "%s created." % path
+    else:
+        print "%s already exists." % path
 
 class Command(BaseCommand):
     help = "Usage: python manage.py setup"
