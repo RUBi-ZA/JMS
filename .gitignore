@@ -4,3 +4,4 @@ logs
 src/impersonator/nohup.out
 *.pyc
 *~
+migrations
