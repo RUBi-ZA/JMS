@@ -733,10 +733,6 @@ class JobManager:
         #create temp job stage directory
         tmp_dir = self.make_tmp_directory(jobstage.JobStageID)
         
-        with open("/tmp/dirs.txt", "w") as f:
-            print >> f, tmp_dir
-            print >> f, jobstage.WorkingDirectory
-        
         #upload files to temp directory
         for f in files:
             with open(os.path.join(tmp_dir, f.name), 'wb+') as destination:

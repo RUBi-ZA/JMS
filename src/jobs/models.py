@@ -306,7 +306,7 @@ class Job(models.Model):
     BatchJobID = models.ForeignKey(BatchJob, null=True, blank=True, db_column="BatchJobID", related_name="Jobs")
     
     JobTypeID = models.IntegerField() #1-Custom, 2-Tool, 3-Workflow, 4-External
-    StatusID = models.IntegerField() #1-Created/Held, 2-Queued, 3-Running, 4-Completed
+    StatusID = models.IntegerField(default=1) #1-Created, 2-Queued, 3-Running, 4-Completed Successfully, 5-Awaiting User Input, 6-Stopped, 7-Failed
     
     NotificationMethod = models.CharField(max_length=10, blank=True, null=True)
     NotificationURL = models.CharField(max_length=255, blank=True, null=True)
@@ -348,8 +348,8 @@ class JobStage(models.Model):
     Status = models.ForeignKey(Status, db_column='StatusID', related_name='StatusJobStages', null=True, blank=True)
     RequiresEditInd = models.NullBooleanField(null=True, blank=True, default=False)
     ExitCode = models.IntegerField(default=None, null=True, blank=True)
-    ClusterJobID = models.CharField(max_length=30, unique=True, null=True, blank=True)
-    JobData = models.TextField()
+    ClusterJobID = models.CharField(max_length=30, null=True, blank=True)
+    JobData = models.TextField(default=None, null=True, blank=True)
     
     ErrorLog = models.CharField(max_length=255, null=True, blank=True)
     OutputLog = models.CharField(max_length=255, null=True, blank=True)
