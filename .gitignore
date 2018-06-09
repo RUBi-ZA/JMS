@@ -2,3 +2,5 @@ src/venv
 src/JMS/settings.py
 logs
 src/impersonator/nohup.out
+*.pyc
+*~
