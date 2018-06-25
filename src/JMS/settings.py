@@ -1,6 +1,6 @@
 import os
 
-SRC_DIR = os.path.dirname(os.path.dirname(__file__)) 
+SRC_DIR = os.path.dirname(os.path.dirname(__file__))
 BASE_DIR = os.path.dirname(SRC_DIR)
 PYTHON_BIN = os.path.join(SRC_DIR, "venv/bin/python")
 
@@ -25,7 +25,7 @@ MEDIA_URL = '/media/'
 STATIC_URL = '/assets/'
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "static"),  
+    os.path.join(BASE_DIR, "static"),
 )
 
 STATICFILES_FINDERS = (
@@ -122,8 +122,8 @@ JMS_SETTINGS = {
     "ansible": False,
     "modules": False,
     "impersonator": {
-        "key": os.path.join(SRC_DIR, "impersonator/pub.key"),
-        "port": "8123"
+        "host": IMPERSONATOR_HOST,
+        "port": IMPERSONATOR_PORT
     },
     "filemanager": {
         "root_url": os.path.join(SHARED_DIRECTORY, "users/"),

@@ -22,14 +22,17 @@ ADMINS = (
     ('Your Name', 'your_email@example.com'),
 )
 
-SHARED_DIRECTORY = os.environ.get("SHARED_DIRECTORY", "~/JMS/")
+SHARED_DIRECTORY = os.environ.get("SHARED_DIRECTORY", "~/JMS/shared/")
 TEMP_DIRECTORY = os.path.join(SHARED_DIRECTORY, "tmp")
+
+IMPERSONATOR_HOST = "127.0.0.1"
+IMPERSONATOR_PORT = 31000
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.live.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", 'jms.rubi@outlook.com')
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", 'JMS>Galaxy')
- 
+
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
