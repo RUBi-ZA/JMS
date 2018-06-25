@@ -28,6 +28,9 @@ class BaseResourceManager:
         if self.user:
             payload = "%s\n%s\n%s\n%s" % (self.user.filemanagersettings.ServerPass, cmd, expect, str(sudo))
             r = requests.post("http://127.0.0.1:%s/impersonate" % settings.JMS_SETTINGS["impersonator"]["port"], data=payload)
+            print "Payload:", payload
+            print "Status:", r.status_code
+            print "Text:", r.text
             return r.text
         else:
             process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, close_fds=True)
@@ -41,6 +44,7 @@ class BaseResourceManager:
         out = self.RunUserProcess("df -h %s" % path)
         
         lines = out.split('\n')
+        print lines
         
         index = lines[0].index("Size")
         size = lines[1][index:index+5].strip()        

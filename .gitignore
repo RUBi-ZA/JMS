@@ -1,4 +1,9 @@
 src/venv
-src/JMS/settings.py
+src/JMS/production.py
 logs
 src/impersonator/nohup.out
+*.pyc
+*~
+migrations
+JMSsqlite
+.vscode
