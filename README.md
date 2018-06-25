@@ -15,31 +15,31 @@ Installation
 *Note: The following instructions are for Ubuntu 14.04, but can be used as a guideline for other Linux flavours.*
 
 ### Prerequisites
-- [MySQL server](https://github.com/RUBi-ZA/JMS/wiki/Set-up-a-database-for-the-JMS)
 - [NFS (or similar) mounted on all nodes of the cluster](https://github.com/RUBi-ZA/JMS/wiki/Set-up-NFS)
 - [Torque Resource Manager](https://github.com/RUBi-ZA/JMS/wiki/Set-up-Torque)
+- [Impersonator service](https://github.com/Stavatech/Impersonator)
+
+In production, you should also set up a production database, such as MySQL, rather than using the default SQLite database:
+- [MySQL server](https://github.com/RUBi-ZA/JMS/wiki/Set-up-a-database-for-the-JMS)
 
 ### 1. Download and setup the JMS project
 
-First of all, you will need to download the project from github. We recommend you download the project to the `/srv` directory so you will not need to change paths in the settings file later:
+First of all, you will need to download the project from github:
 ``` bash
-cd /srv
-sudo mkdir JMS
-sudo chown user:user JMS
+cd ~
 git clone https://github.com/RUBi-ZA/JMS.git
-sudo chown user:user JMS -R
 ```
 
 Navigate to the project src directory and setup a virtual environment:
 ``` bash
-cd /srv/JMS/src
-sudo apt-get install -y libmemcache-dev zlib1g-dev libssl-dev python-dev build-essential
+cd ~/JMS/src
+sudo apt-get install -y libxml2-dev libxslt1-dev zlib1g-dev libssl-dev python-dev libmysqlclient-dev build-essential
 virtualenv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Edit the `/srv/JMS/src/JMS/settings.py` file to include your database login credentials (you should have set these when [creating your database](https://github.com/RUBi-ZA/JMS/wiki/Set-up-a-database-for-the-JMS)) and the path to the [NFS share](https://github.com/RUBi-ZA/JMS/wiki/Set-up-NFS):
+If you want to use a MySQL database, edit the `~/JMS/src/JMS/development.py` file to include your database login credentials (you should have set these when [creating your database](https://github.com/RUBi-ZA/JMS/wiki/Set-up-a-database-for-the-JMS)):
 
 ``` python
 DATABASES = {
@@ -49,31 +49,24 @@ DATABASES = {
         # The following settings are not used with sqlite3:
         'USER': 'username',
         'PASSWORD': 'password',
-        'HOST': 'localhost', 
+        'HOST': 'localhost',
         'PORT': '',                      # Set to empty string for default.
     }
 }
+```
 
+Depending on what host and port you are running the Impersonator service on, you may also need to change the Impersonator settings:
 
-JMS_SETTINGS = {
-    "JMS_shared_directory": "/NFS/JMS/",
-    "resource_manager": {
-        "name": "torque",
-        "log_file": os.path.join(BASE, "logs/torque.log")
-    }
-}
-
-IMPERSONATOR_SETTINGS = {
-    "key": os.path.join(BASE_DIR, "impersonator/pub.key"),
-    "url": "127.0.0.1:8123"
-}
-
+``` python
+IMPERSONATOR_HOST = "127.0.0.1"
+IMPERSONATOR_PORT = 31000
 ```
 
 With the settings.py file set up with your database details and the path to your shared directory, run the following commands:
 ``` bash
-cd /srv/JMS/src
-source venv/bin/activate
+cd ~/JMS/src
+. venv/bin/activate
+python manage.py makemigrations
 python manage.py migrate
 python manage.py setup
 ```
@@ -82,36 +75,26 @@ python manage.py setup
 
 The queue daemon is responsible for updating the JMS job history with details from the resource manager. If you don't start the queue_daemon, your job history will not be updated after the a job has been submitted i.e. no changes in state will be tracked during the job. To start the queue daemon, run the following command:
 ``` bash
+cd ~/JMS/src
 sudo venv/bin/python manage.py queue_daemon start
 ```
 
 To restart or stop the queue daemon, run the following commands respectively:
 ```
+cd ~/JMS/src
 sudo venv/bin/python manage.py queue_daemon restart
 sudo venv/bin/python manage.py queue_daemon stop
 ```
 
 ### 3. Start the impersonator server
 
-The impersonator allows JMS to submit jobs as you. It is also used for a number of other reasons. If you are unable to login, chances are the impersonator is not running. To start it, run the following commands:
-``` bash
-sudo nohup venv/bin/python impersonator/server.py 8123 >/dev/null 2>&1 &
-```
-
-You can set which port JMS communicates with the impersonator on in the settings.py file:
-
-``` python
-IMPERSONATOR_SETTINGS = {
-    "key": os.path.join(BASE_DIR, "impersonator/pub.key"),
-    "url": "127.0.0.1:8123"
-}
-```
+See Impersonaror service [README.md](https://github.com/Stavatech/Impersonator)
 
 ### 4. Test the JMS
 
 To test that your installation is working, run the Django development web server:
 ``` bash
-python manage.py runserver ip.address:8000
+python manage.py runserver
 ```
 
 For improved performance, [host the JMS with Apache](https://github.com/RUBi-ZA/JMS/wiki/Hosting-with-Apache) or some other production web server.

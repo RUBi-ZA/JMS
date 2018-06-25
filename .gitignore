@@ -6,3 +6,4 @@ src/impersonator/nohup.out
 *~
 migrations
 JMSsqlite
+.vscode

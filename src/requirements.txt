@@ -9,7 +9,6 @@ lxml==3.4.1
 paramiko==1.15.2
 pexpect==3.3
 pycrypto==2.6.1
-pylibmc==1.4.1
 requests==2.4.3
 wsgiref==0.1.2
 zope.interface==4.1.2
