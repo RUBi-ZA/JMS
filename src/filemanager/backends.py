@@ -2,47 +2,35 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
 from django.conf import settings
 
-from utilities.security.cryptography import PubPvtKey
+from utilities.io.impersonator import Impersonator
 from filemanager.models import FileManagerSettings
 
-import json, requests
 
-
-class LinuxBackend(ModelBackend):
-
-    impersonator_settings = settings.JMS_SETTINGS["impersonator"]
-    impersonator_endpoint = "http://%s:%s/tokens" % (
-        impersonator_settings["host"],
-        impersonator_settings["port"]
-    )
+class ImpersonatorBackend(ModelBackend):
 
     def authenticate(self, username=None, password=None):
+        config = settings.JMS_SETTINGS["impersonator"]
+
         user = None
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist, ex:
             user = User.objects.create(username=username, email="", password="")
 
-        payload = {
-            "username": username,
-            "password": password
-        }
+        client = Impersonator(config["host"], config["port"])
 
-        token = self.linux_auth(payload)
+        try:
+            token = client.login(username, password)
+        except Exception, ex:
+            print str(ex)
+            token = None
 
-        if token:
-            fm_settings, created = FileManagerSettings.objects.get_or_create(User=user)
+        return self.create_session(user, token) if token else None
 
-            fm_settings.ServerPass = token
-            fm_settings.save()
+    def create_session(self, user, token):
+        fm_settings, created = FileManagerSettings.objects.get_or_create(User=user)
 
-            return user
-        else:
-            return None
+        fm_settings.ServerPass = token
+        fm_settings.save()
 
-    def linux_auth(self, payload):
-        r = requests.post(self.impersonator_endpoint, json=payload)
-        if r.status_code == requests.codes.ok:
-            return r.text
-        else:
-            return None
+        return user

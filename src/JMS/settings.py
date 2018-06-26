@@ -108,7 +108,7 @@ SWAGGER_SETTINGS = {
 }
 
 AUTHENTICATION_BACKENDS = (
-    "filemanager.backends.LinuxBackend",
+    "filemanager.backends.ImpersonatorBackend",
 )
 
 AUTH_PROFILE_MODULE = 'users.UserProfile'
