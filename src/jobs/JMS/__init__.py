@@ -31,10 +31,11 @@ class JobManager:
     def __init__(self, user=None):
         self.user = user
 
-        self.project_dir = settings.BASE_DIR
+        self.project_dir = settings.SRC_DIR
 
         self.base_dir = settings.JMS_SETTINGS["JMS_shared_directory"]
-        self.temp_dir = os.path.join(self.base_dir, "tmp/")
+        self.temp_dir = settings.JMS_SETTINGS["temp_dir"]
+        self.python_bin = settings.PYTHON_BIN
 
         if self.user:
             self.users_dir = os.path.join(self.base_dir, "users/")
@@ -123,8 +124,12 @@ class JobManager:
 
             abspath = os.path.join(stage.WorkingDirectory, filepath)
 
-            cmd = "%s/venv/bin/python %s/manage.py acl CREATE_TEMP_FILE %s %s" % (
-                self.project_dir, self.project_dir, abspath, tmp_path)
+            cmd = "%s %s/manage.py acl CREATE_TEMP_FILE %s %s" % (
+                self.python_bin,
+                self.project_dir,
+                abspath,
+                tmp_path
+            )
 
             out = self.RunUserProcess(cmd, user=stage.Job.User)
 
@@ -138,9 +143,15 @@ class JobManager:
 
     def get_job_directory_listing(self, job_stage_id, directory):
         stage = JobStages.GetJobStageByID(self.user, job_stage_id)
-        return self.RunUserProcess("%s/venv/bin/python %s/manage.py acl GET_DIR %s %s" %
-            (self.project_dir, self.project_dir, stage.WorkingDirectory, directory),
-            user=stage.Job.User)
+        
+        cmd = "%s %s/manage.py acl GET_DIR %s %s" % (
+            self.python_bin,
+            self.project_dir,
+            stage.WorkingDirectory,
+            directory
+        )
+        
+        return self.RunUserProcess(cmd, user=stage.Job.User)
 
 
     def GetDashboard(self):
@@ -745,16 +756,19 @@ class JobManager:
                 jobstage.Stage.ToolVersion.ToolVersionNum
             ))
             Directory.copy_directory(tool_directory, tmp_dir)
-
-        #spawn process as user to create job directory with correct permissions
-        job_dir = self.RunUserProcess("%s/venv/bin/python %s/manage.py jobs_acl setup_job %d %d" %
-            (
-                self.project_dir, self.project_dir, jobstage.JobStageID, stage_index
-            )
+        
+        cmd = "%s %s/manage.py jobs_acl setup_job %d %d" % (
+            self.python_bin,
+            self.project_dir,
+            jobstage.JobStageID,
+            stage_index
         )
 
+        #spawn process as user to create job directory with correct permissions
+        job_script = self.RunUserProcess(cmd)
+
         #return path to job script
-        return os.path.join(job_dir, 'job.sh')
+        return job_script
 
 
 
@@ -795,8 +809,6 @@ class JobManager:
 
         r = ResourceManager(self.user)
         cluster_id = r.ExecuteJobScript(job_script)
-        with open("/tmp/cluster_id.txt", 'w') as f:
-            print >> f, cluster_id
 
         jobstage.ClusterJobID = cluster_id.strip()
         jobstage.save()
@@ -840,8 +852,7 @@ class JobManager:
             command = version.Command
 
             #append parameters to command
-            #TODO: move database call to bottom tier
-            parameters = version.ToolParameters.all()
+            parameters = Parameters.GetParameters(version)
 
             params = ""
             for param in parameters:
@@ -868,8 +879,7 @@ class JobManager:
                                 try:
                                     val = JobStageParameter.objects.get(JobStage__Job=job, Parameter_id=stage_parameter.Value).Value
                                 except Exception, ex:
-                                    with open("/tmp/jobstageparameter.txt", 'w') as f:
-                                        print >> f, traceback.format_exc()
+                                    print traceback.format_exc()
 
                             elif stage_parameter.StageParameterType == 3:
                                 val = ExpectedOutput.objects.get(ExpectedOutputID=stage_parameter.Value).FileName
@@ -887,7 +897,6 @@ class JobManager:
                             p = p.replace("${VALUE}", str(val))
                         except Exception, e:
                             #if the ${VALUE} variable is not located in the string, append the value to the end
-                            #File.print_to_file("/tmp/file.txt", str(e) + ": " + p)
                             p += " %s" % val
 
                         params += ' %s' % p
@@ -914,9 +923,6 @@ class JobManager:
 
         r = ResourceManager(self.user)
         cluster_id = r.ExecuteJobScript(job_script)
-        with open("/tmp/job_id.txt", 'w') as f:
-            print >> f, job_script
-            print >> f, cluster_id
 
         jobstage.ClusterJobID = cluster_id.strip()
         jobstage.save()
@@ -1021,37 +1027,10 @@ class JobManager:
         )
 
 
-    def UpdateJobStatus(self, job):
-
-        #if job.JobStages.filter(Status_id__lt=4).count() == 0:
-            #if there are no jobstages in job with status < 4, the job must be complete
-
-
-        #elif job.JobStages.filter(Status_id=3).count() > 0:
-            #else if atleast one jobstage is in a running state, the job is still running
-
-
-        #elif job.JobStages.filter(Status_id=3).count() == 0 and jobstage.Job.JobStages.filter(Status_id__lt=3).count() > 0:
-            #else if there are no jobstages running, but there are still jobs in the queued or created states, the job is queued
-
-
-        #send notifications
-        if jobstage.Job.NotificationEmail is not None:
-            emails.append(jobstage.Job)
-
-        if jobstage.Job.NotificationURL is not None:
-            http.append(jobstage.Job)
-
-
     def UpdateJobHistory(self):
-        f = open("/tmp/continue1.txt", 'w')
-
         r = ResourceManager(self.user)
         queue = r.GetQueue()
         new_status = None
-
-        #print >> f, queue
-        #print >> f, queue.rows
 
         emails = []
         http = []
@@ -1060,23 +1039,17 @@ class JobManager:
             try:
                 #update or create JobStage
                 jobstage = JobStages.GetJobStage(row.job_id)
-                #print >> f, "Working on %s" % row.job_id
-                #print >> f, jobstage
 
                 if jobstage: # if the job exists in the database and the status has changed
 
                     new_status = row.state
                     old_status = jobstage.Status.StatusID
-                    #print >> f, old_status
 
                     if new_status == 4 and jobstage.RequiresEditInd:
                         new_status = 5
 
-                    #print >> f, new_status
-
                     #if the job status has changed or the job is running
                     if old_status != new_status or new_status == 3:
-                        #print >> f, "Update %s" % row.job_id
 
                         job = r.GetJob(row.job_id)
                         data = json.dumps(job.DataSections,
@@ -1128,9 +1101,8 @@ class JobManager:
                             PWD=job.WorkingDir, JobData=data)
 
             except Exception, ex:
-                File.print_to_file("/tmp/continue.txt", traceback.format_exc())
+                print traceback.format_exc()
                 pass
-        #f.close()
         return emails, http
 
 
@@ -1149,18 +1121,17 @@ class JobManager:
 
 
     def ReleaseJob(self, jobstage):
-        with open("/tmp/stage_%d.txt" % jobstage.Stage.StageID, "a") as f:
-            print >> f, "Attmepting to release stage %d" % jobstage.Stage.StageID
+        print "Attempting to release stage %d" % jobstage.Stage.StageID
 
-            if self.JobStageDependenciesSatisfied(jobstage):
-                self.CopyRequiredFiles(jobstage)
+        if self.JobStageDependenciesSatisfied(jobstage):
+            self.CopyRequiredFiles(jobstage)
 
-                r = ResourceManager(jobstage.Job.User)
-                out = r.ReleaseJob(jobstage.ClusterJobID)
+            r = ResourceManager(jobstage.Job.User)
+            out = r.ReleaseJob(jobstage.ClusterJobID)
 
-                return True
-            else:
-                return False
+            return True
+        else:
+            return False
 
 
     def JobStageDependenciesSatisfied(self, js):
@@ -1190,12 +1161,3 @@ class JobManager:
                 Directory.copy_directory(dep_js.WorkingDirectory,
                     js.WorkingDirectory, permissions=0777, replace=False,
                     exclude=[os.path.join(dep_js.WorkingDirectory, "logs")])
-
-
-
-
-
-
-
-
-

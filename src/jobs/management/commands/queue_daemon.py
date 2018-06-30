@@ -220,7 +220,8 @@ class Command(BaseCommand):
     help = "Usage: python manage.py queue_daemon [start|restart|stop]"
 
     def handle(self, *args, **options):
-        daemon = QueueDaemon('/tmp/queue-daemon.pid')
+        database = os.path.basename(settings.DATABASES['default']['NAME'])
+        daemon = QueueDaemon('/tmp/queue-daemon-%s.pid' % database)
         
         if args[0] == 'start':
             daemon.start()

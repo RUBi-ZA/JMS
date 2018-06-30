@@ -1,5 +1,9 @@
 import os
 
+SRC_DIR = os.path.dirname(os.path.dirname(__file__))
+BASE_DIR = os.path.dirname(SRC_DIR)
+PYTHON_BIN = os.path.join(SRC_DIR, "venv/bin/python")
+
 ENVIRONMENT = "development"
 
 DEBUG = True
@@ -14,7 +18,7 @@ SECRET_KEY = '4ibn4o6g2r(9y8)tk52uc3-$g26a_jf2vc)gzqb)l^kaz&p8&g'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'JMSsqlite'
+        'NAME': os.path.join(SRC_DIR, 'JMSsqlite')
     }
 }
 

@@ -114,7 +114,8 @@ AUTHENTICATION_BACKENDS = (
 AUTH_PROFILE_MODULE = 'users.UserProfile'
 
 JMS_SETTINGS = {
-    "JMS_shared_directory": SHARED_DIRECTORY,
+    "JMS_shared_directory": os.path.expanduser(SHARED_DIRECTORY),
+    "temp_dir": os.path.expanduser(TEMP_DIRECTORY),
     "resource_manager": {
         "name": "torque",
         "poll_interval": 30

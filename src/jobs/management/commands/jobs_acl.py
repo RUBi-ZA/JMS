@@ -21,8 +21,7 @@ class Command(BaseCommand):
     help = 'Parameters are specific to the action being performed'
     
     def handle(self, *args, **options):
-        temp_dir = os.path.join(settings.JMS_SETTINGS["JMS_shared_directory"], 
-            "tmp/")
+        temp_dir = settings.JMS_SETTINGS["temp_dir"]
             
         user = User.objects.get(username=getpass.getuser())
         try:
@@ -35,6 +34,8 @@ class Command(BaseCommand):
                 jobstage = JobStages.GetJobStageByID(user, job_stage_id)
                 
                 temp_job_dir = os.path.join(temp_dir, ".%s/%d" % (user, job_stage_id))
+                
+                File.print_to_file("/tmp/log.txt", temp_job_dir)
                 
                 job_name = jobstage.Job.JobName
                 script_name = "job.sh"
