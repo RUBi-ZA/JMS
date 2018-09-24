@@ -26,6 +26,7 @@ module = __import__('jobs.JMS.resource_managers.%s' % module_name,
 #get the resource manager class from the module
 ResourceManager = getattr(module, module_name)
 
+
 class JobManager:
 
     def __init__(self, user=None):
@@ -46,9 +47,7 @@ class JobManager:
     def RunUserProcess(self, cmd, user=None):
         if not user:
             user = self.user
-
         r = ResourceManager(self.user)
-
         return r.RunUserProcess(cmd)
 
 

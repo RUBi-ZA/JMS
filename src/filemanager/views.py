@@ -16,17 +16,14 @@ from filemanager.objects import *
 
 from jobs.JMS import JobManager
 
-from utilities.security.cryptography import PubPvtKey
-
 #Global variables and functions
 PROJECT_PATH = settings.BASE_DIR
 VIRTUAL_ACTIVATE = os.path.join(PROJECT_PATH, "venv/bin/activate")
 ROOT = settings.JMS_SETTINGS["filemanager"]["root_url"]
    
 def RunUserProcess(user, command):
-    payload = "%s\n%s\nprompt" % (user.filemanagersettings.ServerPass, command)
-    r = requests.post("http://127.0.0.1:%s/impersonate" % settings.JMS_SETTINGS["impersonator"]["port"], data=payload)
-    return r.text
+    jms = JobManager(user=user)
+    return jms.RunUserProcess(command, user)
 
 
     

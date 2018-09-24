@@ -19,16 +19,16 @@ from exceptions import *
 
 from django.conf import settings
 
-from utilities.io.impersonator import Impersonator
+from impersonator.client import Impersonator
 
 class BaseResourceManager:
 
     def __init__(self, user):
         config = settings.JMS_SETTINGS["impersonator"]
-
         self.user = user
-        self.token = user.filemanagersettings.ServerPass
-        self.impersonator = Impersonator(config["host"], config["port"], self.token)
+        if user:
+            self.token = user.filemanagersettings.ServerPass
+            self.impersonator = Impersonator(host=config["host"], port=config["port"], token=self.token)
 
     def RunUserProcess(self, cmd):
         if self.user:
