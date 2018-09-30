@@ -14,17 +14,14 @@ from helpers import *
 from resource_managers import objects
 
 from utilities.io.filesystem import *
+from utilities import import_class
 
 from multiprocessing.pool import ThreadPool
 import shutil, json, requests, traceback, sys
 
-#dynamically import the resource manager module
-module_name = settings.JMS_SETTINGS["resource_manager"]["name"]
-module = __import__('jobs.JMS.resource_managers.%s' % module_name,
-    fromlist=[module_name])
-
-#get the resource manager class from the module
-ResourceManager = getattr(module, module_name)
+#dynamically import the resource manager class
+resource_manager_name = settings.JMS_SETTINGS["resource_manager"]["name"]
+ResourceManager = import_class(resource_manager_name, resource_manager_name)
 
 
 class JobManager:
@@ -797,7 +794,7 @@ class JobManager:
             for s in parsed_settings:
                 #move to data layer
                 jsr = JobStageResource.objects.create(
-                    ResourceManager=module_name, JobStage=jobstage, Key=s["Key"],
+                    ResourceManager=resource_manager_name, JobStage=jobstage, Key=s["Key"],
                     Value=s["Value"], Label=s["Label"]
                 )
 
@@ -909,10 +906,10 @@ class JobManager:
 
             #Get resources for tool version
             #TODO: user customized resources
-            resources = Resources.GetResources(self.user, version, module_name)
+            resources = Resources.GetResources(self.user, version, resource_manager_name)
             for resource in resources:
                 #move to data layer
-                jsr = JobStageResource.objects.create(ResourceManager=module_name,
+                jsr = JobStageResource.objects.create(ResourceManager=resource_manager_name,
                     JobStage=jobstage, Key=resource.Key, Value=resource.Value,
                     Label=resource.Label)
 
