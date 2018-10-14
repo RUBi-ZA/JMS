@@ -1,8 +1,7 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from users import views
 
-urlpatterns = patterns('users.views',
-    
+urlpatterns = [   
     url(r'login/?', views.Login.as_view()), 
     url(r'logout/?', views.Logout.as_view()),  
     url(r'profile/?', views.Profile.as_view()), 
@@ -15,4 +14,4 @@ urlpatterns = patterns('users.views',
     url(r'conversations/?', views.Conversations.as_view()),
     url(r'messages/(?P<conversation_id>[^/]+)/?', views.Messages.as_view()),  
     url(r'', views.Register.as_view()),    
-)
+]

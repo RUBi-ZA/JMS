@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from django.core.servers.basehttp import FileWrapper
 from django.db import transaction
+
+from wsgiref.util import FileWrapper
 
 from JMS import JobManager
 from JMS.CRUD import ToolPermissions
@@ -1165,8 +1166,6 @@ class PackageManagement(APIView):
         """
         Install packages
         """
-        jms = JobManager(user=request.user)
-        
         return Response("Ansible support is not enabled", status=400)
 
 

@@ -7,7 +7,6 @@ PYTHON_BIN = os.path.join(SRC_DIR, "venv/bin/python")
 ENVIRONMENT = "development"
 
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 
 ALLOWED_HOSTS = ['*']
 

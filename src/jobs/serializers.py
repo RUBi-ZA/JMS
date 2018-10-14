@@ -28,21 +28,25 @@ class ToolCategoryListSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
+        fields = '__all__'
 
 
 class ToolSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tool
+        fields = '__all__'
 
 
 class ParameterTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParameterType
+        fields = '__all__'
 
 
 class ParameterOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParameterOption
+        fields = '__all__'
 
 
 class ParameterDetailSerializer(serializers.ModelSerializer):
@@ -50,6 +54,7 @@ class ParameterDetailSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Parameter
+        fields = '__all__'
 
 
 class ParameterListSerializer(serializers.ModelSerializer):
@@ -62,11 +67,13 @@ class ParameterListSerializer(serializers.ModelSerializer):
 class ExpectedOutputSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExpectedOutput
+        fields = '__all__'
 
 
 class ResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ToolVersionResource
+        fields = '__all__'
 
 
 class ToolVersionDetailSerializer(serializers.ModelSerializer):
@@ -77,11 +84,13 @@ class ToolVersionDetailSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ToolVersion
+        fields = '__all__'
 
 
 class FileTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = FileType
+        fields = '__all__'
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -142,6 +151,7 @@ class WorkflowPermissionSerializer(serializers.ModelSerializer):
 class StageParameterSerializer(serializers.ModelSerializer):
     class Meta:
         model = StageParameter
+        fields = '__all__'
 
 class StageDetailSerializer(serializers.ModelSerializer):
     ToolVersion = ToolVersionDetailSerializer()
@@ -149,6 +159,7 @@ class StageDetailSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Stage
+        fields = '__all__'
 
 
 class WorkflowVersionDetailSerializer(serializers.ModelSerializer):
@@ -157,6 +168,7 @@ class WorkflowVersionDetailSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = WorkflowVersion
+        fields = '__all__'
 
 
 class StageWorkflowSerializer(serializers.ModelSerializer):
@@ -213,11 +225,13 @@ class StageToolVersionSerializer(serializers.ModelSerializer):
 class StageDependencyList(serializers.ModelSerializer):
     class Meta:
         model = StageDependency
+        fields = '__all__'
 
 
 class StageParameterList(serializers.ModelSerializer):
     class Meta:
         model = StageParameter
+        fields = '__all__'
 
 
 class StageListSerializer(serializers.ModelSerializer):
@@ -267,6 +281,7 @@ class JobListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Job
+        fields = '__all__'
 
 
 class StageSerializer(serializers.ModelSerializer):
@@ -280,6 +295,7 @@ class StageSerializer(serializers.ModelSerializer):
 class JobStageDataFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobStageDataField
+        fields = '__all__'
     
 
 class JobStageDataSectionSerializer(serializers.ModelSerializer):
@@ -287,6 +303,7 @@ class JobStageDataSectionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = JobStageDataSection
+        fields = '__all__'
 
 
 class JobStageParameterDetailSerializer(serializers.ModelSerializer):
@@ -294,6 +311,7 @@ class JobStageParameterDetailSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = JobStageParameter
+        fields = '__all__'
 
     
 class JobStageDetailSerializer(serializers.ModelSerializer):
@@ -302,6 +320,7 @@ class JobStageDetailSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = JobStage
+        fields = '__all__'
 
 
 class JobDetailSerializer(serializers.ModelSerializer):
@@ -311,3 +330,4 @@ class JobDetailSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Job
+        fields = '__all__'

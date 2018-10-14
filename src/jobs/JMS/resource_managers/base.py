@@ -1,15 +1,15 @@
 '''
-    The base class that all implemented resource managers should inherit from.
+The base class that all implemented resource managers should inherit from.
 
-    This class provides the constructor and a small number of methods that can
-    be used in child classes.
+This class provides the constructor and a small number of methods that can
+be used in child classes.
 
-    All unimplemented methods must be overridden in child classes. Comments
-    within each method provide the required return values as well as the
-    exceptions that must be raised in the case of an error.
+All unimplemented methods must be overridden in child classes. Comments
+within each method provide the required return values as well as the
+exceptions that must be raised in the case of an error.
 
-    The specified objects and exceptions can be found in the objects.py and
-    exceptions.py files respectively.
+The specified objects and exceptions can be found in the objects.py and
+exceptions.py files respectively.
 '''
 
 import requests, subprocess
@@ -20,6 +20,7 @@ from exceptions import *
 from django.conf import settings
 
 from impersonator.client import Impersonator
+
 
 class BaseResourceManager:
 
@@ -33,10 +34,6 @@ class BaseResourceManager:
     def RunUserProcess(self, cmd):
         if self.user:
             response = self.impersonator.execute(cmd)
-            print "Output:", response['out']
-            print "Error:", response['err']
-            print "Code:", response['code']
-
             return response['out']
         else:
             process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, close_fds=True)
@@ -50,7 +47,6 @@ class BaseResourceManager:
         out = self.RunUserProcess("df -h %s" % path)
 
         lines = out.split('\n')
-        print lines
 
         index = lines[0].index("Size")
         size = lines[1][index:index+5].strip()

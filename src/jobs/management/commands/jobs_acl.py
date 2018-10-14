@@ -20,6 +20,9 @@ class Command(BaseCommand):
     args = '<action [param_1 param_2 ...]>'
     help = 'Parameters are specific to the action being performed'
     
+    def add_arguments(self, parser):
+        parser.add_argument('args', nargs='*')
+
     def handle(self, *args, **options):
         temp_dir = settings.JMS_SETTINGS["temp_dir"]
             

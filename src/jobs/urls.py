@@ -1,7 +1,7 @@
-from django.conf.urls import patterns, url, include
+from django.conf.urls import url, include
 from jobs import views
 
-public_urls = patterns('jobs.views',
+public_urls = [
     url(r'jobs/tool/versions/(?P<version_id>[^/]+)/?', views.ToolJob.as_view()),
     url(r'files/types', views.FileTypeList.as_view()),
     
@@ -110,8 +110,8 @@ public_urls = patterns('jobs.views',
     url(r'settings/nodes/(?P<node_name>[^/]+)/?', views.NodeDetails.as_view()),
     url(r'settings/nodes/?', views.Nodes.as_view()),
     url(r'settings/?', views.ServerSettings.as_view()),   
-)
+]
  
-urlpatterns = patterns('',
+urlpatterns = [
 	url(r'^', include(public_urls, namespace="public_urls")),       
-)
+]

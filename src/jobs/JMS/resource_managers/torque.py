@@ -25,7 +25,7 @@ class torque(BaseResourceManager):
         try:
             out = self.RunUserProcess("qstat -x")
             data = objectify.fromstring(out)
-        except Exception, e:
+        except Exception as e:
             return queue
             
         for job in data.Job:
@@ -64,20 +64,6 @@ class torque(BaseResourceManager):
             queue.rows.append(QueueRow(str(job.Job_Id), state, row))         
             
         return queue
-    
-    '''
-    def GetDetailedQueue(self):
-        process = subprocess.Popen("qstat -x", shell=True, stdout=subprocess.PIPE, close_fds=True)
-        out, err = process.communicate()
-        data = objectify.fromstring(out)
-        
-        jobs = []
-        for job in data.Job:
-            j = self._ParseJob(job)
-            jobs.append(j)
-        
-        return jobs
-    '''
     
     def GetJob(self, id):
         out = self.RunUserProcess("qstat -x %s" % id)
@@ -213,7 +199,7 @@ class torque(BaseResourceManager):
     
     
     def GetSettings(self):
-        output = self.RunUserProcess('qmgr -c "print server"', expect=self.user.username + "@%s:" % socket.gethostname())
+        output = self.RunUserProcess('qmgr -c "print server"')
         
         data_sections = [
                 DataSection(

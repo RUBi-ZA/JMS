@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.core.context_processors import csrf
+from django.template.context_processors import csrf
 
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -51,6 +51,12 @@ def settings(request):
 	c.update(csrf(request))
 	
 	return render(request, 'custom/JMS/settings.html', c)
+
+
+@login_required(login_url="/account/login")
+def profile(request):
+	
+	return render(request, 'custom/JMS/settings.html')
 	
 	
 def sign_in(request):

@@ -1,9 +1,10 @@
 from django.contrib.auth.decorators import login_required
-from django.core.context_processors import csrf
+from django.template.context_processors import csrf
 from django.shortcuts import render
 from django.http import HttpResponse, Http404, QueryDict  
-from django.core.servers.basehttp import FileWrapper
 from django.conf import settings
+
+from wsgiref.util import FileWrapper
 
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -46,7 +47,7 @@ def ACLResponse(response):
 
 #Views
 
-@login_required(login_url="/account/login")
+@login_required(login_url="#/login")
 def index(request):
 	c = {}
 	c.update(csrf(request))
