@@ -17,6 +17,9 @@ def create_dir(path):
 
 class Command(BaseCommand):
     help = "Usage: python manage.py setup"
+    
+    def add_arguments(self, parser):
+        parser.add_argument('args', nargs='*')
 
     def handle(self, *args, **options):
         print "\nSetting up shared directory:\n"

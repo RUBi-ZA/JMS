@@ -10,6 +10,9 @@ class Command(BaseCommand):
     args = '<operation [param_1 param_2 ...]>'
     help = 'Parameters are specific to the operation being performed'
     
+    def add_arguments(self, parser):
+        parser.add_argument('args', nargs='*')
+    
     def handle(self, *args, **options):
         
         op = args[0]

@@ -218,6 +218,9 @@ class QueueDaemon(Daemon):
 class Command(BaseCommand):
 
     help = "Usage: python manage.py queue_daemon [start|restart|stop]"
+    
+    def add_arguments(self, parser):
+        parser.add_argument('args', nargs='*')
 
     def handle(self, *args, **options):
         database = os.path.basename(settings.DATABASES['default']['NAME'])
