@@ -41,13 +41,24 @@
                 </a> 
                 
             </div>
-		  	<div style="color: white;padding: 15px 50px 5px 50px;float: right;font-size: 16px;"> 
-		  		<a href="/account/logout" class="btn btn-danger square-btn-adjust">Logout</a> 
-		  	</div>
         </nav>   
            <!-- /. NAV TOP  -->
                 <nav class="navbar-default navbar-side" role="navigation">
             <div class="sidebar-collapse">
+				<div class="text-center" style="width: 100%;">
+					<div style="font-size:12pt;color:white">
+						Welcome, {{ user.first_name }}! <br/>
+						<img src="{{ STATIC_URL }}lib/bootstrap/binary/img/offline_user.png" class="user-image img-responsive"/>
+					</div>
+					<div style="width: 100%;border-bottom:1px solid rgba(107, 108, 109, 0.19);">
+						<a href="#profile" style="font-size:12pt;color:white;padding-right:10px;">
+							<i class="fa fa-user"></i>
+						</a>
+						<a href="/account/logout" style="font-size:12pt;color:white;padding-left:10px;" title="logout">
+							<i class="fa fa-lock"></i>
+						</a>
+					</div>
+				</div>	
                 <ul class="nav" id="main-menu">
 					{% block sidebar %}
 					

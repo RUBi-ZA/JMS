@@ -1,0 +1,60 @@
+{% extends "custom/JMS/master.html" %}
+
+
+<link rel="shortcut icon" href="{{ STATIC_URL }}img/favicon.ico" type="image/x-icon">
+
+{% block css %}
+	
+	<!-- BOOTSTRAP STYLES-->
+	<link href="{{ STATIC_URL }}lib/bootstrap/binary/css/bootstrap.css" rel="stylesheet" />
+	
+	<!-- FONTAWESOME STYLES-->
+	<link href="{{ STATIC_URL }}lib/bootstrap/binary/css/font-awesome.css" rel="stylesheet" />
+	
+	<!-- MORRIS CHART STYLES-->
+	<link href="{{ STATIC_URL }}lib/charts/morris/morris-0.4.3.min.css" rel="stylesheet" />
+	
+	<!-- CUSTOM STYLES-->
+	<link href="{{ STATIC_URL }}lib/bootstrap/binary/css/custom.css" rel="stylesheet" />
+	<link href="{{ STATIC_URL }}lib/bootstrap/binary/css/stavatech.css" rel="stylesheet" />
+		
+	<!-- GOOGLE FONTS-->
+	<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
+	
+{% endblock %}
+
+{% block content %}
+ 	
+	<div id="page-wrapper" class="page-wrapper" >
+		<div class="page-inner">
+
+			<div id="profile"> 
+            </div>		
+            	       
+		</div>
+	</div>
+	
+{% endblock %}
+
+
+{% block scripts %}	
+	<!-- SCRIPTS -AT THE BOTTOM TO REDUCE THE LOAD TIME-->
+	<!-- JQUERY SCRIPTS -->
+	<script src="{{ STATIC_URL }}lib/bootstrap/binary/js/jquery-1.10.2.js"></script>
+	<!-- BOOTSTRAP SCRIPTS -->
+	<script src="{{ STATIC_URL }}lib/bootstrap/binary/js/bootstrap.min.js"></script>
+	<!-- METISMENU SCRIPTS -->
+	<script src="{{ STATIC_URL }}lib/bootstrap/binary/js/jquery.metisMenu.js"></script>
+	<!-- KNOCKOUT SCRIPTS -->
+	<script src="{{ STATIC_URL }}lib/knockout-3.0.0.js"></script>
+	<!-- SAMMY SCRIPTS -->
+	<script src="{{ STATIC_URL }}lib/sammy.js"></script>
+	<!-- CUSTOM SCRIPTS -->
+	<script src="{{ STATIC_URL }}lib/custom/JMS/custom.js"></script>
+	<script src="{{ STATIC_URL }}lib/custom/question.js"></script>
+	<script src="{{ STATIC_URL }}lib/custom/JMS/profile.js"></script>
+	
+	<script>
+		$("#dashboard-menu-item > a").addClass("active-menu");
+	</script>
+{% endblock %}

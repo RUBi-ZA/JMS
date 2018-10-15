@@ -36,14 +36,7 @@
 {% endblock %}
 
 
-{% block sidebar %}
-	
-	<li class="text-center">
-		<a href="#profile" style="font-size:12pt;color:white">
-			Welcome, {{ user }}! <br/>
-			<img src="{{ STATIC_URL }}lib/bootstrap/binary/img/offline_user.png" class="user-image img-responsive"/>
-		</a>
-	</li>				
+{% block sidebar %}			
 					
 	<li id="dashboard-menu-item">
 		<a href="/"><i class="fa fa-dashboard fa-2x"></i> Dashboard</a>
