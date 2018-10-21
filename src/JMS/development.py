@@ -25,7 +25,7 @@ ADMINS = (
     ('Your Name', 'your_email@example.com'),
 )
 
-SHARED_DIRECTORY = os.environ.get("SHARED_DIRECTORY", "~/JMS/shared/")
+SHARED_DIRECTORY = os.environ.get("SHARED_DIRECTORY", "/tmp/JMS/shared/")
 TEMP_DIRECTORY = os.path.join(SHARED_DIRECTORY, "tmp")
 
 IMPERSONATOR_HOST = "127.0.0.1"

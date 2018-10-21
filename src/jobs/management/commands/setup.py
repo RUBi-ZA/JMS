@@ -10,7 +10,7 @@ def create_dir(path):
     path = os.path.expanduser(path)
     if not os.path.exists(path):
         os.makedirs(path)
-        os.chmod(path, 0775)
+        os.chmod(path, 0777)
         print "%s created." % path
     else:
         print "%s already exists." % path

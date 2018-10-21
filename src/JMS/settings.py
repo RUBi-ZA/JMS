@@ -76,7 +76,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'rest_framework',
-    'authentication',
     'accounts',
     'jobs',
     'filemanager',
@@ -130,7 +129,7 @@ SWAGGER_SETTINGS = {
 }
 
 AUTHENTICATION_BACKENDS = (
-    "authentication.backends.ImpersonatorBackend",
+    "accounts.backends.ImpersonatorBackend",
 )
 
 JMS_SETTINGS = {

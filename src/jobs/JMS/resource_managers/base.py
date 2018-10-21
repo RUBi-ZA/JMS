@@ -28,7 +28,7 @@ class BaseResourceManager:
         config = settings.JMS_SETTINGS["impersonator"]
         self.user = user
         if user:
-            self.token = user.filemanagersettings.ServerPass
+            self.token = user.userprofile.impersonator_token
             self.impersonator = Impersonator(host=config["host"], port=config["port"], token=self.token)
 
     def RunUserProcess(self, cmd):

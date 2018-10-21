@@ -646,7 +646,6 @@ class torque(BaseResourceManager):
 
     
     def CreateJobScript(self, job_name, job_dir, script_name, output_log, error_log, settings, has_dependencies, commands):
-        
         script = os.path.join(job_dir, script_name)
         
         with open(script, 'w') as job_script:
