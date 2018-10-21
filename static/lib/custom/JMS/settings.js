@@ -140,6 +140,7 @@ function SettingsViewModel() {
         $.ajax({
             url: "/api/jms/settings",
             type: "POST",
+			contentType: 'application/json',
             data: ko.toJSON(self.Settings),
             success: function(settings) {
                 settings = JSON.parse(settings);
@@ -232,6 +233,7 @@ function SettingsViewModel() {
 	    $.ajax({
             url: "/api/jms/settings/administrators",
             type: method,
+			contentType: 'application/json',
             data: ko.toJSON(self.SelectedAdministrator),
             success: function(admins) { 
                 admins = JSON.parse(admins);
@@ -353,6 +355,7 @@ function SettingsViewModel() {
 	    $.ajax({
             url: "/api/jms/settings/queues/" + queue_name,
             type: "PUT",
+			contentType: 'application/json',
             data: ko.toJSON(self.SelectedQueue),
             success: function(queues) { 
                 queues = JSON.parse(queues);
@@ -420,10 +423,10 @@ function SettingsViewModel() {
 	
 	self.AddNode = function() {
 	    self.LoadingNodes(true);
-	    console.log(ko.toJSON(self.NewNode));
 	    $.ajax({
             url: "/api/jms/settings/nodes",
             type: "POST",
+			contentType: 'application/json',
             data: ko.toJSON(self.NewNode),
             success: function(nodes) { 
                 nodes = JSON.parse(nodes);
@@ -444,6 +447,7 @@ function SettingsViewModel() {
 	    $.ajax({
             url: "/api/jms/settings/nodes/",
             type: "PUT",
+			contentType: 'application/json',
             data: ko.toJSON(self.SelectedNode),
             success: function(nodes) { 
                 nodes = JSON.parse(nodes);

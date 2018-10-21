@@ -77,7 +77,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'rest_framework',
     'authentication',
-    'users',
+    'accounts',
     'jobs',
     'filemanager',
     'interface',
@@ -117,6 +117,12 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PARSER_CLASSES': (
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+        'utilities.django_ext.parsers.PlainTextParser',
+    ),
 }
 
 SWAGGER_SETTINGS = {
@@ -124,10 +130,8 @@ SWAGGER_SETTINGS = {
 }
 
 AUTHENTICATION_BACKENDS = (
-    "filemanager.backends.ImpersonatorBackend",
+    "authentication.backends.ImpersonatorBackend",
 )
-
-AUTH_PROFILE_MODULE = 'users.UserProfile'
 
 JMS_SETTINGS = {
     "JMS_shared_directory": os.path.expanduser(SHARED_DIRECTORY),

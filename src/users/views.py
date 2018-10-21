@@ -68,7 +68,7 @@ class Profile(APIView):
 		"""
 		Update user details
 		"""
-		put = QueryDict(request.body)
+		put = request.data
 		
 		u = get_user_model().objects.get(id=request.user.id)
 		up, created = UserProfile.objects.get_or_create(user = u)
@@ -114,7 +114,7 @@ class Password(APIView):
 		"""
 		Update password
 		"""
-		put = QueryDict(request.body)
+		put = request.data
 		
 		user = request.user
 		
@@ -163,7 +163,7 @@ class Contacts(APIView):
 		"""
 		#parse POST json
 		p = lambda:None
-		p.__dict__ = json.loads(request.body)		
+		p.__dict__ = request.data		
 		
 		with transaction.atomic():
 			for username in p.users:
@@ -188,7 +188,7 @@ class Conversations(APIView):
 		"""
 		#parse POST json
 		p = lambda:None
-		p.__dict__ = json.loads(request.body)
+		p.__dict__ = request.data
 		
 		with transaction.atomic():
 			dt = datetime.now()
@@ -249,7 +249,7 @@ class Messages(APIView):
 		Post a new message to a conversation
 		"""
 		p = lambda:None
-		p.__dict__ = json.loads(request.body)
+		p.__dict__ = request.data
 		
 		profile = UserProfile.objects.get(user__id=request.user.id)	
 		
@@ -280,7 +280,7 @@ class Groups(APIView):
 		Create a group. The group creator automatically becomes a member of the group.
 		"""
 		p = lambda:None
-		p.__dict__ = json.loads(request.body)
+		p.__dict__ = request.data
 		
 		with transaction.atomic():
 			#Create the group

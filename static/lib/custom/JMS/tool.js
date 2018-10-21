@@ -345,7 +345,8 @@ function ToolViewModel() {
         
         $.ajax({
             url: "/api/jms/files/types",
-            type: "POST",
+			type: "POST",
+			contentType: 'text/plain',
             data: self.new_file_type(),
             success: function(type){
                 self.FileTypes.push(new FileType(type.FileTypeID, type.FileTypeName));
@@ -435,6 +436,7 @@ function ToolViewModel() {
 	    $.ajax({
 	        url: "/api/jms/tools/categories",
 	        type: "POST",
+			contentType: 'text/plain',
 	        data: self.new_category_name(),
 	        success: function(category){
 	            var cat = new Category(category.CategoryID, category.CategoryName);
@@ -486,6 +488,7 @@ function ToolViewModel() {
 	    $.ajax({
 	        url: "/api/jms/tools/categories/" + category.CategoryID(),
 	        type: "PUT",
+			contentType: 'text/plain',
 	        data: self.new_category_name(),
 	        success: function(category){
 	            $("#edit-category-dialog").modal('hide');
@@ -508,6 +511,7 @@ function ToolViewModel() {
 	self.GetTools = function() {
 	    $.ajax({
 	        url: "/api/jms/tools",
+			contentType: 'application/json',
 	        success: function(tools) {
 	            self.LoadTools(tools);
 	            self.loading(false);
@@ -556,6 +560,7 @@ function ToolViewModel() {
 	    $.ajax({
 	        url: "/api/jms/tools",
 	        type: "POST",
+			contentType: 'application/json',
 	        data: ko.toJSON(data),
 	        success: function(toolversion){
 	            console.log(toolversion);
@@ -687,6 +692,7 @@ function ToolViewModel() {
 	    $.ajax({
 	        url: "/api/jms/tools/" + self.Tool().ToolID() + "/share/" + self.NewShare().User().Username(),
 	        type: "PUT",
+			contentType: 'application/json',
 	        data: JSON.stringify(data),
 	        success: function() {
 	            self.GetToolPermissions(self.Tool().ToolID());
@@ -745,6 +751,7 @@ function ToolViewModel() {
 		    $.ajax({
 			    url: "/api/jms/tools/" + self.ToolVersion().Tool().ToolID() + "/versions",
 			    type: 'PUT',
+				contentType: 'text/plain',
 			    data: data.ToolVersionNum(),
 			    success: function(v) {	
 			        self.GetDevVersion(self.ToolVersion().Tool().ToolID());
@@ -795,6 +802,7 @@ function ToolViewModel() {
 		    $.ajax({
 			    url: "/api/jms/tools/" + self.ToolVersion().Tool().ToolID() + "/versions",
 			    type: 'POST',
+				contentType: 'application/json',
 			    data: JSON.stringify(version),
 			    success: function(v) {				
 				    var version = new ToolVersion(v.ToolVersionID, null, 
@@ -1040,6 +1048,7 @@ function ToolViewModel() {
 	    $.ajax({
 	        url: "/api/jms/tools/" + self.ToolVersion().Tool().ToolID() + "/files",
 	        type: "PUT",
+			contentType: 'application/json',
 	        data: ko.toJSON(file),
 	        success: function() { },
 	        error: function(http) {
@@ -1156,6 +1165,7 @@ function ToolViewModel() {
 	    $.ajax({
 	        url: "/api/jms/tools/" + version.Tool().ToolID() + "/parameters",
 	        type: "POST",
+			contentType: 'text/plain',
 	        data: "New Parameter",
 	        success: function(param) {
 	            var p = self.LoadParameters([param])[0];
@@ -1318,6 +1328,7 @@ function ToolViewModel() {
 		$.ajax({
 		    url: "/api/jms/tools/" + self.ToolVersion().Tool().ToolID(),
 		    type: "PUT",
+			contentType: 'application/json',
 		    data: data,
 		    success: function() {
 		        $("#loading-dialog").modal('hide');

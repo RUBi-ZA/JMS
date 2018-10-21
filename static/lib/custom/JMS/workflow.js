@@ -297,6 +297,7 @@ function WorkflowViewModel() {
 	    $.ajax({
 	        url: "/api/jms/tools/categories",
 	        type: "POST",
+			contentType: 'text/plain',
 	        data: self.new_category_name(),
 	        success: function(category){
 	            var cat = new Category(category.CategoryID, category.CategoryName);
@@ -329,6 +330,7 @@ function WorkflowViewModel() {
 	    $.ajax({
 	        url: "/api/jms/tools/categories/" + category.CategoryID(),
 	        type: "PUT",
+			contentType: 'text/plain',
 	        data: self.new_category_name(),
 	        success: function(category){
 	            $("#edit-category-dialog").modal('hide');
@@ -401,6 +403,7 @@ function WorkflowViewModel() {
 	    $.ajax({
 	        url: "/api/jms/workflows",
 	        type: "POST",
+			contentType: 'application/json',
 	        data: ko.toJSON(data),
 	        success: function(version){
 	            self.GetCategories();
@@ -429,6 +432,7 @@ function WorkflowViewModel() {
 	    $.ajax({
 		    url: "/api/jms/workflows/" + self.WorkflowVersion().Workflow().WorkflowID(),
 		    type: "PUT",
+			contentType: 'application/json',
 		    data: JSON.stringify(data),
 		    success: function() {
 		        $("#loading-dialog").modal('hide');
@@ -573,6 +577,7 @@ function WorkflowViewModel() {
 	    $.ajax({
 	        url: "/api/jms/workflows/" + self.Workflow().WorkflowID() + "/share/" + self.NewShare().User().Username(),
 	        type: "PUT",
+			contentType: 'application/json',
 	        data: JSON.stringify(data),
 	        success: function() {
 	            self.GetWorkflowPermissions(self.Workflow().WorkflowID());
@@ -779,6 +784,7 @@ function WorkflowViewModel() {
 		    $.ajax({
 			    url: "/api/jms/workflows/" + self.WorkflowVersion().Workflow().WorkflowID() + "/versions",
 			    type: 'POST',
+				contentType: 'application/json',
 			    data: JSON.stringify(version),
 			    success: function(v) {				
 				    var version = new WorkflowlVersion(v.WorkflowVersionID, 

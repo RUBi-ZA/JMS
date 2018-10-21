@@ -48,7 +48,7 @@ class ServerSettings(APIView):
         """
         Set server settings
         """
-        s = json.loads(request.body)  
+        s = request.data  
         
         jms = JobManager(user=request.user)
         settings = jms.UpdateSettings(s)
@@ -73,7 +73,7 @@ class Nodes(APIView):
         """
         Add node
         """
-        n = json.loads(request.body) 
+        n = request.data 
         
         jms = JobManager(user=request.user)
         jms.AddNode(n)
@@ -85,7 +85,7 @@ class Nodes(APIView):
         """
         Update node
         """
-        n = json.loads(request.body) 
+        n = request.data 
         
         jms = JobManager(user=request.user)
         jms.UpdateNode(n)
@@ -150,7 +150,7 @@ class QueueSettings(APIView):
         """
         Update queue settings
         """
-        q = json.loads(request.body)  
+        q = request.data  
         
         jms = JobManager(user=request.user)
         jms.UpdateQueue(q)
@@ -176,7 +176,7 @@ class Administrators(APIView):
         """
         Add administrator
         """
-        a = json.loads(request.body)
+        a = request.data
         
         jms = JobManager(user=request.user)        
         jms.AddAdministrator(a)
@@ -189,7 +189,7 @@ class Administrators(APIView):
         """
         Update administrator
         """
-        a = json.loads(request.body)
+        a = request.data
         
         jms = JobManager(user=request.user)        
         jms.UpdateAdministrator(a)
@@ -249,7 +249,7 @@ class ToolList(APIView):
         """
         Create a new tool
         """
-        tool = json.loads(request.body)
+        tool = request.data
         
         jms = JobManager(user=request.user)
         toolversion = jms.AddTool(tool)
@@ -287,7 +287,7 @@ class ToolDetail(APIView):
         """
         Save the development version of the tool
         """
-        version = json.loads(request.body)
+        version = request.data
         
         jms = JobManager(user=request.user)
         jms.UpdateTool(tool_id, version)
@@ -314,7 +314,7 @@ class CategoryList(APIView):
         """
         Add tool category
         """
-        category = request.body
+        category = request.data
         
         jms = JobManager(user=request.user)
         category = jms.AddCategory(category)
@@ -330,7 +330,7 @@ class CategoryDetail(APIView):
         """
         Update tool category
         """
-        category_name = request.body
+        category_name = request.data
         
         jms = JobManager(user=request.user)
         jms.UpdateCategory(category_id, category_name)
@@ -359,7 +359,7 @@ class ToolVersionList(APIView):
         """
         Publish a new version of a tool
         """
-        version_nums = json.loads(request.body)
+        version_nums = request.data
         
         jms = JobManager(user=request.user)
         toolversion = jms.PublishTool(tool_id, version_nums)
@@ -371,7 +371,7 @@ class ToolVersionList(APIView):
         """
         Revert to an older version of a tool
         """
-        version_num = request.body
+        version_num = request.data
         
         jms = JobManager(user=request.user)
         jms.RevertToolVersion(tool_id, version_num)
@@ -412,7 +412,7 @@ class ToolShareDetail(APIView):
         """
         Share a tool with a user
         """
-        permissions = json.loads(request.body)
+        permissions = request.data
         
         jms = JobManager(user=request.user)
         jms.ShareTool(tool_id, user_name, permissions)
@@ -492,7 +492,7 @@ class ParameterList(APIView):
         """
         Add a new parameter
         """
-        parameter_name = request.body
+        parameter_name = request.data
         
         jms = JobManager(user=request.user)
         parameter = jms.AddParameter(tool_id, parameter_name)
@@ -554,7 +554,7 @@ class FileTypeList(APIView):
         """
         Add file types
         """
-        file_type_name = request.body
+        file_type_name = request.data
         
         jms = JobManager(user=request.user)
         filetype = jms.AddFileType(file_type_name)
@@ -588,7 +588,7 @@ class ToolFileList(APIView):
         """
         Save a tool file 
         """
-        file = json.loads(request.body)
+        file = request.data
         
         jms = JobManager(user=request.user)
         jms.SaveToolFile(tool_id, file["FileName"], file["Content"])
@@ -646,7 +646,7 @@ class WorkflowList(APIView):
         """
         Add a new workflow
         """
-        workflow = json.loads(request.body)
+        workflow = request.data
         
         jms = JobManager(user=request.user)
         version = jms.AddWorkflow(workflow)
@@ -664,7 +664,7 @@ class WorkflowDetail(APIView):
         Fetch workflow
         """
         jms = JobManager(user=request.user)
-        workflow = jms.GetWorkflow(tool_id)
+        workflow = jms.GetWorkflow(workflow_id)
         
         serializer = WorkflowListSerializer(workflow)
         return Response(serializer.data)
@@ -684,7 +684,7 @@ class WorkflowDetail(APIView):
         """
         Update a workflow
         """
-        workflow = json.loads(request.body)
+        workflow = request.data
         
         jms = JobManager(user=request.user)
         jms.UpdateWorkflow(workflow_id, workflow)
@@ -700,7 +700,7 @@ class WorkflowVersionList(APIView):
         """
         Publish a new version of a workflow
         """
-        version_nums = json.loads(request.body)
+        version_nums = request.data
         
         jms = JobManager(user=request.user)
         version = jms.PublishWorkflow(workflow_id, version_nums)
@@ -712,7 +712,7 @@ class WorkflowVersionList(APIView):
         """
         Revert to an older version of a workflow
         """
-        version_num = request.body
+        version_num = request.data
         
         jms = JobManager(user=request.user)
         jms.RevertWorkflowVersion(workflow_id, version_num)
@@ -753,7 +753,7 @@ class WorkflowShareDetail(APIView):
         """
         Share a workflow with a user
         """
-        permissions = json.loads(request.body)
+        permissions = request.data
         
         jms = JobManager(user=request.user)
         jms.ShareWorkflow(workflow_id, user_name, permissions)
@@ -829,7 +829,7 @@ class StageList(APIView):
         Add workflow stage
         """
         if version_num == "dev":
-            stage = json.loads(request.body)
+            stage = request.data
             
             jms = JobManager(user=request.user)
             stages = jms.AddStage(workflow_id, stage)
@@ -859,7 +859,7 @@ class StageDetail(APIView):
         """
         Update stage
         """
-        stage = json.loads(request.body)
+        stage = request.data
         
         jms = JobManager(user=request.user)
         stage = jms.UpdateStage(stage_id, stage)
@@ -899,7 +899,7 @@ class StagePosition(APIView):
         """
         Update stage
         """
-        stage_pos = json.loads(request.body)
+        stage_pos = request.data
         
         jms = JobManager(user=request.user)
         stage = jms.MoveStage(stage_id, stage_pos)
@@ -915,7 +915,7 @@ class DependencyList(APIView):
         """
         Add stage dependency
         """
-        dependency = json.loads(request.body)
+        dependency = request.data
         
         jms = JobManager(user=request.user)
         dep = jms.AddStageDependency(stage_id, dependency)
@@ -932,7 +932,7 @@ class DependencyDetail(APIView):
         """
         Update stage dependency
         """
-        dependency = json.loads(request.body)
+        dependency = request.data
         
         jms = JobManager(user=request.user)
         jms.UpdateStageDependency(dependency_id, dependency)
@@ -1088,7 +1088,7 @@ class JobFilter(APIView):
         """
         Filter accessible jobs by parameters
         """
-        fl = json.loads(request.body)
+        fl = request.data
         
         jms = JobManager(user=request.user)
         jobs = jms.FilterJobsByParameter(fl)

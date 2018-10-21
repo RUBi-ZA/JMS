@@ -100,7 +100,7 @@ class Operation(APIView):
         """
         try:
             dir_dict = lambda:None
-            dir_dict.__dict__ = json.loads(request.body)
+            dir_dict.__dict__ = request.data
             
             op = op.upper()
             cmd = "python %s/manage.py acl %s %s %s %s" % (PROJECT_PATH, op, dir_dict.name, dir_dict.fullpath, dir_dict.type)
@@ -121,7 +121,7 @@ class Operation(APIView):
         Delete file or directory
         """       
         try:
-            delete = QueryDict(request.body)
+            delete = request.data
             cmd = "python %s/manage.py acl DELETE %s %s %s" % (PROJECT_PATH, delete["name"], delete["fullpath"], delete["type"])
             out = RunUserProcess(request.user, cmd)
             

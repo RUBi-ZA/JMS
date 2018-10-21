@@ -203,6 +203,7 @@ function VisualizerViewModel() {
 	    $.ajax({
 	        url: "/api/jms/stages/" + stage.StageID() + "/position",
 	        type: "PUT",
+			contentType: 'application/json',
 	        data: JSON.stringify(data),
 	        success: function(s) { },
 	        error: function(http) { }
@@ -231,6 +232,7 @@ function VisualizerViewModel() {
 	    $.ajax({
 	        url: "/api/jms/workflows/" + self.WorkflowID + "/versions/dev/stages",
 	        type: "POST",
+			contentType: 'application/json',
 	        data: JSON.stringify(data),
 	        success: function(s) {
 	            stage = self.LoadStage(s);
@@ -350,6 +352,7 @@ function VisualizerViewModel() {
 	    $.ajax({
 	        url: "/api/jms/stages/" + stage.StageID(),
 	        type: "PUT",
+			contentType: 'application/json',
 	        data: JSON.stringify(data),
 	        success: function() {
         	    $("#stage-dialog").modal('hide');
@@ -422,6 +425,7 @@ function VisualizerViewModel() {
 	    $.ajax({
 	        url: "/api/jms/stages/" + self.Dependency().StageOI().StageID() + "/dependencies",
 	        type: "POST",
+			contentType: 'application/json',
 	        data: JSON.stringify(data),
 	        success: function(dependency) {
 	            self.StageDependencies.push(self.Dependency());
@@ -461,6 +465,7 @@ function VisualizerViewModel() {
 	    $.ajax({
 	        url: "/api/jms/stages/dependencies/" + dep.StageDependencyID(),
 	        type: "PUT",
+			contentType: 'application/json',
 	        data: JSON.stringify(data),
 	        success: function() {
 	            $("#edit-dependency-dialog").modal('hide');

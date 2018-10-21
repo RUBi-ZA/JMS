@@ -357,6 +357,7 @@ var FileManagerViewModel = function() {
         $.ajax({
             url: "/files/operation/rename",
             type: "PUT",
+			contentType: 'application/json',
             data: JSON.stringify(data),
             success: function() {
                 self.reloadDirectory();
@@ -397,6 +398,7 @@ var FileManagerViewModel = function() {
         $.ajax({
             url: "/files/operation/" + op,
             type: "PUT",
+			contentType: 'application/json',
             data: JSON.stringify(data),
             success: function() {
                 self.reloadDirectory();
