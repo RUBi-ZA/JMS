@@ -9,5 +9,6 @@ urlpatterns = [
 	url(r'^tools', views.tools, name='tools'),
 	url(r'^jobs/?', views.jobs, name='jobs'),
 	url(r'^settings/?', views.settings, name='settings'),
+	url(r'^profile/?', views.profile, name='profile'),
 	url(r'^', views.index, name='index'),	
 ]

@@ -55,8 +55,7 @@ def settings(request):
 
 @login_required(login_url="/account/login")
 def profile(request):
-	
-	return render(request, 'custom/JMS/settings.html')
+	return render(request, 'custom/JMS/profile.html')
 	
 	
 def sign_in(request):

@@ -20,15 +20,156 @@
 		
 	<!-- GOOGLE FONTS-->
 	<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
-	
 {% endblock %}
 
-{% block content %}
- 	
-	<div id="page-wrapper" class="page-wrapper" >
+{% block content %}	
+	<div id="page-wrapper" class="page-wrapper">
+
+		<div class="modal fade" id="password-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title">Update Password</h4>
+					</div>
+					<div class="modal-body" style="overflow:hidden;" data-bind="with: $root.password">
+						<div data-bind="visible: $root.updatingPassword() == false">
+							<div class="form-group">
+								<label>New Password</label>
+								<input type="password" class="form-control" data-bind="value: newPassword" />
+							</div>
+							<div class="form-group">
+								<label>Confirm Password</label>
+								<input type="password" class="form-control" data-bind="value: confirmPassword" />
+							</div>
+						</div>
+						
+						<div id="password-error"></div>
+						
+						<div style="text-align: center;" data-bind="visible: $root.updatingPassword">
+							<img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px"> <br>
+							<img src="{{ STATIC_URL }}img/text_loader.gif" style="height:30px"> <br>
+						</div>
+					</div>
+					<div class="modal-footer" data-bind="visible: $root.updatingPassword() == false">
+						<button type="button" class="btn btn-success" data-bind="click: $root.updatePassword">Update Password</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="credentials-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog"> 
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title">Update Cluster Credentials</h4>
+					</div>
+					<div class="modal-body" style="overflow:hidden;" data-bind="with: $root.credentials">
+						<div data-bind="visible: $root.updatingCredentials() == false">
+							<div class="form-group">
+								<label>Username</label>
+								<input type="text" class="form-control" data-bind="value: username" />
+							</div>
+							<div class="form-group">
+								<label>Private SSH Key</label>
+								<textarea class="form-control" data-bind="value: privateKey"></textarea>
+							</div>
+						</div>
+						
+						<div id="credentials-error"></div>
+						
+						<div style="text-align: center;" data-bind="visible: $root.updatingCredentials">
+							<img src="{{ STATIC_URL }}img/big_red_loader.gif" style="height:100px"> <br>
+							<img src="{{ STATIC_URL }}img/text_loader.gif" style="height:30px"> <br>
+						</div>
+					</div>
+					<div class="modal-footer" data-bind="visible: $root.updatingCredentials() == false">
+						<button type="button" class="btn btn-success" data-bind="click: $root.updateCredentials">Update Credentials</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<div class="page-inner">
 
 			<div id="profile"> 
+				<div style="text-align:center;display:none;" data-bind="visible: $root.loadingProfile">
+					<img src="{{ STATIC_URL }}img/big_red_loader.gif" /> <br/>
+					<img src="{{ STATIC_URL }}img/text_loader.gif" /> <br/>
+				</div>
+				<!-- /. LOADER -->
+
+				<div style="display:none;" data-bind="visible: $root.loadingProfile() == false">
+					<div class="row">
+						<div class="col-md-12">
+							<h2><i class="fa fa-user"></i> Profile</h2>   	
+						</div>
+					</div>
+					<!-- /. ROW  -->
+								
+					<hr />
+					
+					<div class="row" data-bind="with: $root.profile">
+						<div class="col-lg-6"> 
+							<div class="col-md-12">
+								<h3><i class="fa fa-user"></i> User Details</h3>   	
+							</div>
+							<div class="col-lg-12">
+								<div class="form-group" style="padding:5px;">
+									<label>E-mail </label>
+									<input type="text" class="form-control" data-bind="value: email, enable: false" />
+								</div>
+							</div>
+							<div class="col-lg-12">
+								<div class="form-group" style="padding:5px;">
+									<label>First Name </label>
+									<input type="text" class="form-control" data-bind="value: firstName" />
+								</div>
+							</div>
+							<div class="col-lg-12">
+								<div class="form-group" style="padding:5px;">
+									<label>Last Name/s </label>
+									<input type="text" class="form-control" data-bind="value: lastName" />
+								</div>
+							</div>
+							<div class="col-lg-12">
+								<div class="form-group" style="padding:5px;">
+									<label>Blurb </label>
+									<textarea class="form-control" data-bind="value: blurb"></textarea>
+								</div>
+							</div>
+							<div class="col-lg-12" style="text-align:right">
+								<button class="btn btn-info" data-bind="click: $root.updateProfile"> 
+									Save Profile
+								</button>
+								<button class="btn btn-info" data-bind="click: $root.showPasswordModal"> 
+									Update Password
+								</button>
+							</div>
+						</div>
+						<div class="col-lg-6"> 
+							<div class="col-md-12">
+								<h3><i class="fa fa-lock"></i> Cluster Credentials</h3>   	
+							</div>
+							<div class="col-lg-12">
+								<div class="form-group" style="padding:5px;">
+									<label>Username </label>
+									<input type="text" class="form-control" data-bind="value: credentials().username, enable: false" />
+								</div>
+							</div>
+							<div class="col-lg-12" style="text-align:right">
+								<button class="btn btn-info" data-bind="click: $root.showCredentialsModal"> 
+									Update Credentials
+								</button>
+							</div>
+						</div>
+					</div>
+								
+					<hr />
+				</div>
             </div>		
             	       
 		</div>
@@ -47,14 +188,9 @@
 	<script src="{{ STATIC_URL }}lib/bootstrap/binary/js/jquery.metisMenu.js"></script>
 	<!-- KNOCKOUT SCRIPTS -->
 	<script src="{{ STATIC_URL }}lib/knockout-3.0.0.js"></script>
-	<!-- SAMMY SCRIPTS -->
-	<script src="{{ STATIC_URL }}lib/sammy.js"></script>
 	<!-- CUSTOM SCRIPTS -->
 	<script src="{{ STATIC_URL }}lib/custom/JMS/custom.js"></script>
 	<script src="{{ STATIC_URL }}lib/custom/question.js"></script>
 	<script src="{{ STATIC_URL }}lib/custom/JMS/profile.js"></script>
-	
-	<script>
-		$("#dashboard-menu-item > a").addClass("active-menu");
-	</script>
+
 {% endblock %}
