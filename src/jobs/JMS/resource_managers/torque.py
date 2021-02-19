@@ -668,6 +668,7 @@ class torque(BaseResourceManager):
             print >> job_script, "#PBS -e localhost:%s" % error_log
             print >> job_script, "#PBS -d %s" % job_dir
             print >> job_script, "#PBS -N %s" % job_name
+            print >> job_script, "#PBS -W umask=022"
             
             nodes = ""
             for setting in settings:
