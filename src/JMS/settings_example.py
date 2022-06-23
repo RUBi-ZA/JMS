@@ -214,10 +214,10 @@ FILEMANAGER_SETTINGS = {
 
 
 EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.live.com'
+EMAIL_HOST = 'smtp.somesite.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'jms.rubi@outlook.com'
-EMAIL_HOST_PASSWORD = 'JMS>Galaxy'
+EMAIL_HOST_USER = 'someaddress@email.com'
+EMAIL_HOST_PASSWORD = 'somepassword'
  
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
